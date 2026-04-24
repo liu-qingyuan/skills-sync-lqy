@@ -1,0 +1,8 @@
+# Skills Manager runtime artifacts
+.secret.key
+cache/
+logs/
+scenarios/
+skills-manager.db
+skills-manager.db-*
+.DS_Store
