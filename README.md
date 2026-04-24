@@ -12,3 +12,4 @@ Private skill library for managing and syncing personal skills across Codex, Ope
 ## Seeded skills
 
 - `skills/codex/finish-remaining-stories/` — currently Codex-first because it depends on OMX workflows like `$team`, `$ralplan`, `$deep-interview`, and `.codex` conventions.
+- `skills/shared/karpathy-guidelines/` — cross-tool coding guardrails that are not tied to a single CLI path or runtime.
