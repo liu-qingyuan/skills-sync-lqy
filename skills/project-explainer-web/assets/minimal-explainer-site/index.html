@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="{{HTML_LANG}}">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{{PAGE_TITLE}}</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #eef4ff;
+        --bg-2: #f9fbff;
+        --panel: rgba(255, 255, 255, 0.92);
+        --panel-strong: #ffffff;
+        --text: #172033;
+        --muted: #5c6882;
+        --line: rgba(93, 122, 255, 0.14);
+        --accent: #315efb;
+        --accent-2: #7c3aed;
+        --accent-soft: rgba(49, 94, 251, 0.1);
+        --ok: #0f9f6e;
+        --warn: #b26b00;
+        --shadow: 0 20px 45px rgba(31, 45, 93, 0.09);
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+          "Segoe UI", sans-serif;
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        margin: 0;
+        color: var(--text);
+        line-height: 1.7;
+        background:
+          radial-gradient(circle at top left, rgba(49, 94, 251, 0.16), transparent 26%),
+          radial-gradient(circle at top right, rgba(124, 58, 237, 0.12), transparent 22%),
+          linear-gradient(180deg, var(--bg) 0%, var(--bg-2) 100%);
+      }
+
+      a { color: var(--accent); text-decoration: none; }
+      a:hover { text-decoration: underline; }
+
+      .shell {
+        width: min(1180px, calc(100% - 32px));
+        margin: 0 auto;
+        padding: 28px 0 64px;
+      }
+
+      .hero,
+      .panel {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 24px;
+        box-shadow: var(--shadow);
+        backdrop-filter: blur(12px);
+      }
+
+      .hero {
+        position: relative;
+        overflow: hidden;
+        padding: 32px;
+        margin-bottom: 18px;
+      }
+
+      .hero::after {
+        content: "";
+        position: absolute;
+        inset: auto -60px -60px auto;
+        width: 220px;
+        height: 220px;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(49, 94, 251, 0.18), transparent 70%);
+        pointer-events: none;
+      }
+
+      .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 7px 12px;
+        border-radius: 999px;
+        background: linear-gradient(135deg, rgba(49, 94, 251, 0.12), rgba(124, 58, 237, 0.12));
+        color: var(--accent);
+        font-size: 13px;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+      }
+
+      h1, h2, h3 { line-height: 1.2; margin: 0; }
+
+      h1 {
+        font-size: clamp(32px, 5vw, 48px);
+        margin-top: 16px;
+        max-width: 900px;
+      }
+
+      h2 { font-size: clamp(22px, 3vw, 28px); }
+      h3 { font-size: 16px; }
+
+      .hero p {
+        margin: 14px 0 0;
+        color: var(--muted);
+        max-width: 860px;
+        font-size: 15px;
+      }
+
+      .meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 20px;
+      }
+
+      .meta span,
+      .tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 12px;
+        border-radius: 999px;
+        border: 1px solid var(--line);
+        background: rgba(255, 255, 255, 0.82);
+        font-size: 14px;
+      }
+
+      .tag {
+        background: linear-gradient(135deg, rgba(49, 94, 251, 0.08), rgba(124, 58, 237, 0.08));
+        color: #314267;
+        font-weight: 600;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(12, minmax(0, 1fr));
+        gap: 18px;
+      }
+
+      .panel { padding: 22px; }
+      .span-12 { grid-column: span 12; }
+      .span-8 { grid-column: span 8; }
+      .span-7 { grid-column: span 7; }
+      .span-6 { grid-column: span 6; }
+      .span-5 { grid-column: span 5; }
+      .span-4 { grid-column: span 4; }
+
+      .section-title {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 12px;
+        margin-bottom: 16px;
+      }
+
+      .section-title p {
+        margin: 6px 0 0;
+        color: var(--muted);
+      }
+
+      .list {
+        display: grid;
+        gap: 12px;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+
+      .card,
+      .step,
+      .tree,
+      .note {
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        background: linear-gradient(180deg, rgba(255,255,255,0.95), rgba(247,250,255,0.94));
+      }
+
+      .card,
+      .step {
+        padding: 16px;
+      }
+
+      .card p,
+      .step p,
+      .panel p,
+      li p {
+        margin: 8px 0 0;
+        color: var(--muted);
+      }
+
+      .step strong,
+      .card strong { display: block; }
+
+      .file {
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 13px;
+        color: var(--accent);
+      }
+
+      .tree {
+        margin: 0;
+        padding: 18px;
+        white-space: pre-wrap;
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 13px;
+        line-height: 1.75;
+        color: #203052;
+        overflow-x: auto;
+      }
+
+      .note {
+        padding: 14px 16px;
+      }
+      .note.ok { border-left: 4px solid var(--ok); }
+      .note.warn { border-left: 4px solid var(--warn); }
+
+      .footer {
+        text-align: center;
+        color: var(--muted);
+        font-size: 14px;
+        margin-top: 24px;
+      }
+
+      @media (max-width: 900px) {
+        .span-8, .span-7, .span-6, .span-5, .span-4 { grid-column: span 12; }
+        .shell { width: min(100% - 20px, 1180px); }
+        .hero, .panel { border-radius: 20px; }
+        .hero { padding: 24px; }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="shell">
+      <section class="hero">
+        <span class="eyebrow">{{EYEBROW}}</span>
+        <h1>{{PAGE_TITLE}}</h1>
+        <p>{{HERO_HINT}}</p>
+        <div class="meta">
+          <span>{{META_SCOPE}}: {{SCOPE_LABEL}}</span>
+          <span>{{META_LANGUAGE}}: {{LANG_NAME}}</span>
+          <span>{{META_PROJECT}}: {{PROJECT_NAME}}</span>
+          <span>{{META_TASK}}: {{TASK_NAME}}</span>
+          <span>{{META_UPDATED}}: {{LAST_UPDATED}}</span>
+        </div>
+      </section>
+
+      <section class="grid">
+        <article class="panel span-7">
+          <div class="section-title">
+            <div>
+              <h2>{{SECTION_WHAT}}</h2>
+              <p>{{SECTION_WHAT_SUB}}</p>
+            </div>
+            <span class="tag">{{TAG_OVERVIEW}}</span>
+          </div>
+          <p>{{SECTION_WHAT_BODY}}</p>
+        </article>
+
+        <aside class="panel span-5">
+          <div class="section-title">
+            <div>
+              <h2>{{SECTION_WHY}}</h2>
+              <p>{{SECTION_WHY_SUB}}</p>
+            </div>
+            <span class="tag">{{TAG_CONTEXT}}</span>
+          </div>
+          <ul class="list">
+            <li class="card">
+              <strong>{{PROBLEM_LABEL}}</strong>
+              <p>{{PROBLEM_BODY}}</p>
+            </li>
+            <li class="card">
+              <strong>{{OUTCOME_LABEL}}</strong>
+              <p>{{OUTCOME_BODY}}</p>
+            </li>
+          </ul>
+        </aside>
+
+        <article class="panel span-12">
+          <div class="section-title">
+            <div>
+              <h2>{{SECTION_STRUCTURE_TREE}}</h2>
+              <p>{{SECTION_STRUCTURE_TREE_SUB}}</p>
+            </div>
+            <span class="tag">{{TAG_TREE}}</span>
+          </div>
+          <pre class="tree">Project / Task
+├─ Part A -> {{STRUCTURE_TREE_BODY}}
+│  ├─ Sub-part A1 -> concrete function
+│  └─ Sub-part A2 -> concrete function
+└─ Part B -> concrete function</pre>
+        </article>
+
+        <article class="panel span-12">
+          <div class="section-title">
+            <div>
+              <h2>{{SECTION_ARCH}}</h2>
+              <p>{{SECTION_ARCH_SUB}}</p>
+            </div>
+            <span class="tag">{{TAG_OVERVIEW}}</span>
+          </div>
+          <div class="grid">
+            <div class="card span-4">
+              <strong>{{ARCH_A}}</strong>
+              <p>{{ARCH_A_BODY}}</p>
+            </div>
+            <div class="card span-4">
+              <strong>{{ARCH_B}}</strong>
+              <p>{{ARCH_B_BODY}}</p>
+            </div>
+            <div class="card span-4">
+              <strong>{{ARCH_C}}</strong>
+              <p>{{ARCH_C_BODY}}</p>
+            </div>
+          </div>
+        </article>
+
+        <article class="panel span-7">
+          <div class="section-title">
+            <div>
+              <h2>{{SECTION_FLOW}}</h2>
+              <p>{{SECTION_FLOW_SUB}}</p>
+            </div>
+            <span class="tag">{{TAG_FLOW}}</span>
+          </div>
+          <ol class="list">
+            <li class="step">
+              <strong>{{FLOW_1}}</strong>
+              <p>{{FLOW_1_BODY}}</p>
+            </li>
+            <li class="step">
+              <strong>{{FLOW_2}}</strong>
+              <p>{{FLOW_2_BODY}}</p>
+            </li>
+            <li class="step">
+              <strong>{{FLOW_3}}</strong>
+              <p>{{FLOW_3_BODY}}</p>
+            </li>
+          </ol>
+        </article>
+
+        <aside class="panel span-5">
+          <div class="section-title">
+            <div>
+              <h2>{{SECTION_FILES}}</h2>
+              <p>{{SECTION_FILES_SUB}}</p>
+            </div>
+            <span class="tag">{{TAG_CODE}}</span>
+          </div>
+          <ul class="list">
+            <li class="card">
+              <strong class="file">{{FILE_1}}</strong>
+              <p>{{FILE_1_BODY}}</p>
+            </li>
+            <li class="card">
+              <strong class="file">{{FILE_2}}</strong>
+              <p>{{FILE_2_BODY}}</p>
+            </li>
+            <li class="card">
+              <strong class="file">{{FILE_3}}</strong>
+              <p>{{FILE_3_BODY}}</p>
+            </li>
+          </ul>
+        </aside>
+
+        <article class="panel span-12">
+          <div class="section-title">
+            <div>
+              <h2>{{SECTION_TECH_TREE}}</h2>
+              <p>{{SECTION_TECH_TREE_SUB}}</p>
+            </div>
+            <span class="tag">{{TAG_KNOWLEDGE}}</span>
+          </div>
+          <pre class="tree">Technology
+├─ Runtime / Framework -> {{TECH_TREE_BODY}}
+│  ├─ Concept A -> why it matters
+│  ├─ Parameter B -> what it controls
+│  └─ Tradeoff C -> what changes when it is tuned
+└─ Integration / Constraint -> what depends on it</pre>
+        </article>
+
+        <article class="panel span-6">
+          <div class="section-title">
+            <div>
+              <h2>{{SECTION_KNOWLEDGE}}</h2>
+              <p>{{SECTION_KNOWLEDGE_SUB}}</p>
+            </div>
+            <span class="tag">{{TAG_KNOWLEDGE}}</span>
+          </div>
+          <ul class="list">
+            <li class="card">
+              <strong>{{CONCEPT_1}}</strong>
+              <p>{{CONCEPT_1_BODY}}</p>
+            </li>
+            <li class="card">
+              <strong>{{CONCEPT_2}}</strong>
+              <p>{{CONCEPT_2_BODY}}</p>
+            </li>
+          </ul>
+        </article>
+
+        <article class="panel span-6">
+          <div class="section-title">
+            <div>
+              <h2>{{SECTION_RISKS}}</h2>
+              <p>{{SECTION_RISKS_SUB}}</p>
+            </div>
+            <span class="tag">{{TAG_RISK}}</span>
+          </div>
+          <div class="list">
+            <div class="note ok">
+              <strong>{{CONSTRAINT_LABEL}}</strong>
+              <p>{{CONSTRAINT_BODY}}</p>
+            </div>
+            <div class="note warn">
+              <strong>{{RISK_LABEL}}</strong>
+              <p>{{RISK_BODY}}</p>
+            </div>
+          </div>
+        </article>
+
+        <article class="panel span-12">
+          <div class="section-title">
+            <div>
+              <h2>{{SECTION_RECOMMEND}}</h2>
+              <p>{{SECTION_RECOMMEND_SUB}}</p>
+            </div>
+            <span class="tag">{{TAG_RECOMMEND}}</span>
+          </div>
+          <p>{{RECOMMEND_BODY}}</p>
+        </article>
+
+        <article class="panel span-12">
+          <div class="section-title">
+            <div>
+              <h2>{{SECTION_ACTIONS}}</h2>
+              <p>{{SECTION_ACTIONS_SUB}}</p>
+            </div>
+            <span class="tag">{{TAG_ACTION}}</span>
+          </div>
+          <ul class="list">
+            <li class="card">
+              <strong>{{ACTION_1}}</strong>
+              <p>{{ACTION_1_BODY}}</p>
+            </li>
+            <li class="card">
+              <strong>{{ACTION_2}}</strong>
+              <p>{{ACTION_2_BODY}}</p>
+            </li>
+          </ul>
+        </article>
+      </section>
+
+      <p class="footer">{{FOOTER}}</p>
+    </main>
+  </body>
+</html>

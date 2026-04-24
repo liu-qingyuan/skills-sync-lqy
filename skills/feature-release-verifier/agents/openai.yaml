@@ -1,0 +1,4 @@
+interface:
+  display_name: "Feature Release Verifier"
+  short_description: "Verify feature release and packaged readiness"
+  default_prompt: "Use $feature-release-verifier to verify whether this feature is releasable, what evidence proves it, and whether the packaged app is also ready to ship."

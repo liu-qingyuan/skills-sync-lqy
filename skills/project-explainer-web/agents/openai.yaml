@@ -1,0 +1,4 @@
+interface:
+  display_name: "Project Explainer Web"
+  short_description: "Generate a structured explainer page"
+  default_prompt: "Use $project-explainer-web to turn this repo, project, or task brief into a Chinese explainer webpage under _learn_web with ASCII-only file paths, unless I explicitly ask for English."
