@@ -1,6 +1,6 @@
 ---
 name: gitnexus-codex-wiki
-description: "Use GitNexus graph/index context so Codex can author graph-grounded wiki-style markdown or architecture-web pages without modifying GitNexus providers."
+description: "Requires local GitNexus CLI/index evidence, and is intended to pair with `$gitnexus`; use GitNexus graph context so Codex can author graph-grounded wiki markdown or architecture-web pages without modifying GitNexus providers."
 ---
 
 # GitNexus Codex Wiki
@@ -42,9 +42,10 @@ Required framing:
 ## Prerequisites
 
 1. Local repository access.
-2. GitNexus CLI available (`gitnexus --version` should report `1.6.3` for the validated first version).
-3. A fresh, existing GitNexus index for the target repository, or clear authority to create one with `gitnexus analyze`.
-4. A writable documentation output directory such as `docs/gitnexus-codex-wiki/`, `_learn_web/<slug>-architecture-wiki/`, or a user-specified equivalent.
+2. GitNexus support on the machine running Codex: the `gitnexus` CLI must be installed and available on `PATH` (`gitnexus --version` should report `1.6.3` for the validated first version).
+3. A fresh, existing GitNexus index for the target repository, or clear authority to create one with `gitnexus analyze`. Do not run this as a generic project-explainer when GitNexus evidence is unavailable.
+4. Install or keep the companion `$gitnexus` skill when possible. `$gitnexus` is the reusable grounding modifier; this skill consumes the same GitNexus CLI/index evidence to author wiki or architecture-web artifacts.
+5. A writable documentation output directory such as `docs/gitnexus-codex-wiki/`, `_learn_web/<slug>-architecture-wiki/`, or a user-specified equivalent.
 
 ## Default output structures
 

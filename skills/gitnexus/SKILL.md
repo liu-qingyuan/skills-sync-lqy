@@ -1,11 +1,18 @@
 ---
 name: gitnexus
-description: "GitNexus code-graph grounding for OMX workflows. Use `$gitnexus` alone or as a modifier with interview, planning, execution, QA, review, security, visual, or trace workflows."
+description: "GitNexus code-graph grounding for OMX workflows. Requires a local GitNexus CLI/MCP setup and an indexed repository; use `$gitnexus` alone or as a modifier with interview, planning, execution, QA, review, security, visual, or trace workflows."
 ---
 
 # GitNexus
 
 GitNexus is a code-graph grounding layer for OMX/Codex workflows. Use it to collect repository facts before asking the user about code internals, planning changes, or editing source.
+
+## Requirements
+
+- Require GitNexus support on the machine running Codex: the `gitnexus` CLI must be installed and available on `PATH` (`gitnexus --version`).
+- Require a GitNexus-indexed target repository before grounding can be trusted. If `gitnexus status` reports a missing or stale index, recommend `gitnexus analyze <repo-path>` or the local project's documented indexing command before using graph evidence.
+- Prefer a configured GitNexus MCP server for in-session automation, but keep CLI preflight as the baseline dependency because the bundled workflow calls `gitnexus status`, `gitnexus list`, `gitnexus context`, `gitnexus impact`, and `gitnexus cypher`.
+- Do not present this skill as a generic code-explainer without GitNexus. If GitNexus is unavailable and the user only wants a non-graph project overview, route to a non-GitNexus skill such as `$project-explainer-web`.
 
 ## Composition Rule
 

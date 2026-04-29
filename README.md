@@ -6,8 +6,17 @@
 
 - `project-explainer-web`：生成项目或任务的说明型静态网页，默认输出中文，适合快速帮助人类或 AI 理解仓库、架构和任务背景。
 - `feature-release-verifier`：用于验证功能是否具备发布条件，聚合 mock-ui、real-runtime、packaged-smoke 等验证证据并输出发布结论。
-- `gitnexus`：为 OMX/Codex 工作流提供 GitNexus 代码图谱 grounding，可作为 `$deep-interview`、`$ralplan`、`$team`、`$autopilot` 等 workflow 的上下文 modifier。
-- `gitnexus-codex-wiki`：基于 GitNexus graph/index evidence 生成源码证据驱动的 markdown wiki 或 project-explainer-web 风格架构介绍网页。
+- `gitnexus`：为 OMX/Codex 工作流提供 GitNexus 代码图谱 grounding；需要本机已安装/配置 GitNexus CLI/MCP，并且目标仓库已有 GitNexus index；可作为 `$deep-interview`、`$ralplan`、`$team`、`$autopilot` 等 workflow 的上下文 modifier。
+- `gitnexus-codex-wiki`：基于 GitNexus graph/index evidence 生成源码证据驱动的 markdown wiki 或 project-explainer-web 风格架构介绍网页；需要本机可运行 `gitnexus` CLI 和目标仓库 index，推荐与 `$gitnexus` skill 一起安装。
+
+## GitNexus 依赖说明
+
+`gitnexus` 和 `gitnexus-codex-wiki` 不是纯离线通用项目说明 skill。它们都依赖 GitNexus 支持：
+
+- 本机需要能执行 `gitnexus --version`。
+- 目标仓库需要已有 GitNexus index，或有权限先运行 `gitnexus analyze <repo-path>` / 项目约定的索引命令。
+- `gitnexus-codex-wiki` 使用 GitNexus graph/index evidence 写 wiki/架构网页；如果没有 GitNexus evidence，应改用 `project-explainer-web` 这类非图谱 skill。
+- 安装 `gitnexus-codex-wiki` 时建议同时安装 `gitnexus`，这样可以先用 `$gitnexus` 做 preflight/context/impact grounding，再生成文档。
 
 ---
 

@@ -1,7 +1,7 @@
 interface:
   display_name: "GitNexus Codex Wiki"
-  short_description: "Codex-authored wiki docs from graph context"
-  default_prompt: "Use $gitnexus-codex-wiki to produce graph-grounded wiki markdown from this repo."
+  short_description: "Wiki/architecture docs from GitNexus evidence"
+  default_prompt: "Use $gitnexus-codex-wiki with local GitNexus CLI/index evidence to produce graph-grounded wiki or architecture-web docs from this repo."
 dependencies:
   tools:
     - type: "mcp"
