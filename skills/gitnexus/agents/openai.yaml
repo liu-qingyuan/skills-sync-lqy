@@ -1,0 +1,12 @@
+interface:
+  display_name: "GitNexus"
+  short_description: "Code graph grounding for OMX workflows"
+  default_prompt: "Use $gitnexus to ground this task in the GitNexus code graph before planning or implementation."
+dependencies:
+  tools:
+    - type: "mcp"
+      value: "gitnexus"
+      description: "GitNexus MCP server for indexed repository graph context"
+      transport: "stdio"
+policy:
+  allow_implicit_invocation: true

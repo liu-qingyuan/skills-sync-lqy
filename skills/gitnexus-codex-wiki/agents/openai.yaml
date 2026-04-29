@@ -1,0 +1,12 @@
+interface:
+  display_name: "GitNexus Codex Wiki"
+  short_description: "Codex-authored wiki docs from graph context"
+  default_prompt: "Use $gitnexus-codex-wiki to produce graph-grounded wiki markdown from this repo."
+dependencies:
+  tools:
+    - type: "mcp"
+      value: "gitnexus"
+      description: "GitNexus MCP server for indexed repository graph context"
+      transport: "stdio"
+policy:
+  allow_implicit_invocation: true
