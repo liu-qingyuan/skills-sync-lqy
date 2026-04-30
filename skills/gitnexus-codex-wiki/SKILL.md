@@ -12,7 +12,7 @@ Use this skill when a user wants Codex to create or refresh wiki-style documenta
 Choose the lightest mode that satisfies the request:
 
 1. **`markdown-wiki`** — the existing overview/modules/leaves markdown flow under `docs/gitnexus-codex-wiki/` or a user-selected docs directory. Use this for maintainers who want source-grounded markdown pages, backlinks, metadata, and graph evidence.
-2. **`architecture-web`** — a project-explainer-web-style static architecture website under `_learn_web/<slug>-architecture-wiki/` by default. It has exactly one root main page, `index.html`, and optional `modules/*.html` detail pages that are reached by clicking links from `index.html`. Use this for Chinese-by-default, beginner-readable, Feynman-style architecture explanations with module pages, Mermaid `graph TB` diagrams or static Mermaid source blocks, evidence JSON, and verification guidance; Feynman is a writing principle, not a fixed `费曼复述` section.
+2. **`architecture-web`** — a project-explainer-web-style static architecture website under `_learn_web/<slug>-architecture-wiki/` by default. It has exactly one root main page, `index.html`, and optional `modules/*.html` detail pages that are reached by clicking links from `index.html`. Use this for Chinese-by-default, beginner-readable, Feynman-style architecture explanations with module pages, `interactive-flow` React Flow canvases for dense diagrams, Mermaid `graph TB` or SVG for simple diagrams, evidence JSON, and verification guidance; Feynman is a writing principle, not a fixed `费曼复述` section.
 3. **`hybrid`** — run `markdown-wiki` and `architecture-web` sequentially from the same evidence set. The first pass is not a new engine: scaffold markdown with `scripts/scaffold-wiki.py`, scaffold the static site with `scripts/scaffold-architecture-web.py`, then let Codex author both outputs from the same graph/source evidence.
 
 ## Boundary
@@ -38,6 +38,22 @@ Required framing:
 - Never generate a repeated fixed section named `费曼复述`. Explain plainly in context instead: name the source evidence, state the simple mental model, then show the verification path.
 - Do not satisfy validation with 隐藏通用契约文本. Required concepts must be visible in the page or present in structured evidence JSON.
 - Deep architecture pages must include real branches, not only a straight `User -> Renderer -> Preload -> Main -> Runtime` line. For Electron apps, show renderer/preload/main security boundaries and multiple IPC/service branches; for runtime/chat/auth/Lucyna/desktop-pet pages, show success, failure, abort, refresh, readiness, fallback, or provider branches when those paths exist in source.
+
+## Interactive-flow React Flow contract for `architecture-web`
+
+Use `interactive-flow` when the architecture graph is dense enough that Mermaid/SVG would create overlapping labels, ambiguous arrows, or weak inspection affordances. Simple tree, checklist, or audit diagrams may remain Mermaid/SVG when that is clearer and lower churn.
+
+Interactive-flow output requirements:
+
+- Render a local React Flow canvas for dense graphs with zoom, pan, node drag, fit-to-view, visible direction markers, typed nodes/edges, node click handling, edge click handling, and an evidence panel or drawer.
+- Keep the runtime payload embedded page-locally, for example `<script type="application/json" data-architecture-flow>...</script>` or a JS-assigned payload. A copy such as `evidence/interactive-flow.json` may exist for auditability, but `file://` rendering must not require `fetch()` from `evidence/*.json`.
+- Every clickable node and edge must include source/GitNexus evidence references or an explicit fallback rationale. Do not center `_learn_web`, `index.html`, `modules/*.html`, `wiki-meta.json`, evidence files, or the generation workflow as graph nodes.
+- Edge taxonomy must include typed semantics when relevant: `call`, `ipc`, `data`, `error`, `external`, and `test`. Each edge needs a visible label plus distinct visual treatment such as color, stroke style, marker, or badge.
+- Store deterministic positions, dimensions, and layout metadata in the payload. Prefer Dagre for first-pass directed architecture graphs; use ELK only if branching/routing complexity needs it. Dense or crossing-prone edges should carry `sourceHandle` and `targetHandle`, unless the validator/reference documents a fixed-handle convention.
+- Maintain a non-visual fallback table, legend, tree, or prose explanation near every interactive diagram so the page remains readable without canvas interaction.
+- Enforce an offline **no CDN** asset policy: runtime-bearing `<script>`, `<link>`, `<img>`, and CSS `url()` references must not use `http://`, `https://`, protocol-relative CDN URLs, `unpkg`, or `jsdelivr`. React Flow assets must be local, for example `assets/architecture-flow.js` and `assets/architecture-flow.css`.
+- Include `assets/architecture-flow-provenance.json` or equivalent metadata recording package names and versions (`react`, `react-dom`, `@xyflow/react`, layout package such as `@dagrejs/dagre`), build command, source/template path, license notes, generated asset paths, and hashes for `architecture-flow.js/css`.
+- Visual QA is required before delivery: open the generated pages from exact `file://` URLs, capture screenshots, confirm no obvious label overlap, confirm edge semantics/direction are clear, and record node and edge click traces that open evidence.
 
 ## Prerequisites
 
@@ -78,10 +94,14 @@ _learn_web/<slug>-architecture-wiki/
 ├─ modules/
 │  └─ <module>.html               # linked from index.html; no orphan module pages
 ├─ assets/
-│  └─ mermaid.min.js              # local/offline Mermaid, auto-copied when available
+│  ├─ mermaid.min.js              # local/offline Mermaid, auto-copied when available
+│  ├─ architecture-flow.js         # local/offline React Flow bundle when interactive-flow is used
+│  ├─ architecture-flow.css
+│  └─ architecture-flow-provenance.json
 ├─ evidence/
 │  ├─ module-map.json
-│  └─ route-service-trace.json
+│  ├─ route-service-trace.json
+│  └─ interactive-flow.json        # optional audit copy; runtime must use embedded/page-local payload
 └─ wiki-meta.json
 ```
 
@@ -160,8 +180,9 @@ Architecture-web must visually and structurally follow `$project-explainer-web`:
 - **One root main page**: root must contain one main HTML page, `index.html`; all other topic/detail pages live under `modules/` or evidence files.
 - **Click-through navigation**: every module listed in `evidence/module-map.json` must have a linked card or table link from `index.html` to `modules/<slug>.html`; every module page must link back to `../index.html`.
 - **Same visual grammar as project-explainer-web**: use the soft gradient background, `.shell`, `.hero`, `.panel`, cards, tags, tree blocks, and readable knowledge-page layout rather than plain documentation styling.
-- **Offline-safe Mermaid**: prefer local `assets/mermaid.min.js` copied from project-explainer-web when available, or hand-authored inline SVG when Mermaid runtime is unavailable; never use CDN scripts.
-- **No visible raw graph dumps**: final architecture pages must not expose `graph TB` / `flowchart` source as the visible diagram body. If keeping source for auditability, put it in collapsed `<details class="source-note"><summary>图源</summary><pre class="diagram-source">...</pre></details>` after a rendered SVG or local Mermaid render block. This avoids the common failure where users see Mermaid text instead of a diagram.
+- **Dense diagrams use interactive-flow**: use React Flow for dense architecture/relationship graphs that need zoom/pan/drag and click-to-evidence; keep Mermaid/SVG for simple diagrams where it is more readable.
+- **Offline-safe Mermaid and React Flow**: prefer local `assets/mermaid.min.js` copied from project-explainer-web when available, or hand-authored inline SVG when Mermaid runtime is unavailable; React Flow runtime must use local `assets/architecture-flow.js/css` or equivalent. Never use CDN scripts/styles/assets.
+- **No visible raw graph dumps**: final architecture pages must not expose `graph TB` / `flowchart` source as the visible diagram body. If keeping source for auditability, put it in collapsed `<details class="source-note"><summary>图源</summary><pre class="diagram-source">...</pre></details>` after a rendered SVG, local Mermaid render block, or interactive-flow fallback. This avoids the common failure where users see graph source instead of a diagram.
 - **Mermaid-safe syntax**: quote every node label containing `/`, `:`, parentheses, comma, `%`, `#`, `&`, `|`, `<`, or `>`; avoid lowercase node id/label `end`; keep a space after arrows when the destination id starts with lowercase `o` or `x`; and never ship pages with visible `parse error` / `syntax error` text. This follows Mermaid's official flowchart guidance on special characters and parser pitfalls.
 
 Required overview headings in `index.html` mirror project-explainer-web:
@@ -215,7 +236,7 @@ Architecture-web diagrams should include these categories where applicable:
 - branch/fallback graph for auth, chat/runtime, readiness, desktop windows, or other conditional flows;
 - verification-map graph.
 
-Each diagram needs a rendered visual form (inline SVG or local Mermaid render block), Mermaid `graph TB` source kept behind collapsed details for auditability, a plain-language/Feynman-style explanation, source/GitNexus evidence references, and a non-visual fallback such as a table, tree, or prose explanation. Do not create a heading named `费曼复述`. Do not reference Mermaid from a CDN; if rendered Mermaid is needed, pass a local `--mermaid-js` file so the scaffold copies `assets/mermaid.min.js`. Before delivery, run the validator and visual QA so Mermaid syntax errors and visible raw `graph TB` blocks are caught by both static checks and browser-level rendering checks.
+Each diagram needs a rendered visual form (interactive-flow React Flow canvas, inline SVG, or local Mermaid render block), graph source or payload kept behind collapsed details/audit evidence when useful, a plain-language/Feynman-style explanation, source/GitNexus evidence references, and a non-visual fallback such as a table, tree, or prose explanation. Do not create a heading named `费曼复述`. Do not reference Mermaid or React Flow from a CDN; if rendered Mermaid is needed, pass a local `--mermaid-js` file so the scaffold copies `assets/mermaid.min.js`, and if interactive-flow is used include local `assets/architecture-flow.js/css` plus provenance metadata. Before delivery, run the validator and visual QA so Mermaid syntax errors, visible raw `graph TB` blocks, React Flow overlap/readability issues, and click-to-evidence regressions are caught by static checks and browser-level rendering checks.
 
 Deep architecture quality gates:
 
@@ -288,6 +309,8 @@ Manual validation checklist:
 - architecture-web root has exactly one `index.html` main page; module pages are linked from `index.html` and link back to it;
 - architecture-web overview and module pages include required project-explainer-web headings;
 - architecture-web pages default to Chinese (`lang=zh-CN`) and use project-explainer-web-style `.shell`, `.hero`, `.panel` layout;
+- interactive-flow pages embed page-local graph payloads, include local React Flow bundle assets, include provenance with package versions/license notes/hashes, and obey the no CDN runtime asset policy;
+- interactive-flow nodes and edges are target-system-centric, typed, labeled, evidence-backed, and paired with fallback text/tables plus visual QA click traces;
 - no repeated fixed `费曼复述` sections appear in final pages;
 - deep architecture graphs contain meaningful branches, not only straight-line happy paths;
 - no 隐藏通用契约文本 is used to satisfy strict validation;
@@ -314,7 +337,8 @@ Manual validation checklist:
 - **Huge graph:** slice by modules/flows and generate pages incrementally.
 - **Provider confusion:** clarify that this skill does not add or rely on GitNexus provider support for Codex.
 - **Architecture-web placeholders:** final validation fails unresolved `TODO`/placeholder text; use `--allow-placeholders` only for scaffold smoke checks.
-- **Network Mermaid:** architecture-web output must be offline-first; copy local Mermaid with `--mermaid-js` or keep Mermaid as readable static source blocks.
+- **Network Mermaid/React Flow:** architecture-web output must be offline-first; copy local Mermaid with `--mermaid-js`, keep Mermaid as readable static source blocks, or use local React Flow `architecture-flow` assets with provenance. No CDN/runtime network URLs are allowed.
+- **Missing interactive evidence:** interactive-flow nodes/edges without evidence or fallback rationale are invalid; replace artifact-centric nodes with target-system entities and record click-to-evidence QA.
 
 ## References
 
