@@ -1,6 +1,6 @@
 {
   "name": "architecture-flow",
-  "generated_at": "2026-04-30T00:00:00Z",
+  "generated_at": "2026-04-30T08:40:53Z",
   "description": "Local/offline React Flow architecture diagram renderer for gitnexus-codex-wiki scaffold output.",
   "source_template": "assets/architecture-flow/src/architecture-flow.tsx",
   "build_command": "npm install && npm run build",
@@ -21,8 +21,8 @@
   "generated_assets": [
     {
       "path": "dist/architecture-flow.js",
-      "sha256": "2be82b15aab244fe08214f900102f1ad0b2c0f49a0c96ee57b5a116f7bab9aa9",
-      "bytes": 1517301
+      "sha256": "51e5ec132f96515a91a6103819b34643c793085d13d7efc48b4500cddf7d4c5a",
+      "bytes": 1518338
     },
     {
       "path": "dist/architecture-flow.css",

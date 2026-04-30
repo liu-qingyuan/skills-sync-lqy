@@ -208,8 +208,18 @@ def copy_architecture_flow_assets(assets_dir: Path, force: bool) -> None:
 
 
 def evidence_refs(evidence_entries: list[dict[str, str]]) -> list[str]:
-    refs = [entry.get("path", "") for entry in evidence_entries if entry.get("path")]
-    return refs or ["TODO: evidence reference"]
+    refs: list[str] = []
+    for entry in evidence_entries:
+        source = entry.get("source", "")
+        path = entry.get("path", "")
+        # Primary React Flow payloads must describe the target system, not the
+        # generated documentation artifact. Use original source/GitNexus labels
+        # in graph evidence rather than evidence/*.json audit-file paths.
+        if source and "TODO:" not in source:
+            refs.append(source)
+        elif path and not path.startswith("evidence/") and "TODO:" not in path:
+            refs.append(path)
+    return refs or ["GitNexus graph/source evidence for target runtime"]
 
 
 def flow_node(node_id: str, node_type: str, label: str, x: int, y: int, evidence: list[str]) -> dict[str, Any]:
@@ -311,28 +321,98 @@ def architecture_flow_payload(slug_value: str, modules: list[str], evidence_entr
                 },
             }
         )
-    return {
-        "version": 1,
-        "graphs": [
-            {
-                "id": "runtime-overview",
-                "title": f"{slug_value} 目标应用整体运行时结构",
-                "summary": "从用户动作进入目标系统边界，穿过运行时服务、模块、存储、外部集成、错误分支和验证命令。",
-                "nodes": nodes,
-                "edges": edges,
-                "layout": {
-                    "engine": "manual",
-                    "direction": "LR",
-                    "nodeWidth": 230,
-                    "nodeHeight": 96,
-                    "ranksep": 96,
-                    "nodesep": 64,
-                    "computedAtBuildTime": True,
-                },
-            },
-            *module_graphs,
-        ],
+    common_layout = {
+        "engine": "manual",
+        "direction": "LR",
+        "nodeWidth": 230,
+        "nodeHeight": 96,
+        "ranksep": 96,
+        "nodesep": 64,
+        "computedAtBuildTime": True,
     }
+    overview_graphs = [
+        {
+            "id": "runtime-overview",
+            "title": f"{slug_value} 目标应用整体运行时结构",
+            "summary": "从用户动作进入目标系统边界，穿过运行时服务、模块、存储、外部集成、错误分支和验证命令。",
+            "nodes": nodes,
+            "edges": edges,
+            "layout": common_layout,
+        },
+        {
+            "id": "source-structure",
+            "title": f"{slug_value} 真实源码边界图",
+            "summary": "用目标源码入口、运行时边界、领域模块、服务依赖和验证边界替代静态源码树 SVG。",
+            "nodes": [
+                flow_node("source-root", "entrypoint", "target source root", 0, 180, refs),
+                flow_node("entrypoints", "entrypoint", "routes / commands / handlers", 300, 80, refs),
+                flow_node("runtime-boundaries", "boundary", "API / IPC / runtime boundaries", 300, 280, refs),
+                flow_node("domain-modules", "service", "domain modules", 650, 80, refs),
+                flow_node("providers", "external", "services / providers", 980, 80, refs),
+                flow_node("state", "data", "storage / state", 980, 250, refs),
+                flow_node("checks", "test", "tests / build checks", 650, 360, refs),
+            ],
+            "edges": [
+                flow_edge("root-entrypoints", "source-root", "entrypoints", "call", "contains entry files", refs),
+                flow_edge("root-boundaries", "source-root", "runtime-boundaries", "ipc", "defines boundary files", refs, "right", "left"),
+                flow_edge("entrypoints-modules", "entrypoints", "domain-modules", "call", "routes into modules", refs),
+                flow_edge("boundaries-modules", "runtime-boundaries", "domain-modules", "ipc", "validates boundary call", refs),
+                flow_edge("modules-providers", "domain-modules", "providers", "external", "uses integration", refs),
+                flow_edge("modules-state", "domain-modules", "state", "data", "reads/writes state", refs, "right", "left"),
+                flow_edge("modules-checks", "domain-modules", "checks", "test", "covered by checks", refs, "bottom", "top"),
+            ],
+            "layout": common_layout,
+        },
+        {
+            "id": "technology-framework",
+            "title": f"{slug_value} 技术框架图",
+            "summary": "展示目标应用的框架、运行时、服务、数据和验证层，而不是文档网站技术栈。",
+            "nodes": [
+                flow_node("ui-framework", "runtime", "UI / renderer framework", 0, 130, refs),
+                flow_node("routing", "entrypoint", "routes / commands", 300, 130, refs),
+                flow_node("boundary-api", "boundary", "preload / API / IPC contract", 620, 130, refs),
+                flow_node("runtime-core", "runtime", "runtime orchestrator", 940, 130, refs),
+                flow_node("service-layer", "service", "service/provider layer", 1260, 40, refs),
+                flow_node("data-layer", "data", "state/persistence layer", 1260, 220, refs),
+                flow_node("test-layer", "test", "low-level/e2e checks", 940, 360, refs),
+            ],
+            "edges": [
+                flow_edge("ui-routing", "ui-framework", "routing", "call", "user action enters route", refs),
+                flow_edge("routing-boundary", "routing", "boundary-api", "ipc", "crosses safe boundary", refs),
+                flow_edge("boundary-runtime-core", "boundary-api", "runtime-core", "ipc", "dispatches handler", refs),
+                flow_edge("runtime-service-layer", "runtime-core", "service-layer", "external", "calls service/provider", refs),
+                flow_edge("runtime-data-layer", "runtime-core", "data-layer", "data", "persists state", refs),
+                flow_edge("runtime-test-layer", "runtime-core", "test-layer", "test", "verified by command", refs, "bottom", "top"),
+            ],
+            "layout": common_layout,
+        },
+        {
+            "id": "branch-fallback-test",
+            "title": f"{slug_value} 分支 / fallback / test 地图",
+            "summary": "覆盖 success、error、fallback 和验证分支，避免只有一条直线的架构解释。",
+            "nodes": [
+                flow_node("action", "actor", "用户动作 / system event", 0, 220, refs),
+                flow_node("decision", "boundary", "handler/API decision point", 300, 220, refs),
+                flow_node("success", "service", "success path", 650, 80, refs),
+                flow_node("error", "fallback", "error / invalid path", 650, 220, refs),
+                flow_node("fallback", "fallback", "fallback / degraded mode", 650, 360, refs),
+                flow_node("observe", "data", "logs/state/evidence", 980, 220, refs),
+                flow_node("verify", "test", "tests / smoke / visual QA", 1280, 220, refs),
+            ],
+            "edges": [
+                flow_edge("action-decision", "action", "decision", "call", "enters branch point", refs),
+                flow_edge("decision-success", "decision", "success", "call", "valid request", refs, "right", "left"),
+                flow_edge("decision-error", "decision", "error", "error", "invalid/error input", refs, "right", "left"),
+                flow_edge("decision-fallback", "decision", "fallback", "error", "degraded/provider missing", refs, "right", "left"),
+                flow_edge("success-observe", "success", "observe", "data", "records result", refs),
+                flow_edge("error-observe", "error", "observe", "data", "records failure state", refs),
+                flow_edge("fallback-observe", "fallback", "observe", "data", "records fallback state", refs),
+                flow_edge("observe-verify", "observe", "verify", "test", "asserts branch behavior", refs),
+            ],
+            "layout": common_layout,
+        },
+    ]
+    return {"version": 1, "graphs": [*overview_graphs, *module_graphs]}
 
 
 def flow_payload_script(payload: dict[str, Any]) -> str:
@@ -480,9 +560,9 @@ def overview_html(slug_value: str, modules: list[str], evidence_entries: list[di
   Services --> Tests[verification commands]""",
             )
         else:
-            structure_diagram = rendered_svg_block("真实源码目录树", "target source structure")
-            tech_diagram = rendered_svg_block("技术框架图", "target technology framework")
-            branch_diagram = rendered_svg_block("分叉总览图", "target branch overview")
+            structure_diagram = interactive_flow_block("真实源码边界 interactive-flow", "source-structure")
+            tech_diagram = interactive_flow_block("技术框架 interactive-flow", "technology-framework")
+            branch_diagram = interactive_flow_block("分叉 / fallback / test interactive-flow", "branch-fallback-test")
     script_ref = "./assets/mermaid.min.js" if mermaid_script else None
     flow_ref = "./assets/architecture-flow.js" if use_interactive else None
     flow_css = "./assets/architecture-flow.css" if use_interactive else None
@@ -510,7 +590,7 @@ def overview_html(slug_value: str, modules: list[str], evidence_entries: list[di
 <section class=\"panel span-6\"><h2>安全修改方式</h2><p>TODO: 先更新目标系统证据，再同步首页和对应模块页，最后跑验证器与项目相关检查。</p></section>
 <section class=\"panel span-12\" id=\"verification\"><h2>验证命令</h2><ul><li><code>python3 ~/.codex/skills/gitnexus-codex-wiki/scripts/validate-skill.py ~/.codex/skills/gitnexus-codex-wiki --architecture-web-dir _learn_web/{slug_value}-architecture-wiki</code></li><li><code>rg -n "TODO|TBD|FIXME|PLACEHOLDER|REPLACE ME" _learn_web/{slug_value}-architecture-wiki</code></li></ul></section>
 <section class=\"panel span-6\"><h2>常见反模式</h2><ul><li>把网页 artifact 当成被解释系统。</li><li>只写文件清单，不解释用户动作到服务边界的链路。</li><li>用英文 scaffold 交付给中文读者。</li><li>引用 CDN 导致离线打不开图。</li></ul></section>
-<section class=\"panel span-6\"><h2>原理与背景知识</h2><p>TODO: 解释目标项目框架、运行时边界、GitNexus graph 与 Mermaid graph TB 如何帮助理解源码。</p></section>
+<section class=\"panel span-6\"><h2>原理与背景知识</h2><p>TODO: 解释目标项目框架、运行时边界、GitNexus 图证据与交互式架构图如何帮助理解源码。</p></section>
 <section class=\"panel span-6\"><h2>约束与风险</h2><p>TODO: 记录 stale index、dirty worktree、未验证推断等风险。</p></section>
 <section class=\"panel span-6\"><h2>推荐维护方案</h2><p>TODO: 给出下一步维护目标系统架构说明的建议。</p></section>
 <section class=\"panel span-12\"><h2>后续维护动作</h2><ol><li>补齐真实源码入口和模块页。</li><li>补齐 route/service/API/IPC trace。</li><li>运行验证命令。</li></ol></section>
@@ -564,7 +644,12 @@ def module_html(name: str, evidence_entries: list[dict[str, str]], mermaid_scrip
             )
     tech_section_body = f'<pre class="tree">{tech_tree}</pre>'
     if use_interactive and not use_mermaid:
-        tech_section_body = rendered_svg_block("技术框架图", "module technology framework") + tech_section_body
+        tech_section_body = (
+            '<table class="fallback-table"><thead><tr><th>技术层</th><th>阅读方式</th></tr></thead>'
+            '<tbody><tr><td>入口/边界</td><td>先看上方 React Flow 模块边界图里的 entrypoint 与 boundary 节点。</td></tr>'
+            '<tr><td>服务/依赖</td><td>再看 service、external、data 与 test 类型边。</td></tr></tbody></table>'
+            + tech_section_body
+        )
     script_ref = "../assets/mermaid.min.js" if mermaid_script else None
     flow_ref = "../assets/architecture-flow.js" if use_interactive else None
     flow_css = "../assets/architecture-flow.css" if use_interactive else None
@@ -621,7 +706,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--module", action="append", default=[], help="Module page name to create; repeatable")
     parser.add_argument("--evidence", action="append", default=[], help="源码证据 file to copy/reference; repeatable")
     parser.add_argument("--mermaid-js", help="Optional local mermaid.min.js file to copy into assets/")
-    parser.add_argument("--diagram-mode", choices=DIAGRAM_MODES, default="hybrid", help="Diagram renderer mode: mermaid, interactive-flow, or hybrid (default)")
+    parser.add_argument("--diagram-mode", choices=DIAGRAM_MODES, default="interactive-flow", help="Diagram renderer mode: mermaid, interactive-flow (default), or hybrid")
     parser.add_argument("--no-default-mermaid-js", action="store_true", help="Do not auto-copy project-explainer-web's bundled Mermaid asset")
     parser.add_argument("--force", action="store_true", help="Overwrite existing generated files")
     args = parser.parse_args(argv)

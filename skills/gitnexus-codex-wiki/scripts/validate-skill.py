@@ -114,7 +114,12 @@ LINK_HREF_PATTERN = re.compile(r"<link\b[^>]*\bhref=[\"']([^\"']+)[\"']", re.I)
 IMG_SRC_PATTERN = re.compile(r"<img\b[^>]*\bsrc=[\"']([^\"']+)[\"']", re.I)
 CSS_URL_PATTERN = re.compile(r"url\(\s*[\"']?([^\)\"']+)", re.I)
 INTERACTIVE_PAYLOAD_PATTERN = re.compile(r"<script\b(?P<attrs>[^>]*\bdata-architecture-flow\b[^>]*)>(?P<body>.*?)</script>", re.I | re.S)
-INTERACTIVE_CONTAINER_PATTERN = re.compile(r"data-architecture-flow(?:-root)?\b|class=[\"'][^\"']*architecture-flow", re.I)
+FLOW_GRAPH_CONTAINER_PATTERN = re.compile(r"\bdata-flow-graph\s*=\s*[\"']([^\"']+)[\"']", re.I)
+INTERACTIVE_CONTAINER_PATTERN = re.compile(r"\bdata-flow-graph\s*=|\bdata-architecture-flow(?:-root)?\b|class=[\"'][^\"']*architecture-flow\b", re.I)
+PRIMARY_STATIC_DIAGRAM_PATTERN = re.compile(
+    r"\bgraph\s+TB\b|\bflowchart\s+(?:TB|TD|BT|LR|RL)\b|class\s*=\s*[\"'][^\"']*(?:mermaid|diagram-source|diagram-svg)[^\"']*[\"']|<svg\b",
+    re.I,
+)
 ALLOWED_EDGE_TYPES = {"call", "ipc", "data", "error", "external", "test", "control"}
 TAG_PATTERN = re.compile(r"<[^>]+>")
 SCRIPT_STYLE_BLOCK_PATTERN = re.compile(r"<(script|style)\b[^>]*>.*?</\1>", re.I | re.S)
@@ -238,6 +243,42 @@ def extract_interactive_flow_payloads(html: str, path: Path | str = "<html>") ->
     return payloads
 
 
+def extract_flow_graph_container_ids(html: str) -> list[str]:
+    return [match.strip() for match in FLOW_GRAPH_CONTAINER_PATTERN.findall(html) if match.strip()]
+
+
+def payload_graph_ids(payloads: list[Any]) -> tuple[set[str], list[str]]:
+    ids: set[str] = set()
+    duplicates: list[str] = []
+    for payload in payloads:
+        if not isinstance(payload, dict):
+            continue
+        graphs = payload.get("graphs")
+        if not isinstance(graphs, list):
+            continue
+        for graph in graphs:
+            if not isinstance(graph, dict):
+                continue
+            graph_id = str(graph.get("id", "")).strip()
+            if not graph_id:
+                continue
+            if graph_id in ids:
+                duplicates.append(graph_id)
+            ids.add(graph_id)
+    return ids, duplicates
+
+
+def meta_requires_interactive_flow(meta: Any) -> bool:
+    if not isinstance(meta, dict):
+        return False
+    if meta.get("diagram_mode") == "interactive-flow":
+        return True
+    interactive = meta.get("interactive_flow")
+    if interactive is True or isinstance(interactive, dict):
+        return True
+    return "interactive-flow" in str(meta.get("diagram_strategy", "")).lower()
+
+
 def validate_runtime_network_urls(path: Path, errors: list[str]) -> None:
     html = read_text(path)
     for label, pattern in (("script src", SCRIPT_SRC_PATTERN), ("link href", LINK_HREF_PATTERN), ("img src", IMG_SRC_PATTERN)):
@@ -340,6 +381,54 @@ def validate_no_visible_raw_graph_blocks(path: Path, allow_placeholders: bool, e
             fail(errors, f"{path} 技术框架图 section must contain a rendered SVG, local Mermaid render block, or valid interactive-flow contract elsewhere on the page")
         if re.search(r"</svg>\s*</div>\s*<pre\b[^>]*>\s*(?:graph|flowchart)\s+(?:TB|TD|BT|LR|RL)\b", body, re.I | re.S):
             fail(errors, f"{path} places raw graph source immediately after rendered SVG; wrap source in collapsed <details>")
+
+
+def strip_allowed_non_primary_diagram_blocks(html: str) -> str:
+    """Remove blocks where graph source/static previews are allowed for audit only.
+
+    Full conversion is a page-wide contract: generated architecture-web pages
+    must not keep Mermaid/source/SVG as visible primary or alternate diagrams.
+    Collapsed source/audit details and explicit evidence/provenance blocks are
+    still allowed so readers can inspect raw source or metadata.
+    """
+    stripped = SCRIPT_STYLE_BLOCK_PATTERN.sub(" ", html)
+    patterns = [
+        r"<details(?![^>]*\bopen\b)\b[^>]*>.*?</details>",
+        r"<(?P<tag>section|div|aside)\b[^>]*(?:data-non-primary-diagram|data-evidence|data-provenance|class=[\"'][^\"']*(?:evidence|provenance|audit-source|source-audit|source-note)[^\"']*[\"'])[^>]*>.*?</(?P=tag)>",
+    ]
+    for pattern in patterns:
+        previous = None
+        while previous != stripped:
+            previous = stripped
+            stripped = re.sub(pattern, " ", stripped, flags=re.I | re.S)
+    return stripped
+
+
+def validate_no_visible_primary_static_diagrams(path: Path, errors: list[str]) -> None:
+    html = strip_allowed_non_primary_diagram_blocks(read_text(path))
+    if PRIMARY_STATIC_DIAGRAM_PATTERN.search(html):
+        fail(
+            errors,
+            f"{path} has visible primary Mermaid/flowchart/static SVG diagram output; "
+            "architecture-web primary dense diagrams must be React Flow, with raw/static sources only in collapsed audit/evidence/provenance blocks",
+        )
+
+
+def validate_interactive_runtime_source(skill_root: Path, errors: list[str]) -> None:
+    source_path = skill_root / "assets" / "architecture-flow" / "src" / "architecture-flow.tsx"
+    if not source_path.is_file():
+        fail(errors, f"missing React Flow runtime source: {source_path}")
+        return
+    source = read_text(source_path)
+    required = {
+        "useNodesState": "persistent node state for manual drag",
+        "onNodesChange": "React Flow node change handler",
+        "nodesDraggable": "manual node dragging enabled",
+        "data-flow-node": "stable node selector for browser QA",
+    }
+    for needle, label in required.items():
+        if needle not in source:
+            fail(errors, f"{source_path} missing {label}: {needle}")
 
 
 
@@ -457,6 +546,8 @@ def validate_skill(root: Path) -> list[str]:
             "skill package must not require every architecture-web page to include a fixed `费曼复述` section; "
             f"found requirement-like text near: {match.group(0)!r}",
         )
+
+    validate_interactive_runtime_source(root, errors)
 
     return errors
 
@@ -581,8 +672,10 @@ def validate_interactive_payload(payload: Any, path: Path, errors: list[str]) ->
             fail(errors, f"{path} interactive-flow graph {graph.get('id', graph_index)} missing deterministic layout metadata")
 
 
-def validate_interactive_flow_page(path: Path, root: Path, errors: list[str]) -> None:
+def validate_interactive_flow_page(path: Path, root: Path, errors: list[str], require_interactive: bool = False, allow_placeholders: bool = False) -> None:
     html = read_text(path)
+    if require_interactive and not has_interactive_flow(html):
+        fail(errors, f"{path} must include primary React Flow interactive containers and embedded payload")
     if not has_interactive_flow(html):
         return
     validate_runtime_network_urls(path, errors)
@@ -593,6 +686,15 @@ def validate_interactive_flow_page(path: Path, root: Path, errors: list[str]) ->
     payloads = extract_interactive_flow_payloads(html, path)
     if not payloads:
         fail(errors, f"{path} uses interactive-flow but lacks embedded page-local data-architecture-flow payload")
+    container_ids = extract_flow_graph_container_ids(html)
+    if not allow_placeholders and not container_ids:
+        fail(errors, f"{path} uses interactive-flow but has no data-flow-graph containers for React Flow mounting")
+    graph_ids, duplicate_graph_ids = payload_graph_ids(payloads)
+    for duplicate_graph_id in duplicate_graph_ids:
+        fail(errors, f"{path} interactive-flow payload contains duplicate graph id: {duplicate_graph_id}")
+    missing = sorted(set(container_ids) - graph_ids)
+    if missing:
+        fail(errors, f"{path} data-flow-graph containers missing matching payload graph ids: {', '.join(missing)}")
     if re.search(r"fetch\(\s*[\"']evidence/", html, re.I):
         fail(errors, f"{path} interactive-flow must not require fetch() from evidence/*.json for file:// rendering")
     for payload in payloads:
@@ -600,9 +702,60 @@ def validate_interactive_flow_page(path: Path, root: Path, errors: list[str]) ->
     visible = visible_text(html).lower()
     if not any(term in visible for term in ("fallback", "非视觉", "legend", "图例", "table")):
         fail(errors, f"{path} interactive-flow diagram missing textual fallback or legend")
+    if not allow_placeholders:
+        validate_no_visible_primary_static_diagrams(path, errors)
 
 
-def validate_page_scripts(path: Path, root: Path, errors: list[str]) -> None:
+def validate_visual_qa_report(report: Any, errors: list[str], path: Path | str = "<visual-qa-report>") -> None:
+    """Validate browser QA proves actual drag instead of marker-only enablement.
+
+    Accepted report shape is intentionally flexible: either a top-level
+    ``checks``/``pages`` list or a single top-level object may carry the fields.
+    Each check must include a file:// URL, graph/node identity, and a measured
+    drag delta whose absolute x or y movement is at least 20 CSS pixels.
+    """
+    if not isinstance(report, dict):
+        fail(errors, f"{path} visual QA report must be a JSON object")
+        return
+    checks = report.get("checks") or report.get("pages") or report.get("results")
+    if isinstance(checks, dict):
+        checks = list(checks.values())
+    if not isinstance(checks, list):
+        checks = [report]
+    measured = 0
+    for index, check in enumerate(checks):
+        if not isinstance(check, dict):
+            fail(errors, f"{path} visual QA check {index} must be an object")
+            continue
+        url = str(check.get("url") or check.get("file_url") or "")
+        if not url.startswith("file://"):
+            fail(errors, f"{path} visual QA check {index} missing file:// URL")
+        graph_id = check.get("graph_id") or check.get("graphId")
+        node_id = check.get("node_id") or check.get("nodeId")
+        if not graph_id or not node_id:
+            fail(errors, f"{path} visual QA check {index} missing graph_id/node_id")
+        delta = check.get("drag_delta") or check.get("dragDelta") or check.get("delta")
+        dx = dy = None
+        if isinstance(delta, dict):
+            dx = delta.get("x", delta.get("dx"))
+            dy = delta.get("y", delta.get("dy"))
+        elif isinstance(delta, (list, tuple)) and len(delta) >= 2:
+            dx, dy = delta[0], delta[1]
+        if not isinstance(dx, (int, float)) or not isinstance(dy, (int, float)):
+            fail(errors, f"{path} visual QA check {index} missing measured drag delta")
+            continue
+        if max(abs(dx), abs(dy)) < 20:
+            fail(errors, f"{path} visual QA check {index} drag delta below threshold: x={dx}, y={dy}")
+            continue
+        measured += 1
+    report_text = json.dumps(report, ensure_ascii=False).lower()
+    if measured == 0:
+        fail(errors, f"{path} visual QA report must prove drag with measured position delta")
+    if "nodesdraggable" in report_text and "drag_delta" not in report_text and "dragdelta" not in report_text:
+        fail(errors, f"{path} visual QA report is marker-only; include measured drag delta evidence")
+
+
+def validate_page_scripts(path: Path, root: Path, errors: list[str], require_interactive: bool = False, allow_placeholders: bool = False) -> None:
     html = read_text(path)
     validate_runtime_network_urls(path, errors)
     if NETWORK_SCRIPT_PATTERN.search(html) or CDN_NAME_PATTERN.search(html):
@@ -612,7 +765,7 @@ def validate_page_scripts(path: Path, root: Path, errors: list[str]) -> None:
             continue
         if src.endswith("mermaid.min.js") and not (path.parent / src).resolve().is_file():
             fail(errors, f"{path} references missing local Mermaid asset: {src}")
-    validate_interactive_flow_page(path, root, errors)
+    validate_interactive_flow_page(path, root, errors, require_interactive=require_interactive, allow_placeholders=allow_placeholders)
     if "graph TB" not in html and not has_interactive_flow(html):
         fail(errors, f"{path} missing Mermaid graph TB source/render block or interactive-flow payload")
     if re.search(r"parse error|syntax error in text|diagram validation failed", visible_text(html), re.I):
@@ -857,16 +1010,17 @@ def validate_architecture_web(architecture_web_dir: Path, allow_placeholders: bo
     if not module_pages:
         fail(errors, "architecture-web output must include at least one modules/*.html page")
 
+    meta = load_json(root / "wiki-meta.json", errors)
+    require_interactive = meta_requires_interactive_flow(meta)
     html_pages = ([root / "index.html"] if (root / "index.html").is_file() else []) + module_pages
     for page in html_pages:
-        validate_page_scripts(page, root, errors)
+        validate_page_scripts(page, root, errors, require_interactive=require_interactive, allow_placeholders=allow_placeholders)
         validate_project_explainer_style(page, errors)
         validate_no_hidden_generic_contract(page, errors)
         validate_no_visible_raw_graph_blocks(page, allow_placeholders, errors)
         validate_architecture_semantics(page, errors)
         validate_deep_graphs(page, errors)
 
-    meta = load_json(root / "wiki-meta.json", errors)
     module_map = load_json(root / "evidence" / "module-map.json", errors)
     route_trace = load_json(root / "evidence" / "route-service-trace.json", errors)
     validate_index_navigation(root, module_pages, module_map, errors)

@@ -9,6 +9,8 @@ import {
   Position,
   ReactFlow,
   ReactFlowProvider,
+  useEdgesState,
+  useNodesState,
   type Edge,
   type Node,
   type NodeProps,
@@ -78,7 +80,12 @@ function ArchitectureNode(props: NodeProps<Node<FlowNode>>) {
   const data = props.data;
   const nodeType = data.type || 'runtime';
   return (
-    <div className={`af-node af-node-${nodeType}`} style={{ minWidth: data.width || 220, minHeight: data.height || 92 }}>
+    <div
+      className={`af-node af-node-${nodeType}`}
+      data-flow-node={props.id}
+      data-node-type={nodeType}
+      style={{ minWidth: data.width || 220, minHeight: data.height || 92 }}
+    >
       {Object.entries(POSITION_BY_HANDLE).map(([id, position]) => (
         <Handle key={id} id={id} type="source" position={position} className={`af-handle af-handle-${id}`} />
       ))}
@@ -126,7 +133,7 @@ function EvidencePanel({ selection, graph }: { selection: Selection; graph: Flow
 function ArchitectureFlow({ graph }: { graph: FlowGraph }) {
   const [selection, setSelection] = useState<Selection>(null);
   const nodeTypes = useMemo(() => ({ architecture: ArchitectureNode }), []);
-  const nodes = useMemo<Node<FlowNode>[]>(() => graph.nodes.map((node) => ({
+  const initialNodes = useMemo<Node<FlowNode>[]>(() => graph.nodes.map((node) => ({
     id: node.id,
     type: 'architecture',
     position: node.position || { x: 0, y: 0 },
@@ -134,7 +141,7 @@ function ArchitectureFlow({ graph }: { graph: FlowGraph }) {
     height: node.height || 92,
     data: node,
   })), [graph]);
-  const edges = useMemo<Edge[]>(() => graph.edges.map((edge) => {
+  const initialEdges = useMemo<Edge[]>(() => graph.edges.map((edge) => {
     const style = TYPE_STYLE[edge.type || 'default'] || TYPE_STYLE.default;
     return {
       id: edge.id,
@@ -149,8 +156,11 @@ function ArchitectureFlow({ graph }: { graph: FlowGraph }) {
       labelStyle: { fill: style.color, fontWeight: 700, fontSize: 12 },
       labelBgStyle: { fill: 'rgba(255,255,255,.92)' },
       data: { semanticType: edge.type, badge: style.badge, evidence: edge.evidence },
+      ariaLabel: `architecture edge ${edge.id}: ${edge.label || edge.type || 'edge'}`,
     } satisfies Edge;
   }), [graph]);
+  const [nodes, _setNodes, onNodesChange] = useNodesState(initialNodes);
+  const [edges, _setEdges, onEdgesChange] = useEdgesState(initialEdges);
   const handleNodeClick = useCallback((_event: React.MouseEvent, node: Node<FlowNode>) => {
     setSelection({ kind: 'node', item: node.data });
   }, []);
@@ -166,6 +176,8 @@ function ArchitectureFlow({ graph }: { graph: FlowGraph }) {
             nodes={nodes}
             edges={edges}
             nodeTypes={nodeTypes}
+            onNodesChange={onNodesChange}
+            onEdgesChange={onEdgesChange}
             onNodeClick={handleNodeClick}
             onEdgeClick={handleEdgeClick}
             fitView

@@ -12,7 +12,7 @@ Architecture-web pages must follow the same reader experience as `$project-expla
 - Module/detail pages live under `modules/` and link back to `../index.html`. They must not become separate root landing pages.
 - Styling should use the project-explainer-web visual grammar: soft gradient background, `.shell`, `.hero`, `.panel`, cards, tags, tree blocks, readable tables, and short scannable sections.
 - Mermaid is offline-safe: use local `assets/mermaid.min.js` or hand-authored inline SVG for rendered diagrams. CDN Mermaid is invalid.
-- Dense diagrams may use `interactive-flow`: a local React Flow canvas with zoom/pan/drag, typed nodes/edges, visible direction markers, click-to-evidence, and a nearby text/table fallback. Simple diagrams may remain Mermaid/SVG.
+- Dense diagrams should use `interactive-flow`: a local React Flow canvas with zoom/pan/drag, typed nodes/edges, visible direction markers, click-to-evidence, and a nearby text/table fallback. For full-coverage deliveries, React Flow is the required primary renderer across `index.html` and module pages; simple Mermaid/SVG may remain only as collapsed audit/source or explicit non-primary evidence/provenance.
 - Interactive-flow is offline and no CDN: use local `assets/architecture-flow.js/css` or equivalent, embed the graph payload page-locally, and include bundle provenance with package versions, license notes, build command, generated asset paths, and hashes.
 - Final pages must not show raw `graph TB` / `flowchart` text as the visible diagram. Keep graph source only in collapsed `<details class="source-note">` after the rendered diagram when auditability is needed.
 
@@ -162,12 +162,13 @@ Deep architecture pages must show real source relationships and branches:
 
 ## Interactive-flow React Flow policy
 
-Use `interactive-flow` for dense architecture maps where zoom, pan, drag, and click-to-evidence make the target system easier to inspect than a Mermaid/SVG diagram. Keep Mermaid/SVG for simple branch, tree, or audit diagrams when they are clearer.
+Use `interactive-flow` for dense architecture maps where zoom, pan, drag, and click-to-evidence make the target system easier to inspect than a Mermaid/SVG diagram. In full-coverage architecture-web output, React Flow is the primary diagram surface: the homepage contains multiple primary graphs for overview/runtime/action/branch coverage, and every module page contains at least one primary graph. Keep Mermaid/SVG only for simple non-primary branch/tree material or collapsed audit/source details.
 
 Runtime contract:
 
-- The page contains one or more React Flow containers, for example `<section class="interactive-flow" data-flow-id="runtime-overview">` plus a side panel/drawer for evidence.
+- The page contains one or more React Flow containers, for example `<div class="architecture-flow" data-flow-graph="runtime-overview"></div>` plus a side panel/drawer for evidence. Every `data-flow-graph` value must match a `graphs[].id` entry in the page-local payload.
 - The runtime graph payload is embedded in the HTML through `<script type="application/json" data-architecture-flow>...</script>` or a JS-assigned payload. `evidence/interactive-flow.json` may be written for audit, but `file://` rendering must not require `fetch()` from evidence JSON.
+- Visible primary Mermaid `graph TB` / `flowchart` text and visible static SVG diagram blocks are invalid in full-coverage React Flow output. Retain source only inside collapsed `<details>` audit/source blocks or explicit non-primary evidence/provenance areas.
 - Runtime-bearing URLs are local only. Reject `http://`, `https://`, protocol-relative CDN URLs, `unpkg`, and `jsdelivr` in script/link/img attributes and CSS `url()` used by the delivered renderer.
 - `assets/architecture-flow-provenance.json` records source packages and versions (`react`, `react-dom`, `@xyflow/react`, and layout package such as `@dagrejs/dagre`), build command, source/template path, license notes, generated asset paths, and hashes for `architecture-flow.js/css`.
 - Visual QA must open exact `file://` URLs, capture screenshots, confirm no obvious overlap in default viewport, confirm edge direction/semantics, and record at least one node click and one edge click that opens evidence.

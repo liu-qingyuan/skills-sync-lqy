@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import re
 import shutil
 import subprocess
 import tempfile
@@ -158,7 +159,7 @@ INTERACTIVE_STYLE = STYLE + """
 
 def architecture_flow_block(payload: dict | None = None) -> str:
     payload_text = json.dumps(payload or INTERACTIVE_FLOW_PAYLOAD, ensure_ascii=False, indent=2)
-    return f"""<div class="architecture-flow" data-architecture-flow-root="runtime-overview" aria-label="interactive runtime architecture"></div>
+    return f"""<div class="architecture-flow" data-flow-graph="runtime-overview" aria-label="interactive runtime architecture"></div>
 <script type="application/json" data-architecture-flow>{payload_text}</script>
 <div class="evidence-panel" data-architecture-flow-evidence><strong>点击节点或边查看源码证据</strong><p>Source: src/renderer/App.tsx, src/preload/index.ts, src/main/index.ts. GitNexus graph evidence backs each node and edge.</p></div>
 <div class="edge-legend"><span class="edge-call">call/control</span><span class="edge-ipc">ipc boundary</span><span class="edge-data">data/storage</span><span class="edge-error">error/fallback</span><span class="edge-external">external provider</span><span>test/verification</span></div>
@@ -438,6 +439,112 @@ class ValidateSkillTests(unittest.TestCase):
             for edge in graph["edges"]:
                 self.assertIn("sourceHandle", edge)
                 self.assertIn("targetHandle", edge)
+
+    def test_no_flag_scaffold_default_has_required_interactive_coverage(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp) / "sample-architecture-wiki"
+            subprocess.check_call([
+                "python3",
+                str(ROOT / "scripts" / "scaffold-architecture-web.py"),
+                "--repo",
+                str(ROOT),
+                "--out",
+                str(out),
+                "--slug",
+                "sample",
+                "--module",
+                "renderer",
+                "--module",
+                "preload",
+                "--module",
+                "main",
+                "--force",
+            ])
+            meta = json.loads((out / "wiki-meta.json").read_text(encoding="utf-8"))
+            self.assertEqual(meta["diagram_mode"], "interactive-flow")
+            self.assertFalse((out / "assets" / "mermaid.min.js").exists())
+            pages = [out / "index.html", *sorted((out / "modules").glob("*.html"))]
+            for page in pages:
+                html = page.read_text(encoding="utf-8")
+                containers = re.findall(r'data-flow-graph="([^"]+)"', html)
+                payloads = validator.extract_interactive_flow_payloads(html, page)
+                graph_ids = {graph["id"] for payload in payloads for graph in payload.get("graphs", [])}
+                if page.name == "index.html":
+                    self.assertGreaterEqual(len(containers), 4)
+                    self.assertTrue({"runtime-overview", "source-structure", "technology-framework", "branch-fallback-test"} <= set(containers))
+                else:
+                    self.assertGreaterEqual(len(containers), 1)
+                self.assertTrue(set(containers) <= graph_ids)
+            self.assertEqual(validator.validate_architecture_web(out, allow_placeholders=True), [])
+
+    def test_payload_container_graph_id_consistency(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp) / "mismatched-container-architecture-wiki"
+            write_valid_interactive_architecture_web(out)
+            index = out / "index.html"
+            index.write_text(
+                index.read_text(encoding="utf-8").replace('data-flow-graph="runtime-overview"', 'data-flow-graph="missing-runtime"'),
+                encoding="utf-8",
+            )
+            errors = validator.validate_architecture_web(out)
+            self.assertTrue(any("missing matching payload graph ids" in err for err in errors))
+
+    def test_validator_rejects_zero_interactive_output_when_meta_requests_interactive(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp) / "static-only-architecture-wiki"
+            write_valid_architecture_web(out)
+            meta_path = out / "wiki-meta.json"
+            meta = json.loads(meta_path.read_text(encoding="utf-8"))
+            meta["diagram_mode"] = "interactive-flow"
+            meta["interactive_flow"] = {"mode": "interactive-flow", "file_url_safe": True}
+            meta_path.write_text(json.dumps(meta, indent=2), encoding="utf-8")
+            errors = validator.validate_architecture_web(out)
+            self.assertTrue(any("primary React Flow" in err or "data-flow-graph" in err for err in errors))
+
+    def test_validator_rejects_visible_primary_mermaid_or_svg_page_wide(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp) / "visible-static-primary-architecture-wiki"
+            write_valid_interactive_architecture_web(out)
+            index = out / "index.html"
+            index.write_text(
+                index.read_text(encoding="utf-8").replace(
+                    "</main>",
+                    '<section class="panel"><h2>静态主图</h2><div class="diagram"><svg role="img"><path d="M0 0L10 10"/></svg></div><pre class="diagram-source">graph TB\\n  A --> B</pre></section></main>',
+                ),
+                encoding="utf-8",
+            )
+            errors = validator.validate_architecture_web(out)
+            self.assertTrue(any("visible primary" in err for err in errors))
+
+    def test_validator_allows_collapsed_audit_graph_source_for_interactive_pages(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp) / "collapsed-audit-interactive-architecture-wiki"
+            write_valid_interactive_architecture_web(out)
+            index = out / "index.html"
+            index.write_text(
+                index.read_text(encoding="utf-8").replace(
+                    "</main>",
+                    '<details class="source-audit"><summary>图源审计</summary><div class="diagram"><svg role="img"><path d="M0 0L10 10"/></svg></div><pre class="diagram-source">graph TB\\n  A --> B</pre></details></main>',
+                ),
+                encoding="utf-8",
+            )
+            self.assertEqual(validator.validate_architecture_web(out), [])
+
+    def test_visual_qa_report_requires_measured_drag_delta(self) -> None:
+        bad_errors: list[str] = []
+        validator.validate_visual_qa_report(
+            {"checks": [{"url": "file:///tmp/index.html", "graph_id": "runtime-overview", "node_id": "renderer", "nodesDraggable": True}]},
+            bad_errors,
+            Path("visual-qa-react-flow-drag.json"),
+        )
+        self.assertTrue(any("measured drag delta" in err or "marker-only" in err for err in bad_errors))
+        good_errors: list[str] = []
+        validator.validate_visual_qa_report(
+            {"checks": [{"url": "file:///tmp/index.html", "graph_id": "runtime-overview", "node_id": "renderer", "drag_delta": {"x": 96, "y": 32}}]},
+            good_errors,
+            Path("visual-qa-react-flow-drag.json"),
+        )
+        self.assertEqual(good_errors, [])
 
     def test_file_url_payload_does_not_require_fetch(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

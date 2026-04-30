@@ -30266,6 +30266,16 @@ var ArchitectureFlowBundle = (() => {
     return (0, import_jsx_runtime.jsx)("div", { "data-testid": "rf__wrapper", ...rest, onScroll: wrapperOnScroll, style: { ...style2, ...wrapperStyle }, ref, className: cc(["react-flow", className, colorModeClassName]), id: id2, role: "application", children: (0, import_jsx_runtime.jsxs)(Wrapper, { nodes, edges, width, height, fitView, fitViewOptions, minZoom, maxZoom, nodeOrigin, nodeExtent, zIndexMode, children: [(0, import_jsx_runtime.jsx)(StoreUpdater, { nodes, edges, defaultNodes, defaultEdges, onConnect, onConnectStart, onConnectEnd, onClickConnectStart, onClickConnectEnd, nodesDraggable, autoPanOnNodeFocus, nodesConnectable, nodesFocusable, edgesFocusable, edgesReconnectable, elementsSelectable, elevateNodesOnSelect, elevateEdgesOnSelect, minZoom, maxZoom, nodeExtent, onNodesChange, onEdgesChange, snapToGrid, snapGrid, connectionMode, translateExtent, connectOnClick, defaultEdgeOptions, fitView, fitViewOptions, onNodesDelete, onEdgesDelete, onDelete, onNodeDragStart, onNodeDrag, onNodeDragStop, onSelectionDrag, onSelectionDragStart, onSelectionDragStop, onMove, onMoveStart, onMoveEnd, noPanClassName, nodeOrigin, rfId, autoPanOnConnect, autoPanOnNodeDrag, autoPanSpeed, onError, connectionRadius, isValidConnection, selectNodesOnDrag, nodeDragThreshold, connectionDragThreshold, onBeforeDelete, debug, ariaLabelConfig, zIndexMode }), (0, import_jsx_runtime.jsx)(GraphView, { onInit, onNodeClick, onEdgeClick, onNodeMouseEnter, onNodeMouseMove, onNodeMouseLeave, onNodeContextMenu, onNodeDoubleClick, nodeTypes, edgeTypes, connectionLineType, connectionLineStyle, connectionLineComponent, connectionLineContainerStyle, selectionKeyCode, selectionOnDrag, selectionMode, deleteKeyCode, multiSelectionKeyCode, panActivationKeyCode, zoomActivationKeyCode, onlyRenderVisibleElements, defaultViewport: defaultViewport$1, translateExtent, minZoom, maxZoom, preventScrolling, zoomOnScroll, zoomOnPinch, zoomOnDoubleClick, panOnScroll, panOnScrollSpeed, panOnScrollMode, panOnDrag, onPaneClick, onPaneMouseEnter, onPaneMouseMove, onPaneMouseLeave, onPaneScroll, onPaneContextMenu, paneClickDistance, nodeClickDistance, onSelectionContextMenu, onSelectionStart, onSelectionEnd, onReconnect, onReconnectStart, onReconnectEnd, onEdgeContextMenu, onEdgeDoubleClick, onEdgeMouseEnter, onEdgeMouseMove, onEdgeMouseLeave, reconnectRadius, defaultMarkerColor, noDragClassName, noWheelClassName, noPanClassName, rfId, disableKeyboardA11y, nodeExtent, viewport, onViewportChange }), (0, import_jsx_runtime.jsx)(SelectionListener, { onSelectionChange }), children2, (0, import_jsx_runtime.jsx)(Attribution, { proOptions, position: attributionPosition }), (0, import_jsx_runtime.jsx)(A11yDescriptions, { rfId, disableKeyboardA11y })] }) });
   }
   var index = fixedForwardRef(ReactFlow);
+  function useNodesState(initialNodes) {
+    const [nodes, setNodes] = (0, import_react2.useState)(initialNodes);
+    const onNodesChange = (0, import_react2.useCallback)((changes) => setNodes((nds) => applyNodeChanges(changes, nds)), []);
+    return [nodes, setNodes, onNodesChange];
+  }
+  function useEdgesState(initialEdges) {
+    const [edges, setEdges] = (0, import_react2.useState)(initialEdges);
+    const onEdgesChange = (0, import_react2.useCallback)((changes) => setEdges((eds) => applyEdgeChanges(changes, eds)), []);
+    return [edges, setEdges, onEdgesChange];
+  }
   var error014 = errorMessages["error014"]();
   function LinePattern({ dimensions, lineWidth, variant, className }) {
     return (0, import_jsx_runtime.jsx)("path", { strokeWidth: lineWidth, d: `M${dimensions[0] / 2} 0 V${dimensions[1]} M0 ${dimensions[1] / 2} H${dimensions[0]}`, className: cc(["react-flow__background-pattern", variant, className]) });
@@ -30728,16 +30738,25 @@ var ArchitectureFlowBundle = (() => {
   function ArchitectureNode(props) {
     const data = props.data;
     const nodeType = data.type || "runtime";
-    return /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: `af-node af-node-${nodeType}`, style: { minWidth: data.width || 220, minHeight: data.height || 92 }, children: [
-      Object.entries(POSITION_BY_HANDLE).map(([id2, position]) => /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(Handle, { id: id2, type: "source", position, className: `af-handle af-handle-${id2}` }, id2)),
-      Object.entries(POSITION_BY_HANDLE).map(([id2, position]) => /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(Handle, { id: id2, type: "target", position, className: `af-handle af-handle-${id2}` }, `target-${id2}`)),
-      /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("div", { className: "af-node-type", children: nodeType }),
-      /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("div", { className: "af-node-label", children: data.label }),
-      /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: "af-node-evidence", children: [
-        (data.evidence || []).length,
-        " evidence refs"
-      ] })
-    ] });
+    return /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)(
+      "div",
+      {
+        className: `af-node af-node-${nodeType}`,
+        "data-flow-node": props.id,
+        "data-node-type": nodeType,
+        style: { minWidth: data.width || 220, minHeight: data.height || 92 },
+        children: [
+          Object.entries(POSITION_BY_HANDLE).map(([id2, position]) => /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(Handle, { id: id2, type: "source", position, className: `af-handle af-handle-${id2}` }, id2)),
+          Object.entries(POSITION_BY_HANDLE).map(([id2, position]) => /* @__PURE__ */ (0, import_jsx_runtime2.jsx)(Handle, { id: id2, type: "target", position, className: `af-handle af-handle-${id2}` }, `target-${id2}`)),
+          /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("div", { className: "af-node-type", children: nodeType }),
+          /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("div", { className: "af-node-label", children: data.label }),
+          /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("div", { className: "af-node-evidence", children: [
+            (data.evidence || []).length,
+            " evidence refs"
+          ] })
+        ]
+      }
+    );
   }
   function EvidencePanel({ selection: selection2, graph }) {
     const item = selection2?.item;
@@ -30783,7 +30802,7 @@ var ArchitectureFlowBundle = (() => {
   function ArchitectureFlow({ graph }) {
     const [selection2, setSelection] = (0, import_react3.useState)(null);
     const nodeTypes = (0, import_react3.useMemo)(() => ({ architecture: ArchitectureNode }), []);
-    const nodes = (0, import_react3.useMemo)(() => graph.nodes.map((node) => ({
+    const initialNodes = (0, import_react3.useMemo)(() => graph.nodes.map((node) => ({
       id: node.id,
       type: "architecture",
       position: node.position || { x: 0, y: 0 },
@@ -30791,7 +30810,7 @@ var ArchitectureFlowBundle = (() => {
       height: node.height || 92,
       data: node
     })), [graph]);
-    const edges = (0, import_react3.useMemo)(() => graph.edges.map((edge) => {
+    const initialEdges = (0, import_react3.useMemo)(() => graph.edges.map((edge) => {
       const style2 = TYPE_STYLE[edge.type || "default"] || TYPE_STYLE.default;
       return {
         id: edge.id,
@@ -30805,9 +30824,12 @@ var ArchitectureFlowBundle = (() => {
         style: { stroke: style2.color, strokeWidth: 2.4, strokeDasharray: style2.stroke },
         labelStyle: { fill: style2.color, fontWeight: 700, fontSize: 12 },
         labelBgStyle: { fill: "rgba(255,255,255,.92)" },
-        data: { semanticType: edge.type, badge: style2.badge, evidence: edge.evidence }
+        data: { semanticType: edge.type, badge: style2.badge, evidence: edge.evidence },
+        ariaLabel: `architecture edge ${edge.id}: ${edge.label || edge.type || "edge"}`
       };
     }), [graph]);
+    const [nodes, _setNodes, onNodesChange] = useNodesState(initialNodes);
+    const [edges, _setEdges, onEdgesChange] = useEdgesState(initialEdges);
     const handleNodeClick2 = (0, import_react3.useCallback)((_event, node) => {
       setSelection({ kind: "node", item: node.data });
     }, []);
@@ -30822,6 +30844,8 @@ var ArchitectureFlowBundle = (() => {
           nodes,
           edges,
           nodeTypes,
+          onNodesChange,
+          onEdgesChange,
           onNodeClick: handleNodeClick2,
           onEdgeClick: handleEdgeClick,
           fitView: true,
