@@ -70,6 +70,23 @@ For each generated architecture-web output set, verify:
 - [ ] Main diagrams and module cards include target-system entities, source entrypoints, runtime/service boundaries, and verification paths.
 - [ ] The central architecture is not `_learn_web`, `architecture-web flow`, `index.html`, `modules/*.html`, `evidence/*.json`, `wiki-meta.json`, Mermaid rendering, or `Codex 生成网页流程`. Those may appear only as metadata/evidence/navigation details.
 
+
+## Function-depth review
+
+When `wiki-meta.json.functionDepth.enabled` is true, verify:
+
+- [ ] `wiki-meta.json` includes `functionDepth.coverageScope`, `functionDepth.mapPath: "evidence/function-architecture-map.json"`, and `functionDepth.validatorMode: "function-depth"`.
+- [ ] `evidence/function-architecture-map.json` exists and records `schemaVersion`, `repo`, current git head, GitNexus indexed commit, `indexFreshness`, modules, symbols, exclusions, and traces.
+- [ ] Coverage language is scoped to `in-scope architecture functions` unless all repo function-like symbols are actually mapped.
+- [ ] Every module page has a concrete function trace React Flow graph and a searchable/filterable function inventory table.
+- [ ] Inventory rows include symbol, kind, file + line, responsibility, callers/callees when known, trace IDs, relevant tests, evidence source, and index freshness.
+- [ ] Every trace graph node references a valid inventory `symbolId` or documented boundary node.
+- [ ] Trace edge labels use `calls`, `invokes IPC`, `returns`, `updates state`, `fallback`, `error`, or `test covers`; unknown or unlabeled edges fail review.
+- [ ] Graphs avoid generic-only nodes and stay under the readability cap (normally 12-30 nodes, hard cap 40 unless split).
+- [ ] Exclusions have valid reasons: `generated`, `vendor`, `type-only`, `duplicate-overload`, `not-architecture-scope`, or `unresolved-anonymous-callback`.
+- [ ] Visual/function QA records React Flow overlap/readability, node/edge click traces, inventory row counts, load/search timings, and pagination/virtualization status.
+- [ ] Stale or unknown GitNexus index freshness is visibly disclosed and direct-source fallback evidence is labeled.
+
 ## Dry-run command transcript template
 
 ```bash
@@ -94,6 +111,7 @@ A first release is complete when:
 3. A local dry-run or checklist confirms index handling.
 4. Forbidden-claim review is clean or any matches are explicitly negated guardrails.
 5. Architecture-web scaffold validation and strict final validation are treated as separate bars.
+6. Function-depth output, when enabled, has canonical map evidence, valid trace/inventory references, scoped coverage claims, and recorded visual/performance QA.
 
 
 ## Project-explainer-web architecture-web checks

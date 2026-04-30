@@ -30773,6 +30773,16 @@ var ArchitectureFlowBundle = (() => {
           " ",
           /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("code", { children: item.id })
         ] }),
+        "symbolId" in item && item.symbolId ? /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("p", { children: [
+          /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("strong", { children: "Symbol ID:" }),
+          " ",
+          /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("code", { children: item.symbolId })
+        ] }) : null,
+        "file" in item && item.file ? /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("p", { children: [
+          /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("strong", { children: "Source:" }),
+          " ",
+          /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("code", { children: `${item.file}${"line" in item && item.line ? `:${item.line}` : ""}` })
+        ] }) : null,
         "type" in item && item.type ? /* @__PURE__ */ (0, import_jsx_runtime2.jsxs)("p", { children: [
           /* @__PURE__ */ (0, import_jsx_runtime2.jsx)("strong", { children: "Type:" }),
           " ",
@@ -30876,7 +30886,60 @@ var ArchitectureFlowBundle = (() => {
       return null;
     }
   }
+
+  function mountFunctionInventories() {
+    const tables = Array.from(document.querySelectorAll("table[data-function-inventory]"));
+    tables.forEach((table) => {
+      const scope = table.closest("[data-function-inventory-scope]") || table.parentElement || document.body;
+      const input = scope.querySelector("[data-function-inventory-search]");
+      const status = scope.querySelector("[data-function-inventory-count]");
+      const rows = Array.from((table.tBodies[0] == null ? void 0 : table.tBodies[0].rows) || []);
+      const pageSize = Math.max(1, Number(table.dataset.pageSize || "50") || 50);
+      let page = 0;
+      let controls = scope.querySelector("[data-function-inventory-controls]");
+      if (!controls) {
+        controls = document.createElement("div");
+        controls.className = "function-inventory-controls";
+        controls.dataset.functionInventoryControls = "true";
+        controls.innerHTML = '<button type="button" data-function-page="prev">上一页</button><span data-function-page-status></span><button type="button" data-function-page="next">下一页</button>';
+        table.insertAdjacentElement("afterend", controls);
+      }
+      const prev = controls.querySelector('[data-function-page="prev"]');
+      const next = controls.querySelector('[data-function-page="next"]');
+      const pageStatus = controls.querySelector("[data-function-page-status]");
+      const apply = () => {
+        const query = ((input == null ? void 0 : input.value) || "").trim().toLowerCase();
+        const matched = rows.filter((row) => !query || row.textContent?.toLowerCase().includes(query));
+        const totalPages = Math.max(1, Math.ceil(matched.length / pageSize));
+        page = Math.min(page, totalPages - 1);
+        const start = page * pageSize;
+        const visible = new Set(matched.slice(start, start + pageSize));
+        rows.forEach((row) => {
+          row.hidden = !visible.has(row);
+        });
+        if (status) status.textContent = `显示 ${matched.length} / ${rows.length} 个函数；每页 ${pageSize} 行`;
+        if (pageStatus) pageStatus.textContent = `${page + 1} / ${totalPages}`;
+        if (prev) prev.disabled = page <= 0;
+        if (next) next.disabled = page >= totalPages - 1;
+        table.dataset.filteredRows = String(matched.length);
+      };
+      input?.addEventListener("input", () => {
+        page = 0;
+        apply();
+      });
+      prev?.addEventListener("click", () => {
+        page = Math.max(0, page - 1);
+        apply();
+      });
+      next?.addEventListener("click", () => {
+        page += 1;
+        apply();
+      });
+      apply();
+    });
+  }
   function mountAll() {
+    mountFunctionInventories();
     const payload = parsePayload();
     const containers = Array.from(document.querySelectorAll("[data-flow-graph]"));
     if (!payload) {

@@ -21,13 +21,13 @@
   "generated_assets": [
     {
       "path": "dist/architecture-flow.js",
-      "sha256": "51e5ec132f96515a91a6103819b34643c793085d13d7efc48b4500cddf7d4c5a",
-      "bytes": 1518338
+      "sha256": "ffdc3fec66c1d1cf133f66d331caa52c5321fe9f5e02286bea84d5afd6f25a59",
+      "bytes": 1521723
     },
     {
       "path": "dist/architecture-flow.css",
-      "sha256": "b01e4ef71b500220c77599845f45f0aedbfcbdef12a17341a0bd888e3d3f2377",
-      "bytes": 21272
+      "sha256": "bbe5822875ed6026a9c033c00a78d37ad6ac66f9155a07eb026d9cb20b477935",
+      "bytes": 22141
     }
   ]
 }

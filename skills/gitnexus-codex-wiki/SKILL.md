@@ -57,6 +57,124 @@ Interactive-flow output requirements:
 - Include `assets/architecture-flow-provenance.json` or equivalent metadata recording package names and versions (`react`, `react-dom`, `@xyflow/react`, layout package such as `@dagrejs/dagre`), build command, source/template path, license notes, generated asset paths, and hashes for `architecture-flow.js/css`.
 - Visual QA is required before delivery: open the generated pages from exact `file://` URLs, capture screenshots, confirm no obvious label overlap, confirm edge semantics/direction are clear, and record node and edge click traces that open evidence.
 
+
+## Function-depth architecture contract for `architecture-web`
+
+Use this contract when the request asks for architect-grade drill-downs, function-level architecture, or a generated site whose `wiki-meta.json` enables `functionDepth`. The goal is layered fidelity: overview graphs stay readable, module pages explain concrete behavior paths, and exhaustive detail lives in searchable inventories rather than one mega-graph.
+
+Function-depth modes are additive:
+
+- **`overview`** — high-level target-system topology only.
+- **`module`** — module-level architecture with files, components, services, IPC/API boundaries, and tests.
+- **`function-trace`** — branch-aware call-chain graphs for critical user/runtime flows.
+- **`function-inventory`** — exhaustive searchable tables for in-scope architecture functions; do not draw every function as React Flow nodes.
+
+Default architecture-web generation should use `overview + module + function-trace + function-inventory` whenever GitNexus or direct-source evidence can support it. If the index is stale, missing, or partial, the generated pages and evidence must warn visibly and label affected rows as `direct-source-fallback`, `stale`, or `unknown` rather than claiming fresh complete coverage.
+
+Function-depth extraction requirements:
+
+1. Refresh the GitNexus index or explicitly record index freshness before making exact function coverage claims.
+2. Collect GitNexus symbols/edges plus direct source confirmation for source roots in scope.
+3. Normalize anonymous callbacks/listeners into contextual labels, for example `preload.chat.onMessage listener`, not repeated `listener`.
+4. Classify function-like symbols as component, hook, service, helper, IPC facade, IPC handler, runtime, test helper, or callback.
+5. Link functions to user/runtime traces and tests where evidence exists.
+6. Put exhaustive coverage in inventory tables; put only architecturally meaningful subsets into React Flow trace graphs.
+7. Record exclusions with reasons such as `generated`, `vendor`, `type-only`, `duplicate-overload`, `not-architecture-scope`, or `unresolved-anonymous-callback`.
+
+Function trace graph rules:
+
+- React Flow is required for primary dense function traces.
+- Trace nodes must reference real inventory `symbolId` values or clearly marked boundary nodes; generic-only graphs such as `Renderer -> Service -> Runtime` are invalid for function-depth mode.
+- Edge labels must use meaningful semantics such as `calls`, `invokes IPC`, `returns`, `updates state`, `fallback`, `error`, or `test covers`.
+- Graphs must show branch/fallback/error paths where source evidence exists.
+- Node click details must expose file path, symbol, role, and evidence note.
+- Keep each trace readable: normally 12-30 nodes, hard cap 40 unless split into nested traces.
+
+Function-depth metadata contract in `wiki-meta.json`:
+
+```json
+{
+  "functionDepth": {
+    "enabled": true,
+    "coverageScope": "in-scope-architecture-functions",
+    "mapPath": "evidence/function-architecture-map.json",
+    "validatorMode": "function-depth"
+  }
+}
+```
+
+When `functionDepth.enabled` is true, the canonical map path is `evidence/function-architecture-map.json`. The map must identify the repo commit, GitNexus indexed commit/freshness, module source roots, inventory symbols, exclusions, traces, and trace edges. Complete coverage claims apply only to **in-scope architecture functions** unless all repo function-like symbols are explicitly mapped.
+
+Generated `function-architecture-map.json` shape:
+
+```json
+{
+  "schemaVersion": 1,
+  "repo": "<target-repo>",
+  "git": {
+    "head": "<current commit>",
+    "gitnexusIndexedCommit": "<indexed commit>",
+    "indexFreshness": "fresh|stale|unknown"
+  },
+  "modules": [
+    {
+      "moduleId": "renderer-routing",
+      "label": "Renderer routing",
+      "sourceRoots": ["src/renderer/src/App.tsx"],
+      "symbols": [
+        {
+          "symbolId": "renderer-routing:src/renderer/src/App.tsx:151:AppLayout",
+          "name": "AppLayout",
+          "kind": "component|hook|service|helper|ipc-facade|ipc-handler|runtime|test-helper|callback",
+          "file": "src/renderer/src/App.tsx",
+          "line": 151,
+          "responsibility": "...",
+          "callers": ["..."],
+          "callees": ["..."],
+          "traceIds": ["route-to-service"],
+          "testRefs": ["tests/low-level/..."],
+          "evidenceSource": "gitnexus|direct-source|both",
+          "indexFreshness": "fresh|stale|direct-source-fallback"
+        }
+      ],
+      "exclusions": [
+        {"file": "...", "name": "...", "reason": "generated|vendor|type-only|duplicate-overload|not-architecture-scope|unresolved-anonymous-callback"}
+      ]
+    }
+  ],
+  "traces": [
+    {
+      "traceId": "route-to-service",
+      "moduleId": "renderer-routing",
+      "entrySymbolId": "...",
+      "nodeSymbolIds": ["..."],
+      "edges": [
+        {"from": "...", "to": "...", "kind": "calls|invokes-ipc|returns|updates-state|fallback|error|test-covers"}
+      ]
+    }
+  ]
+}
+```
+
+Function-depth validation must fail when:
+
+- a module page lacks a function inventory or a concrete function trace graph;
+- an inventory row lacks file, line or source path, symbol, role/responsibility, and evidence source;
+- every in-scope architecture function is not represented exactly once in an inventory or in exclusions with a valid reason;
+- trace graph nodes do not reference valid inventory `symbolId` values or documented boundary nodes;
+- trace edges reference unknown nodes or lack semantic labels;
+- a graph exceeds the readability cap without split/nesting evidence;
+- pages claim exhaustive all-repo coverage without mapping all repo function-like symbols;
+- no visual/function QA artifact records React Flow clickability, overlap/readability, inventory row counts, load/search timings, and pagination/virtualization status.
+
+Static inventory performance budgets for browser QA:
+
+- module inventory controls interactive within 2.5s on the local QA machine;
+- search/filter updates within 300ms for modules up to 1,000 rows;
+- modules over 1,000 rows use pagination, virtualization, or chunked rendering and keep search/filter updates within 500ms;
+- default visible rows per table page stay between 25 and 100;
+- QA evidence records measured row counts, timings, and whether pagination/virtualization is enabled.
+
 ## Prerequisites
 
 1. Local repository access.
@@ -107,7 +225,7 @@ _learn_web/<slug>-architecture-wiki/
 └─ wiki-meta.json
 ```
 
-`wiki-meta.json` must include `generated_at`, `repo`, `git_commit`, `gitnexus_version`, `execution_boundary`, `mode`, `modules`, and `evidence_files`. The metadata must preserve the provider boundary: GitNexus supplies graph/index evidence and Codex authors architecture-web pages directly.
+`wiki-meta.json` must include `generated_at`, `repo`, `git_commit`, `gitnexus_version`, `execution_boundary`, `mode`, `modules`, and `evidence_files`. The metadata must preserve the provider boundary: GitNexus supplies graph/index evidence and Codex authors architecture-web pages directly. When function-depth output is requested, it must also include `functionDepth.enabled: true`, `functionDepth.coverageScope`, `functionDepth.mapPath: "evidence/function-architecture-map.json"`, and `functionDepth.validatorMode: "function-depth"`.
 
 ## Workflow
 
@@ -313,6 +431,7 @@ Manual validation checklist:
 - architecture-web pages default to Chinese (`lang=zh-CN`) and use project-explainer-web-style `.shell`, `.hero`, `.panel` layout;
 - interactive-flow pages embed page-local graph payloads, include local React Flow bundle assets, include provenance with package versions/license notes/hashes, and obey the no CDN runtime asset policy;
 - interactive-flow nodes and edges are target-system-centric, typed, labeled, evidence-backed, and paired with fallback text/tables plus visual QA click traces;
+- function-depth pages include `wiki-meta.json.functionDepth`, canonical `evidence/function-architecture-map.json`, concrete function trace graphs, searchable inventories, valid symbol/edge references, and recorded inventory performance/visual QA evidence;
 - no repeated fixed `费曼复述` sections appear in final pages;
 - deep architecture graphs contain meaningful branches, not only straight-line happy paths;
 - no 隐藏通用契约文本 is used to satisfy strict validation;

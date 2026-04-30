@@ -121,6 +121,38 @@ PRIMARY_STATIC_DIAGRAM_PATTERN = re.compile(
     re.I,
 )
 ALLOWED_EDGE_TYPES = {"call", "ipc", "data", "error", "external", "test", "control"}
+FUNCTION_MAP_PATH = "evidence/function-architecture-map.json"
+FUNCTION_VISUAL_QA_PATH = "evidence/visual-qa-function-drilldown.json"
+FUNCTION_SYMBOL_KINDS = {
+    "component",
+    "hook",
+    "service",
+    "helper",
+    "ipc-facade",
+    "ipc-handler",
+    "runtime",
+    "test-helper",
+    "callback",
+}
+FUNCTION_EVIDENCE_SOURCES = {"gitnexus", "direct-source", "both"}
+FUNCTION_INDEX_FRESHNESS = {"fresh", "stale", "unknown", "direct-source-fallback"}
+FUNCTION_EXCLUSION_REASONS = {
+    "generated",
+    "vendor",
+    "type-only",
+    "duplicate-overload",
+    "not-architecture-scope",
+    "unresolved-anonymous-callback",
+}
+FUNCTION_EDGE_KINDS = {
+    "calls",
+    "invokes-ipc",
+    "returns",
+    "updates-state",
+    "fallback",
+    "error",
+    "test-covers",
+}
 TAG_PATTERN = re.compile(r"<[^>]+>")
 SCRIPT_STYLE_BLOCK_PATTERN = re.compile(r"<(script|style)\b[^>]*>.*?</\1>", re.I | re.S)
 HIDDEN_BLOCK_PATTERN = re.compile(
@@ -755,6 +787,277 @@ def validate_visual_qa_report(report: Any, errors: list[str], path: Path | str =
         fail(errors, f"{path} visual QA report is marker-only; include measured drag delta evidence")
 
 
+def function_depth_config(meta: Any) -> dict[str, Any] | None:
+    if not isinstance(meta, dict):
+        return None
+    config = meta.get("functionDepth")
+    if isinstance(config, dict) and config.get("enabled") is True:
+        return config
+    return None
+
+
+def validate_function_visual_qa_report(report: Any, errors: list[str], path: Path | str = "<function-visual-qa>") -> None:
+    if not isinstance(report, dict):
+        fail(errors, f"{path} function visual QA report must be a JSON object")
+        return
+    validate_visual_qa_report(report, errors, path)
+
+    inventory = report.get("inventory") or report.get("inventories") or report.get("inventoryPerformance")
+    inventory_entries: list[tuple[str, Any]] = []
+    if isinstance(inventory, dict):
+        inventory_entries = [(str(key), value) for key, value in inventory.items()]
+    elif isinstance(inventory, list):
+        inventory_entries = [(str(index), value) for index, value in enumerate(inventory)]
+    if not inventory_entries:
+        fail(errors, f"{path} function visual QA must record inventory row counts and load/search timings")
+        return
+
+    for key, item in inventory_entries:
+        if not isinstance(item, dict):
+            fail(errors, f"{path} inventory performance entry {key} must be an object")
+            continue
+        row_count = item.get("rowCount", item.get("row_count"))
+        load_ms = item.get("initialInteractiveLoadMs", item.get("loadMs", item.get("load_ms")))
+        search_ms = item.get("searchFilterUpdateMs", item.get("searchMs", item.get("search_ms")))
+        if not isinstance(row_count, int) or row_count < 0:
+            fail(errors, f"{path} inventory performance entry {key} missing rowCount")
+        if not isinstance(load_ms, (int, float)) or load_ms > 2500:
+            fail(errors, f"{path} inventory performance entry {key} load timing missing or above 2500ms")
+        budget = 500 if isinstance(row_count, int) and row_count > 1000 else 300
+        if not isinstance(search_ms, (int, float)) or search_ms > budget:
+            fail(errors, f"{path} inventory performance entry {key} search timing missing or above {budget}ms")
+        has_large_inventory = isinstance(row_count, int) and row_count > 1000
+        has_paging = any(item.get(field) for field in ("pagination", "virtualization", "chunkedRendering", "paginationOrVirtualization"))
+        if has_large_inventory and not has_paging:
+            fail(errors, f"{path} inventory performance entry {key} over 1000 rows must record pagination/virtualization/chunked rendering")
+        visible_rows = item.get("defaultVisibleRows", item.get("default_visible_rows"))
+        if isinstance(visible_rows, int) and not 25 <= visible_rows <= 100:
+            fail(errors, f"{path} inventory performance entry {key} default visible rows must stay between 25 and 100")
+
+
+def documented_boundary_ids(trace: dict[str, Any]) -> set[str]:
+    boundary_ids: set[str] = set()
+    boundary_nodes = trace.get("boundaryNodes")
+    if isinstance(boundary_nodes, list):
+        for node in boundary_nodes:
+            if isinstance(node, dict) and node.get("id") and node.get("label"):
+                boundary_ids.add(str(node["id"]))
+    return boundary_ids
+
+
+def is_documented_boundary_ref(value: Any, boundary_ids: set[str]) -> bool:
+    if not isinstance(value, str) or not value.strip():
+        return False
+    return value in boundary_ids or value.startswith(("boundary:", "external:", "test:"))
+
+
+def validate_function_trace_graphs(page: Path, module_id: str, trace_ids: set[str], inventory_symbol_ids: set[str], errors: list[str]) -> None:
+    html = read_text(page)
+    visible = visible_text(html).lower()
+    if "函数清单" not in visible and "function inventory" not in visible:
+        fail(errors, f"{page} function-depth page missing visible function inventory section")
+    if "函数调用链" not in visible and "function trace" not in visible and "function" not in visible:
+        fail(errors, f"{page} function-depth page missing visible function trace section")
+    if "data-function-inventory" not in html:
+        fail(errors, f"{page} function-depth page missing data-function-inventory table")
+    if "data-function-inventory-search" not in html and "data-function-search" not in html:
+        fail(errors, f"{page} function-depth page missing file:// function inventory search/filter control")
+    if re.search(r"(all[- ]repo|all repository|全部仓库|全仓库).{0,40}(exhaustive|complete|完整|穷尽)", visible, re.I):
+        fail(errors, f"{page} must not claim exhaustive all-repo function coverage in in-scope function-depth mode")
+
+    payloads = extract_interactive_flow_payloads(html, page)
+    function_graphs: list[dict[str, Any]] = []
+    for payload in payloads:
+        if not isinstance(payload, dict):
+            continue
+        graphs = payload.get("graphs")
+        if not isinstance(graphs, list):
+            continue
+        for graph in graphs:
+            if not isinstance(graph, dict):
+                continue
+            graph_id = str(graph.get("id", ""))
+            graph_text = json.dumps(graph, ensure_ascii=False).lower()
+            if graph_id in trace_ids or "function" in graph_id.lower() or "symbolid" in graph_text:
+                function_graphs.append(graph)
+    if not function_graphs:
+        fail(errors, f"{page} function-depth module {module_id} missing a React Flow function trace graph")
+        return
+
+    generic_labels = {"renderer", "service", "runtime", "main", "preload", "ipc", "user", "module", "component", "fallback"}
+    for graph in function_graphs:
+        nodes = graph.get("nodes")
+        if not isinstance(nodes, list):
+            continue
+        if len(nodes) > 40 and not graph.get("splitFrom"):
+            fail(errors, f"{page} function trace graph {graph.get('id')} exceeds readability hard cap of 40 nodes without splitting")
+        symbol_nodes = 0
+        for node in nodes:
+            if not isinstance(node, dict):
+                continue
+            symbol_id = str(node.get("symbolId", "")).strip()
+            label = str(node.get("label", "")).strip().lower()
+            if not symbol_id:
+                fail(errors, f"{page} function trace graph {graph.get('id')} node {node.get('id')} missing function symbolId")
+                continue
+            symbol_nodes += 1
+            if inventory_symbol_ids and symbol_id not in inventory_symbol_ids:
+                fail(errors, f"{page} function trace graph {graph.get('id')} node {node.get('id')} symbolId is not in function inventory: {symbol_id}")
+            if label in generic_labels:
+                fail(errors, f"{page} function trace graph {graph.get('id')} node {node.get('id')} uses generic architecture noun instead of a concrete function symbol")
+        if symbol_nodes < 2:
+            fail(errors, f"{page} function trace graph {graph.get('id')} uses only generic architecture nouns; add concrete function symbols")
+
+
+def validate_function_architecture_map(root: Path, meta: Any, module_pages: list[Path], errors: list[str]) -> None:
+    config = function_depth_config(meta)
+    if not config:
+        return
+    if config.get("coverageScope") != "in-scope-architecture-functions":
+        fail(errors, "wiki-meta.json functionDepth.coverageScope must be in-scope-architecture-functions")
+    if config.get("mapPath") != FUNCTION_MAP_PATH:
+        fail(errors, f"wiki-meta.json functionDepth.mapPath must be {FUNCTION_MAP_PATH}")
+    if config.get("validatorMode") != "function-depth":
+        fail(errors, "wiki-meta.json functionDepth.validatorMode must be function-depth")
+
+    function_map = load_json(root / FUNCTION_MAP_PATH, errors)
+    if not isinstance(function_map, dict):
+        return
+    if function_map.get("schemaVersion") != 1:
+        fail(errors, f"{FUNCTION_MAP_PATH} schemaVersion must be 1")
+    git_info = function_map.get("git")
+    if not isinstance(git_info, dict):
+        fail(errors, f"{FUNCTION_MAP_PATH} missing git metadata")
+    else:
+        freshness = git_info.get("indexFreshness")
+        if freshness not in {"fresh", "stale", "unknown"}:
+            fail(errors, f"{FUNCTION_MAP_PATH} git.indexFreshness must be fresh|stale|unknown")
+        if freshness != "fresh":
+            page_text = "\n".join(visible_text(read_text(page)) for page in ([root / "index.html"] + module_pages) if page.is_file())
+            if not re.search(r"(stale|过期|direct-source|直接源码|fallback|降级)", page_text, re.I):
+                fail(errors, "stale/unknown GitNexus index requires visible warning and direct-source fallback evidence")
+
+    modules = function_map.get("modules")
+    if not isinstance(modules, list) or not modules:
+        fail(errors, f"{FUNCTION_MAP_PATH} modules must be a non-empty list")
+        return
+
+    symbol_to_module: dict[str, str] = {}
+    module_trace_ids: dict[str, set[str]] = {}
+    module_inventory_ids: dict[str, set[str]] = {}
+    module_pages_by_id: dict[str, Path] = {}
+    module_page_by_stem = {page.stem: page for page in module_pages}
+    module_ids: set[str] = set()
+    for module_index, module in enumerate(modules):
+        if not isinstance(module, dict):
+            fail(errors, f"{FUNCTION_MAP_PATH} modules[{module_index}] must be an object")
+            continue
+        module_id = str(module.get("moduleId", "")).strip()
+        if not module_id:
+            fail(errors, f"{FUNCTION_MAP_PATH} modules[{module_index}] missing moduleId")
+            continue
+        module_ids.add(module_id)
+        page_value = str(module.get("page", "")).strip()
+        if page_value:
+            page_path = root / page_value
+        else:
+            page_path = module_page_by_stem.get(module_id, root / "modules" / f"{module_id}.html")
+        module_pages_by_id[module_id] = page_path
+        if not page_path.is_file():
+            fail(errors, f"function-depth module {module_id} missing page: {page_path.relative_to(root) if page_path.is_absolute() and root in page_path.parents else page_path}")
+        if not list_field_is_grounded(module.get("sourceRoots"), False):
+            fail(errors, f"{FUNCTION_MAP_PATH} module {module_id} missing sourceRoots")
+        symbols = module.get("symbols")
+        if not isinstance(symbols, list) or not symbols:
+            fail(errors, f"{FUNCTION_MAP_PATH} module {module_id} must include non-empty symbols")
+            symbols = []
+        exclusions = module.get("exclusions", [])
+        if not isinstance(exclusions, list):
+            fail(errors, f"{FUNCTION_MAP_PATH} module {module_id} exclusions must be a list")
+            exclusions = []
+        for symbol_index, symbol in enumerate(symbols):
+            if not isinstance(symbol, dict):
+                fail(errors, f"{FUNCTION_MAP_PATH} module {module_id} symbols[{symbol_index}] must be an object")
+                continue
+            symbol_id = str(symbol.get("symbolId", "")).strip()
+            if not symbol_id:
+                fail(errors, f"{FUNCTION_MAP_PATH} module {module_id} symbols[{symbol_index}] missing symbolId")
+                continue
+            if symbol_id in symbol_to_module:
+                fail(errors, f"{FUNCTION_MAP_PATH} symbolId appears more than once: {symbol_id}")
+            symbol_to_module[symbol_id] = module_id
+            module_inventory_ids.setdefault(module_id, set()).add(symbol_id)
+            for field in ("name", "kind", "file", "line", "responsibility", "evidenceSource", "indexFreshness"):
+                if field not in symbol or symbol.get(field) in (None, "", []):
+                    fail(errors, f"{FUNCTION_MAP_PATH} symbol {symbol_id} missing {field}")
+            if symbol.get("kind") not in FUNCTION_SYMBOL_KINDS:
+                fail(errors, f"{FUNCTION_MAP_PATH} symbol {symbol_id} has unsupported kind: {symbol.get('kind')}")
+            if not isinstance(symbol.get("line"), int) or symbol.get("line", 0) < 1:
+                fail(errors, f"{FUNCTION_MAP_PATH} symbol {symbol_id} line must be a positive integer")
+            if symbol.get("evidenceSource") not in FUNCTION_EVIDENCE_SOURCES:
+                fail(errors, f"{FUNCTION_MAP_PATH} symbol {symbol_id} evidenceSource must be gitnexus|direct-source|both")
+            if symbol.get("indexFreshness") not in FUNCTION_INDEX_FRESHNESS:
+                fail(errors, f"{FUNCTION_MAP_PATH} symbol {symbol_id} indexFreshness is invalid")
+            if not re.search(r"src/|tests/", str(symbol.get("file"))):
+                fail(errors, f"{FUNCTION_MAP_PATH} symbol {symbol_id} file must reference a source/test path")
+            trace_ids = symbol.get("traceIds", [])
+            if isinstance(trace_ids, list):
+                module_trace_ids.setdefault(module_id, set()).update(str(trace_id) for trace_id in trace_ids)
+        for exclusion_index, exclusion in enumerate(exclusions):
+            if not isinstance(exclusion, dict):
+                fail(errors, f"{FUNCTION_MAP_PATH} module {module_id} exclusions[{exclusion_index}] must be an object")
+                continue
+            if exclusion.get("reason") not in FUNCTION_EXCLUSION_REASONS:
+                fail(errors, f"{FUNCTION_MAP_PATH} module {module_id} exclusion has invalid reason: {exclusion.get('reason')}")
+
+    traces = function_map.get("traces")
+    if not isinstance(traces, list) or not traces:
+        fail(errors, f"{FUNCTION_MAP_PATH} traces must be a non-empty list")
+        traces = []
+    for trace_index, trace in enumerate(traces):
+        if not isinstance(trace, dict):
+            fail(errors, f"{FUNCTION_MAP_PATH} traces[{trace_index}] must be an object")
+            continue
+        trace_id = str(trace.get("traceId", "")).strip()
+        module_id = str(trace.get("moduleId", "")).strip()
+        module_trace_ids.setdefault(module_id, set()).add(trace_id)
+        if module_id not in module_ids:
+            fail(errors, f"{FUNCTION_MAP_PATH} trace {trace_id} references unknown moduleId: {module_id}")
+        node_symbol_ids = trace.get("nodeSymbolIds")
+        if not isinstance(node_symbol_ids, list) or not node_symbol_ids:
+            fail(errors, f"{FUNCTION_MAP_PATH} trace {trace_id} missing nodeSymbolIds")
+            node_symbol_ids = []
+        if len(node_symbol_ids) > 40 and not trace.get("splitFrom"):
+            fail(errors, f"{FUNCTION_MAP_PATH} trace {trace_id} exceeds readability hard cap of 40 nodes without splitting")
+        for symbol_id in node_symbol_ids:
+            if symbol_id not in symbol_to_module:
+                fail(errors, f"{FUNCTION_MAP_PATH} trace {trace_id} references node symbolId not present in inventory: {symbol_id}")
+        boundary_ids = documented_boundary_ids(trace)
+        edges = trace.get("edges")
+        if not isinstance(edges, list) or not edges:
+            fail(errors, f"{FUNCTION_MAP_PATH} trace {trace_id} must include non-empty edges")
+            edges = []
+        for edge_index, edge in enumerate(edges):
+            if not isinstance(edge, dict):
+                fail(errors, f"{FUNCTION_MAP_PATH} trace {trace_id} edges[{edge_index}] must be an object")
+                continue
+            if edge.get("kind") not in FUNCTION_EDGE_KINDS:
+                fail(errors, f"{FUNCTION_MAP_PATH} trace {trace_id} edge has unsupported kind: {edge.get('kind')}")
+            for endpoint in ("from", "to"):
+                value = edge.get(endpoint)
+                if value not in symbol_to_module and not is_documented_boundary_ref(value, boundary_ids):
+                    fail(errors, f"{FUNCTION_MAP_PATH} trace {trace_id} edge {endpoint} references unknown symbol/boundary: {value}")
+
+    visual_qa = load_json(root / FUNCTION_VISUAL_QA_PATH, errors)
+    validate_function_visual_qa_report(visual_qa, errors, root / FUNCTION_VISUAL_QA_PATH)
+
+    for module_id in sorted(module_ids):
+        page = module_pages_by_id.get(module_id) or module_page_by_stem.get(module_id)
+        if not page or not page.is_file():
+            continue
+        validate_function_trace_graphs(page, module_id, module_trace_ids.get(module_id, set()), module_inventory_ids.get(module_id, set()), errors)
+
+
 def validate_page_scripts(path: Path, root: Path, errors: list[str], require_interactive: bool = False, allow_placeholders: bool = False) -> None:
     html = read_text(path)
     validate_runtime_network_urls(path, errors)
@@ -1042,9 +1345,16 @@ def validate_architecture_web(architecture_web_dir: Path, allow_placeholders: bo
     validate_meta(meta, errors)
     validate_module_map(module_map, allow_placeholders, errors)
     validate_route_trace(route_trace, errors)
+    validate_function_architecture_map(root, meta, module_pages, errors)
 
     if not allow_placeholders:
-        for path in html_pages + [root / "wiki-meta.json", root / "evidence" / "module-map.json", root / "evidence" / "route-service-trace.json"]:
+        for path in html_pages + [
+            root / "wiki-meta.json",
+            root / "evidence" / "module-map.json",
+            root / "evidence" / "route-service-trace.json",
+            root / FUNCTION_MAP_PATH,
+            root / FUNCTION_VISUAL_QA_PATH,
+        ]:
             if path.is_file() and PLACEHOLDER_PATTERN.search(read_text(path)):
                 fail(errors, f"unresolved TODO/placeholder evidence in {path}")
 

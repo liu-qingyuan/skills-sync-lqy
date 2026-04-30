@@ -321,6 +321,294 @@ def write_valid_architecture_web(root: Path) -> None:
     )
 
 
+FUNCTION_TRACE_PAYLOAD = {
+    "version": 1,
+    "graphs": [
+        {
+            "id": "auth-session-trace",
+            "title": "Auth session function trace",
+            "nodes": [
+                {
+                    "id": "auth-provider",
+                    "type": "component",
+                    "label": "AuthProvider",
+                    "symbolId": "auth-session:src/renderer/src/contexts/AuthContext.tsx:42:AuthProvider",
+                    "position": {"x": 0, "y": 100},
+                    "width": 240,
+                    "height": 92,
+                    "evidence": ["src/renderer/src/contexts/AuthContext.tsx:42 AuthProvider"],
+                },
+                {
+                    "id": "login",
+                    "type": "service",
+                    "label": "AuthService.login",
+                    "symbolId": "auth-session:src/renderer/src/services/AuthService.ts:88:login",
+                    "position": {"x": 330, "y": 100},
+                    "width": 240,
+                    "height": 92,
+                    "evidence": ["src/renderer/src/services/AuthService.ts:88 login"],
+                },
+                {
+                    "id": "persist",
+                    "type": "service",
+                    "label": "TokenService.persist",
+                    "symbolId": "auth-session:src/renderer/src/services/TokenService.ts:27:persist",
+                    "position": {"x": 660, "y": 20},
+                    "width": 240,
+                    "height": 92,
+                    "evidence": ["src/renderer/src/services/TokenService.ts:27 persist"],
+                },
+                {
+                    "id": "failure",
+                    "type": "branch",
+                    "label": "AuthContext.handleLoginError",
+                    "symbolId": "auth-session:src/renderer/src/contexts/AuthContext.tsx:133:handleLoginError",
+                    "position": {"x": 660, "y": 190},
+                    "width": 280,
+                    "height": 92,
+                    "evidence": ["src/renderer/src/contexts/AuthContext.tsx:133 handleLoginError"],
+                },
+            ],
+            "edges": [
+                {
+                    "id": "auth-provider-login",
+                    "source": "auth-provider",
+                    "target": "login",
+                    "type": "call",
+                    "label": "calls",
+                    "sourceHandle": "right",
+                    "targetHandle": "left",
+                    "evidence": ["src/renderer/src/contexts/AuthContext.tsx:77"],
+                },
+                {
+                    "id": "login-persist",
+                    "source": "login",
+                    "target": "persist",
+                    "type": "data",
+                    "label": "updates state",
+                    "sourceHandle": "right",
+                    "targetHandle": "left",
+                    "evidence": ["src/renderer/src/services/AuthService.ts:101"],
+                },
+                {
+                    "id": "login-failure",
+                    "source": "login",
+                    "target": "failure",
+                    "type": "error",
+                    "label": "error",
+                    "sourceHandle": "bottom",
+                    "targetHandle": "left",
+                    "evidence": ["tests/low-level/auth-session.test.ts:41"],
+                },
+            ],
+            "layout": {"engine": "dagre", "direction": "LR", "nodeWidth": 240, "nodeHeight": 92},
+        }
+    ],
+}
+
+
+def function_trace_flow_block(payload: dict | None = None) -> str:
+    payload_text = json.dumps(payload or FUNCTION_TRACE_PAYLOAD, ensure_ascii=False, indent=2)
+    return f"""<div class="architecture-flow" data-flow-graph="auth-session-trace" aria-label="auth session function trace"></div>
+<script type="application/json" data-architecture-flow>{payload_text}</script>
+<div class="evidence-panel" data-architecture-flow-evidence><strong>点击函数节点查看源码证据</strong><p>Source: src/renderer/src/contexts/AuthContext.tsx, src/renderer/src/services/AuthService.ts, src/renderer/src/services/TokenService.ts.</p></div>
+<div class="edge-legend"><span class="edge-call">calls</span><span class="edge-data">updates state</span><span class="edge-error">error</span><span>test covers</span></div>
+<table><tr><th>函数边</th><th>非视觉 fallback</th><th>证据</th></tr><tr><td>AuthService.login → TokenService.persist</td><td>登录成功后持久化 token；失败进入错误分支。</td><td>src/renderer/src/services/AuthService.ts:101</td></tr></table>"""
+
+
+def write_valid_function_depth_architecture_web(root: Path, payload: dict | None = None) -> None:
+    write_valid_interactive_architecture_web(root)
+    index = root / "index.html"
+    index.write_text(
+        index.read_text(encoding="utf-8").replace(
+            "<section class=\"panel\"><h2>优先阅读文件</h2><a href=\"modules/core.html\">Core</a></section>",
+            "<section class=\"panel\"><h2>函数视图入口</h2><p>函数级细节位于模块页，概览只保留可读的系统关系。</p></section><section class=\"panel\"><h2>优先阅读文件</h2><a href=\"modules/core.html\">Auth session 函数视图</a></section>",
+        ),
+        encoding="utf-8",
+    )
+    module = root / "modules" / "core.html"
+    html = module.read_text(encoding="utf-8")
+    html = re.sub(
+        r'<section class="panel"><h2>整体运行时结构图</h2>.*?</section>',
+        f'<section class="panel"><h2>整体运行时结构图</h2><p>函数级 trace 使用 React Flow 展示 Auth/session 的调用、状态更新和错误分支。</p>{function_trace_flow_block(payload)}</section>',
+        html,
+        count=1,
+        flags=re.S,
+    )
+    html = html.replace(
+        '<section class="panel"><h2>源码证据</h2><p>GitNexus graph evidence.</p></section>',
+        """<section class="panel"><h2>函数清单</h2>
+<input data-function-inventory-search aria-label="搜索函数清单" value="">
+<table data-function-inventory data-module-id="auth-session">
+<tr><th>symbolId</th><th>symbol</th><th>kind</th><th>file</th><th>line</th><th>trace</th><th>tests</th></tr>
+<tr><td>auth-session:src/renderer/src/contexts/AuthContext.tsx:42:AuthProvider</td><td>AuthProvider</td><td>component</td><td>src/renderer/src/contexts/AuthContext.tsx</td><td>42</td><td>auth-login</td><td>tests/low-level/auth-session.test.ts</td></tr>
+<tr><td>auth-session:src/renderer/src/services/AuthService.ts:88:login</td><td>AuthService.login</td><td>service</td><td>src/renderer/src/services/AuthService.ts</td><td>88</td><td>auth-login</td><td>tests/low-level/auth-session.test.ts</td></tr>
+<tr><td>auth-session:src/renderer/src/services/TokenService.ts:27:persist</td><td>TokenService.persist</td><td>service</td><td>src/renderer/src/services/TokenService.ts</td><td>27</td><td>auth-login</td><td>tests/low-level/auth-session.test.ts</td></tr>
+<tr><td>auth-session:src/renderer/src/contexts/AuthContext.tsx:133:handleLoginError</td><td>AuthContext.handleLoginError</td><td>helper</td><td>src/renderer/src/contexts/AuthContext.tsx</td><td>133</td><td>auth-login</td><td>tests/low-level/auth-session.test.ts</td></tr>
+</table></section>
+<section class="panel"><h2>源码证据</h2><p>GitNexus graph evidence and direct source evidence back every function row.</p></section>""",
+    )
+    module.write_text(html, encoding="utf-8")
+
+    meta_path = root / "wiki-meta.json"
+    meta = json.loads(meta_path.read_text(encoding="utf-8"))
+    meta["functionDepth"] = {
+        "enabled": True,
+        "coverageScope": "in-scope-architecture-functions",
+        "mapPath": "evidence/function-architecture-map.json",
+        "validatorMode": "function-depth",
+    }
+    meta["evidence_files"].append({"source": "/tmp/function-architecture-map.json", "path": "evidence/function-architecture-map.json"})
+    meta_path.write_text(json.dumps(meta, ensure_ascii=False, indent=2), encoding="utf-8")
+
+    function_map = {
+        "schemaVersion": 1,
+        "repo": "cpilot-web-lucyna",
+        "git": {"head": "abc123", "gitnexusIndexedCommit": "abc123", "indexFreshness": "fresh"},
+        "modules": [
+            {
+                "moduleId": "auth-session",
+                "label": "Auth session",
+                "page": "modules/core.html",
+                "sourceRoots": [
+                    "src/renderer/src/contexts/AuthContext.tsx",
+                    "src/renderer/src/services/AuthService.ts",
+                    "src/renderer/src/services/TokenService.ts",
+                ],
+                "symbols": [
+                    {
+                        "symbolId": "auth-session:src/renderer/src/contexts/AuthContext.tsx:42:AuthProvider",
+                        "name": "AuthProvider",
+                        "kind": "component",
+                        "file": "src/renderer/src/contexts/AuthContext.tsx",
+                        "line": 42,
+                        "responsibility": "Owns renderer authentication state and delegates login.",
+                        "callers": [],
+                        "callees": ["auth-session:src/renderer/src/services/AuthService.ts:88:login"],
+                        "traceIds": ["auth-login"],
+                        "testRefs": ["tests/low-level/auth-session.test.ts"],
+                        "evidenceSource": "both",
+                        "indexFreshness": "fresh",
+                    },
+                    {
+                        "symbolId": "auth-session:src/renderer/src/services/AuthService.ts:88:login",
+                        "name": "AuthService.login",
+                        "kind": "service",
+                        "file": "src/renderer/src/services/AuthService.ts",
+                        "line": 88,
+                        "responsibility": "Performs login and returns token/session result.",
+                        "callers": ["auth-session:src/renderer/src/contexts/AuthContext.tsx:42:AuthProvider"],
+                        "callees": ["auth-session:src/renderer/src/services/TokenService.ts:27:persist"],
+                        "traceIds": ["auth-login"],
+                        "testRefs": ["tests/low-level/auth-session.test.ts"],
+                        "evidenceSource": "both",
+                        "indexFreshness": "fresh",
+                    },
+                    {
+                        "symbolId": "auth-session:src/renderer/src/services/TokenService.ts:27:persist",
+                        "name": "TokenService.persist",
+                        "kind": "service",
+                        "file": "src/renderer/src/services/TokenService.ts",
+                        "line": 27,
+                        "responsibility": "Persists login token.",
+                        "callers": ["auth-session:src/renderer/src/services/AuthService.ts:88:login"],
+                        "callees": [],
+                        "traceIds": ["auth-login"],
+                        "testRefs": ["tests/low-level/auth-session.test.ts"],
+                        "evidenceSource": "both",
+                        "indexFreshness": "fresh",
+                    },
+                    {
+                        "symbolId": "auth-session:src/renderer/src/contexts/AuthContext.tsx:133:handleLoginError",
+                        "name": "AuthContext.handleLoginError",
+                        "kind": "helper",
+                        "file": "src/renderer/src/contexts/AuthContext.tsx",
+                        "line": 133,
+                        "responsibility": "Handles failed login branch.",
+                        "callers": ["auth-session:src/renderer/src/services/AuthService.ts:88:login"],
+                        "callees": [],
+                        "traceIds": ["auth-login"],
+                        "testRefs": ["tests/low-level/auth-session.test.ts"],
+                        "evidenceSource": "both",
+                        "indexFreshness": "fresh",
+                    },
+                ],
+                "exclusions": [
+                    {
+                        "file": "src/renderer/src/contexts/AuthContext.tsx",
+                        "name": "AuthState",
+                        "reason": "type-only",
+                    }
+                ],
+            }
+        ],
+        "traces": [
+            {
+                "traceId": "auth-login",
+                "moduleId": "auth-session",
+                "entrySymbolId": "auth-session:src/renderer/src/contexts/AuthContext.tsx:42:AuthProvider",
+                "nodeSymbolIds": [
+                    "auth-session:src/renderer/src/contexts/AuthContext.tsx:42:AuthProvider",
+                    "auth-session:src/renderer/src/services/AuthService.ts:88:login",
+                    "auth-session:src/renderer/src/services/TokenService.ts:27:persist",
+                    "auth-session:src/renderer/src/contexts/AuthContext.tsx:133:handleLoginError",
+                ],
+                "edges": [
+                    {
+                        "from": "auth-session:src/renderer/src/contexts/AuthContext.tsx:42:AuthProvider",
+                        "to": "auth-session:src/renderer/src/services/AuthService.ts:88:login",
+                        "kind": "calls",
+                    },
+                    {
+                        "from": "auth-session:src/renderer/src/services/AuthService.ts:88:login",
+                        "to": "auth-session:src/renderer/src/services/TokenService.ts:27:persist",
+                        "kind": "updates-state",
+                    },
+                    {
+                        "from": "auth-session:src/renderer/src/services/AuthService.ts:88:login",
+                        "to": "auth-session:src/renderer/src/contexts/AuthContext.tsx:133:handleLoginError",
+                        "kind": "error",
+                    },
+                ],
+            }
+        ],
+    }
+    (root / "evidence" / "function-architecture-map.json").write_text(
+        json.dumps(function_map, ensure_ascii=False, indent=2),
+        encoding="utf-8",
+    )
+    (root / "evidence" / "visual-qa-function-drilldown.json").write_text(
+        json.dumps(
+            {
+                "checks": [
+                    {
+                        "url": "file:///tmp/core.html",
+                        "graph_id": "auth-session-trace",
+                        "node_id": "auth-provider",
+                        "drag_delta": {"x": 44, "y": 21},
+                    }
+                ],
+                "inventory": {
+                    "auth-session": {
+                        "rowCount": 4,
+                        "initialInteractiveLoadMs": 180,
+                        "searchFilterUpdateMs": 32,
+                        "paginationOrVirtualization": False,
+                        "defaultVisibleRows": 25,
+                    }
+                },
+            },
+            ensure_ascii=False,
+            indent=2,
+        ),
+        encoding="utf-8",
+    )
+    (root / "evidence" / "architecture-review-function-drilldown.md").write_text(
+        "# Architecture review\n\nPASS: function traces explain cpilot application architecture with branch evidence.\n",
+        encoding="utf-8",
+    )
+
+
 class ValidateSkillTests(unittest.TestCase):
     def test_current_skill_package_passes(self) -> None:
         self.assertEqual(validator.validate_skill(ROOT), [])
@@ -545,6 +833,100 @@ class ValidateSkillTests(unittest.TestCase):
             Path("visual-qa-react-flow-drag.json"),
         )
         self.assertEqual(good_errors, [])
+
+    def test_function_depth_fixture_passes_strict_validation(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp) / "function-depth-architecture-wiki"
+            write_valid_function_depth_architecture_web(out)
+            self.assertEqual(validator.validate_architecture_web(out), [])
+
+    def test_function_depth_meta_requires_canonical_function_map(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp) / "missing-function-map-architecture-wiki"
+            write_valid_function_depth_architecture_web(out)
+            (out / "evidence" / "function-architecture-map.json").unlink()
+            errors = validator.validate_architecture_web(out)
+            self.assertTrue(any("function-architecture-map.json" in err for err in errors), errors)
+
+    def test_function_depth_requires_module_inventory_and_trace_graph(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp) / "missing-inventory-architecture-wiki"
+            write_valid_function_depth_architecture_web(out)
+            module = out / "modules" / "core.html"
+            module.write_text(
+                re.sub(
+                    r'<section class="panel"><h2>函数清单</h2>.*?</section>',
+                    '<section class="panel"><h2>函数清单</h2><p>Missing inventory table.</p></section>',
+                    module.read_text(encoding="utf-8"),
+                    count=1,
+                    flags=re.S,
+                ),
+                encoding="utf-8",
+            )
+            errors = validator.validate_architecture_web(out)
+            self.assertTrue(any("function inventory" in err.lower() or "函数清单" in err for err in errors), errors)
+
+    def test_function_depth_rejects_trace_node_without_inventory_symbol(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp) / "missing-trace-symbol-architecture-wiki"
+            write_valid_function_depth_architecture_web(out)
+            function_map_path = out / "evidence" / "function-architecture-map.json"
+            function_map = json.loads(function_map_path.read_text(encoding="utf-8"))
+            function_map["traces"][0]["nodeSymbolIds"].append("auth-session:src/renderer/src/services/Missing.ts:1:missing")
+            function_map_path.write_text(json.dumps(function_map, ensure_ascii=False, indent=2), encoding="utf-8")
+            errors = validator.validate_architecture_web(out)
+            self.assertTrue(any("trace" in err.lower() and "inventory" in err.lower() for err in errors), errors)
+
+    def test_function_depth_rejects_generic_trace_graph_without_function_symbols(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp) / "generic-trace-architecture-wiki"
+            payload = json.loads(json.dumps(FUNCTION_TRACE_PAYLOAD))
+            for node, label in zip(payload["graphs"][0]["nodes"], ["Renderer", "Service", "Runtime", "Fallback"]):
+                node["label"] = label
+                node.pop("symbolId", None)
+            write_valid_function_depth_architecture_web(out, payload)
+            errors = validator.validate_architecture_web(out)
+            self.assertTrue(any("generic" in err.lower() or "symbol" in err.lower() for err in errors), errors)
+
+    def test_function_depth_requires_visual_qa_inventory_performance_artifact(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp) / "missing-function-visual-qa-architecture-wiki"
+            write_valid_function_depth_architecture_web(out)
+            (out / "evidence" / "visual-qa-function-drilldown.json").unlink()
+            errors = validator.validate_architecture_web(out)
+            self.assertTrue(any("visual" in err.lower() and "function" in err.lower() for err in errors), errors)
+
+    def test_function_depth_enforces_trace_node_readability_cap(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp) / "oversized-trace-architecture-wiki"
+            payload = json.loads(json.dumps(FUNCTION_TRACE_PAYLOAD))
+            base_node = payload["graphs"][0]["nodes"][0]
+            payload["graphs"][0]["nodes"] = [
+                {
+                    **base_node,
+                    "id": f"function-{index}",
+                    "label": f"Function{index}",
+                    "symbolId": f"auth-session:src/example.ts:{index}:Function{index}",
+                    "position": {"x": index * 20, "y": (index % 5) * 120},
+                }
+                for index in range(41)
+            ]
+            payload["graphs"][0]["edges"] = [
+                {
+                    "id": f"edge-{index}",
+                    "source": f"function-{index}",
+                    "target": f"function-{index + 1}",
+                    "type": "call",
+                    "label": "calls",
+                    "sourceHandle": "right",
+                    "targetHandle": "left",
+                    "evidence": [f"src/example.ts:{index}"],
+                }
+                for index in range(40)
+            ]
+            write_valid_function_depth_architecture_web(out, payload)
+            errors = validator.validate_architecture_web(out)
+            self.assertTrue(any("cap" in err.lower() or "40" in err or "readability" in err.lower() for err in errors), errors)
 
     def test_file_url_payload_does_not_require_fetch(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

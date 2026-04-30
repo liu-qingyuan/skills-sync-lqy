@@ -81,6 +81,49 @@ python3 ~/.codex/skills/gitnexus-codex-wiki/scripts/scaffold-architecture-web.py
 
 The scaffold defaults to Chinese and auto-copies project-explainer-web's bundled Mermaid runtime when available. Use `--no-default-mermaid-js` only during scaffolding or when you will replace static source with inline SVG before final delivery.
 
+
+## Function-depth architecture output
+
+Function-depth output is the deep version of `architecture-web`: overview pages stay readable, module pages carry concrete function trace graphs, and exhaustive function detail appears in searchable inventories. Enable it when `wiki-meta.json` contains:
+
+```json
+{
+  "functionDepth": {
+    "enabled": true,
+    "coverageScope": "in-scope-architecture-functions",
+    "mapPath": "evidence/function-architecture-map.json",
+    "validatorMode": "function-depth"
+  }
+}
+```
+
+Required page behavior:
+
+- `index.html` includes a visible “函数视图入口” or equivalent section that sends readers to module-level traces and inventories instead of promising one giant all-function graph.
+- Every module page includes at least one React Flow function trace graph and one searchable/filterable function inventory table.
+- Trace graph nodes use concrete functions/components/hooks/services/IPC handlers/test helpers from source evidence; generic-only graphs are invalid.
+- Edge labels use `calls`, `invokes IPC`, `returns`, `updates state`, `fallback`, `error`, or `test covers` where applicable.
+- Inventory rows include symbol, kind, file + line, responsibility, callers/callees when known, trace membership, tests, evidence source, and index freshness.
+- Branch/fallback/error paths appear in traces where source evidence exists.
+- Large inventories render only 25-100 rows by default and use search/filter plus pagination, virtualization, or chunking when needed.
+
+Canonical evidence artifact:
+
+```text
+evidence/function-architecture-map.json
+```
+
+The map records repo/head/index freshness, module source roots, function-like symbols, exclusions, traces, and trace edges. Complete coverage claims apply only to `in-scope-architecture-functions` unless the map explicitly covers all repo function-like symbols.
+
+Validation and QA evidence must prove:
+
+- every in-scope architecture function appears exactly once in one module inventory or appears in exclusions with a valid reason;
+- every function trace node references a valid inventory `symbolId` or documented boundary node;
+- every trace edge references valid nodes and has a semantic kind;
+- every inventory symbol links to file/line evidence and source freshness;
+- search/filter works from `file://`;
+- visual QA records React Flow readability/click traces plus inventory row counts, load timings, search timings, and pagination/virtualization status.
+
 ## Required page contracts
 
 Overview headings in `index.html`:
@@ -151,7 +194,13 @@ Deep architecture pages must show real source relationships and branches:
   "visual_style": "project-explainer-web",
   "entrypoint": "index.html",
   "modules": ["core"],
-  "evidence_files": [{"source": "/path/preflight.md", "path": "evidence/preflight.md"}]
+  "evidence_files": [{"source": "/path/preflight.md", "path": "evidence/preflight.md"}],
+  "functionDepth": {
+    "enabled": false,
+    "coverageScope": "overview|in-scope-architecture-functions|all-repo-function-like-symbols",
+    "mapPath": "evidence/function-architecture-map.json",
+    "validatorMode": "standard|function-depth"
+  }
 }
 ```
 

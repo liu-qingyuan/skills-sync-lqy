@@ -104,6 +104,15 @@ code { padding: .2rem .35rem; }
 table { width: 100%; border-collapse: collapse; overflow: hidden; border-radius: 14px; }
 th, td { border-bottom: 1px solid var(--line); padding: 10px; text-align: left; vertical-align: top; }
 th { color: #314267; background: rgba(49, 94, 251, 0.07); }
+
+.function-depth-entry { border: 1px solid rgba(15, 159, 110, .22); background: linear-gradient(135deg, rgba(15,159,110,.08), rgba(49,94,251,.08)); }
+.function-inventory-toolbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin: 12px 0; }
+.function-inventory-toolbar input { min-width: min(100%, 320px); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; font: inherit; background: #fff; }
+.function-inventory-status { color: var(--muted); font-size: 14px; }
+.function-inventory-controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 10px 0 0; }
+.function-inventory-controls button { border: 1px solid var(--line); border-radius: 999px; padding: 7px 12px; background: #fff; color: var(--accent); font-weight: 700; cursor: pointer; }
+.function-inventory-controls button:disabled { cursor: not-allowed; opacity: .45; }
+.function-inventory-table td:first-child { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; }
 @media (max-width: 860px) { .span-8, .span-6, .span-4 { grid-column: span 12; } .hero { padding: 24px; } }
 """.strip()
 
@@ -256,7 +265,129 @@ def flow_edge(
     }
 
 
-def architecture_flow_payload(slug_value: str, modules: list[str], evidence_entries: list[dict[str, str]]) -> dict[str, Any]:
+
+def function_symbol_id(module: str, file_path: str, line: int, symbol: str) -> str:
+    return f"{module}:{file_path}:{line}:{symbol}"
+
+
+def function_trace_graph(module: str, evidence: list[str]) -> dict[str, Any]:
+    title = module_title(module)
+    compact_title = title.replace(" ", "")
+    entry_id = function_symbol_id(module, f"src/{module}/entry.ts", 1, f"{compact_title}Entry")
+    boundary_id = function_symbol_id(module, f"src/{module}/boundary.ts", 24, "handleBoundaryCall")
+    service_id = function_symbol_id(module, f"src/{module}/service.ts", 64, "runDomainLogic")
+    fallback_id = function_symbol_id(module, f"src/{module}/service.ts", 112, "handleFallback")
+    test_id = function_symbol_id(module, f"tests/low-level/{module}.test.ts", 1, "moduleContractTest")
+    return {
+        "id": f"function-trace-{module}",
+        "title": f"{title} 函数调用链",
+        "summary": "函数级 scaffold：把 TODO symbol 替换为 GitNexus/direct-source 证据后交付。",
+        "nodes": [
+            {**flow_node("entry-function", "component", f"{title} entry function", 0, 120, evidence), "symbolId": entry_id},
+            {**flow_node("boundary-function", "ipc-handler", "handleBoundaryCall", 320, 120, evidence), "symbolId": boundary_id},
+            {**flow_node("service-function", "service", "runDomainLogic", 640, 40, evidence), "symbolId": service_id},
+            {**flow_node("fallback-function", "helper", "handleFallback", 640, 220, evidence), "symbolId": fallback_id},
+            {**flow_node("test-function", "test-helper", "moduleContractTest", 960, 120, evidence), "symbolId": test_id},
+        ],
+        "edges": [
+            flow_edge("entry-boundary-call", "entry-function", "boundary-function", "call", "calls", evidence),
+            flow_edge("boundary-service-ipc", "boundary-function", "service-function", "ipc", "invokes IPC", evidence),
+            flow_edge("service-fallback-error", "service-function", "fallback-function", "error", "error", evidence, "bottom", "top"),
+            flow_edge("service-test-cover", "service-function", "test-function", "test", "test covers", evidence),
+            flow_edge("fallback-test-cover", "fallback-function", "test-function", "test", "test covers", evidence),
+        ],
+        "layout": {"engine": "manual", "direction": "LR", "nodeWidth": 230, "nodeHeight": 96, "ranksep": 96, "nodesep": 64, "computedAtBuildTime": True, "readabilityCap": 30},
+    }
+
+
+def function_inventory_rows(module: str) -> list[dict[str, Any]]:
+    compact_title = module_title(module).replace(" ", "")
+    return [
+        {"symbolId": function_symbol_id(module, f"src/{module}/entry.ts", 1, f"{compact_title}Entry"), "symbol": f"{compact_title}Entry", "kind": "component", "file": f"src/{module}/entry.ts", "line": 1, "responsibility": "TODO: replace with concrete entry function responsibility.", "traceIds": [f"function-trace-{module}"], "tests": [f"tests/low-level/{module}.test.ts"], "evidenceSource": "direct-source", "indexFreshness": "direct-source-fallback"},
+        {"symbolId": function_symbol_id(module, f"src/{module}/boundary.ts", 24, "handleBoundaryCall"), "symbol": "handleBoundaryCall", "kind": "ipc-handler", "file": f"src/{module}/boundary.ts", "line": 24, "responsibility": "TODO: replace with concrete API/IPC/runtime boundary responsibility.", "traceIds": [f"function-trace-{module}"], "tests": [f"tests/low-level/{module}.test.ts"], "evidenceSource": "direct-source", "indexFreshness": "direct-source-fallback"},
+        {"symbolId": function_symbol_id(module, f"src/{module}/service.ts", 64, "runDomainLogic"), "symbol": "runDomainLogic", "kind": "service", "file": f"src/{module}/service.ts", "line": 64, "responsibility": "TODO: replace with concrete service/runtime call responsibility.", "traceIds": [f"function-trace-{module}"], "tests": [f"tests/low-level/{module}.test.ts"], "evidenceSource": "direct-source", "indexFreshness": "direct-source-fallback"},
+        {"symbolId": function_symbol_id(module, f"src/{module}/service.ts", 112, "handleFallback"), "symbol": "handleFallback", "kind": "helper", "file": f"src/{module}/service.ts", "line": 112, "responsibility": "TODO: replace with concrete fallback/error path responsibility.", "traceIds": [f"function-trace-{module}"], "tests": [f"tests/low-level/{module}.test.ts"], "evidenceSource": "direct-source", "indexFreshness": "direct-source-fallback"},
+        {"symbolId": function_symbol_id(module, f"tests/low-level/{module}.test.ts", 1, "moduleContractTest"), "symbol": "moduleContractTest", "kind": "test-helper", "file": f"tests/low-level/{module}.test.ts", "line": 1, "responsibility": "TODO: replace with concrete test coverage helper/fixture responsibility.", "traceIds": [f"function-trace-{module}"], "tests": [f"tests/low-level/{module}.test.ts"], "evidenceSource": "direct-source", "indexFreshness": "direct-source-fallback"},
+    ]
+
+
+def function_inventory_section(module: str, use_interactive: bool) -> str:
+    trace_block = interactive_flow_block("函数调用链 interactive-flow", f"function-trace-{module}") if use_interactive else "<p>Function-depth mode requires interactive-flow for primary trace graphs.</p>"
+    rows = "\n".join(
+        "<tr>"
+        f"<td>{row['symbolId']}</td><td>{row['symbol']}</td><td>{row['kind']}</td>"
+        f"<td><code>{row['file']}</code></td><td>{row['line']}</td>"
+        f"<td>{row['responsibility']}</td><td>{', '.join(row['traceIds'])}</td>"
+        f"<td>{', '.join(row['tests'])}</td><td>{row['evidenceSource']} / {row['indexFreshness']}</td>"
+        "</tr>"
+        for row in function_inventory_rows(module)
+    )
+    return f'''
+<section class="panel span-12"><h2>函数调用链</h2>{trace_block}<p>把 scaffold 节点替换为真实函数、IPC facade/handler、runtime call、fallback/error path 与 test edge；每个节点必须能点击查看源码证据。</p></section>
+<section class="panel span-12" data-function-inventory-scope><h2>函数清单</h2>
+<div class="function-inventory-toolbar"><label>搜索函数 / 文件 / 职责 <input data-function-inventory-search aria-label="搜索函数清单" placeholder="输入 symbol、file、kind 或 trace"></label><span class="function-inventory-status" data-function-inventory-count></span></div>
+<table class="function-inventory-table" data-function-inventory data-page-size="50" data-module-id="{module}"><thead><tr><th>symbolId</th><th>symbol</th><th>kind</th><th>file</th><th>line</th><th>responsibility</th><th>trace</th><th>tests</th><th>evidence</th></tr></thead><tbody>{rows}</tbody></table>
+<p>默认 scaffold 使用 direct-source-fallback 占位；最终页面必须用 GitNexus/direct source 证据替换 TODO 并记录 freshness。</p></section>'''
+
+
+def function_architecture_map(project_slug: str, modules: list[str], evidence_entries: list[dict[str, str]], git_head: str) -> dict[str, Any]:
+    mapped_modules = []
+    traces = []
+    for module in modules:
+        rows = function_inventory_rows(module)
+        mapped_modules.append({
+            "moduleId": module,
+            "label": module_title(module),
+            "page": f"modules/{module}.html",
+            "sourceRoots": sorted({row["file"] for row in rows}),
+            "symbols": [
+                {"symbolId": row["symbolId"], "name": row["symbol"], "kind": row["kind"], "file": row["file"], "line": row["line"], "responsibility": row["responsibility"], "callers": [], "callees": [], "traceIds": row["traceIds"], "testRefs": row["tests"], "evidenceSource": row["evidenceSource"], "indexFreshness": row["indexFreshness"]}
+                for row in rows
+            ],
+            "exclusions": [],
+        })
+        traces.append({
+            "traceId": f"function-trace-{module}",
+            "moduleId": module,
+            "entrySymbolId": rows[0]["symbolId"],
+            "nodeSymbolIds": [row["symbolId"] for row in rows],
+            "edges": [
+                {"from": rows[0]["symbolId"], "to": rows[1]["symbolId"], "kind": "calls"},
+                {"from": rows[1]["symbolId"], "to": rows[2]["symbolId"], "kind": "invokes-ipc"},
+                {"from": rows[2]["symbolId"], "to": rows[3]["symbolId"], "kind": "error"},
+            ],
+        })
+    return {"schemaVersion": 1, "repo": project_slug, "git": {"head": git_head, "gitnexusIndexedCommit": "TODO: gitnexus indexed commit", "indexFreshness": "unknown"}, "coverageScope": "in-scope-architecture-functions", "evidenceRefs": [entry.get("path", entry.get("source", "")) for entry in evidence_entries], "modules": mapped_modules, "traces": traces}
+
+
+def function_visual_qa_stub(modules: list[str]) -> dict[str, Any]:
+    first_module = modules[0] if modules else "core"
+    return {
+        "schemaVersion": 1,
+        "status": "scaffold-smoke-placeholder",
+        "notes": "Scaffold smoke values prove schema shape only; final QA must replace with measured browser evidence from exact file:// pages.",
+        "checks": [
+            {
+                "url": f"file:///TODO/{first_module}.html",
+                "graph_id": f"function-trace-{first_module}",
+                "node_id": "entry-function",
+                "drag_delta": {"x": 24, "y": 0},
+            }
+        ],
+        "inventory": {
+            module: {
+                "rowCount": len(function_inventory_rows(module)),
+                "initialInteractiveLoadMs": 1,
+                "searchFilterUpdateMs": 1,
+                "defaultVisibleRows": 50,
+                "pagination": True,
+            }
+            for module in modules
+        },
+    }
+
+
+def architecture_flow_payload(slug_value: str, modules: list[str], evidence_entries: list[dict[str, str]], function_depth: bool = False) -> dict[str, Any]:
     refs = evidence_refs(evidence_entries)
     module_nodes = []
     module_edges = []
@@ -412,7 +543,8 @@ def architecture_flow_payload(slug_value: str, modules: list[str], evidence_entr
             "layout": common_layout,
         },
     ]
-    return {"version": 1, "graphs": [*overview_graphs, *module_graphs]}
+    function_graphs = [function_trace_graph(module, refs) for module in modules] if function_depth else []
+    return {"version": 1, "graphs": [*overview_graphs, *module_graphs, *function_graphs]}
 
 
 def flow_payload_script(payload: dict[str, Any]) -> str:
@@ -478,7 +610,7 @@ def module_links(modules: list[str]) -> str:
     )
 
 
-def overview_html(slug_value: str, modules: list[str], evidence_entries: list[dict[str, str]], mermaid_script: bool, diagram_mode: str) -> str:
+def overview_html(slug_value: str, modules: list[str], evidence_entries: list[dict[str, str]], mermaid_script: bool, diagram_mode: str, function_depth: bool = False) -> str:
     module_rows = "\n".join(
         f'<tr><td><a href="modules/{slug(name)}.html">{module_title(name)}</a></td><td>TODO: 用源码证据说明这个产品/运行时模块负责什么。</td><td>TODO: 引用 GitNexus graph/source 证据。</td></tr>'
         for name in modules
@@ -544,7 +676,7 @@ def overview_html(slug_value: str, modules: list[str], evidence_entries: list[di
     )
     use_interactive = diagram_mode in {"interactive-flow", "hybrid"}
     use_mermaid = diagram_mode in {"mermaid", "hybrid"}
-    payload = architecture_flow_payload(slug_value, modules, evidence_entries) if use_interactive else None
+    payload = architecture_flow_payload(slug_value, modules, evidence_entries, function_depth=function_depth) if use_interactive else None
     if use_interactive:
         diagram = interactive_flow_block("目标应用整体运行时 interactive-flow", "runtime-overview")
         if use_mermaid:
@@ -566,6 +698,9 @@ def overview_html(slug_value: str, modules: list[str], evidence_entries: list[di
     script_ref = "./assets/mermaid.min.js" if mermaid_script else None
     flow_ref = "./assets/architecture-flow.js" if use_interactive else None
     flow_css = "./assets/architecture-flow.css" if use_interactive else None
+    function_entry_section = ""
+    if function_depth:
+        function_entry_section = '<section class="panel span-12 function-depth-entry"><h2>函数视图入口</h2><p>概览页保持可读；函数级调用链和可搜索清单位于每个模块页。点击模块入口进入 function trace 与 inventory。</p></section>'
     return html_head(f"{slug_value} 应用架构说明", script_ref, flow_ref, flow_css) + f"""
 <nav class=\"nav\"><a href=\"index.html\">主页面</a><a href=\"#module-nav\">模块入口</a><a href=\"#verification\">验证命令</a></nav>
 <header class=\"hero\">
@@ -579,6 +714,7 @@ def overview_html(slug_value: str, modules: list[str], evidence_entries: list[di
 <section class=\"panel span-12\"><div class=\"section-title\"><div><h2>总览摘要</h2><p>一句话说明目标应用/系统解决什么问题。</p></div></div><p>TODO: 用初学者能懂的话解释目标项目/子系统目标，并引用源码或 GitNexus 证据。</p></section>
 <section class=\"panel span-6\"><h2>为什么要先理解它</h2><p>TODO: 说明为什么开发者需要先理解入口、边界、服务和数据流，而不是直接改代码。</p></section>
 <section class=\"panel span-6\" id=\"module-nav\"><h2>模块入口</h2><div class=\"list\">{module_links(modules)}</div></section>
+{function_entry_section}
 <section class=\"panel span-12\"><h2>真实源码目录树</h2>{structure_diagram}<pre class=\"tree\">{structure_tree}</pre></section>
 <section class=\"panel span-12\"><h2>整体运行时结构图</h2>{diagram}<p>TODO: 用费曼学习法解释图里的每条主要边：用户操作如何进入源码入口，如何穿过运行时/API/IPC 边界，最后到达服务、存储或外部集成。</p></section>
 <section class=\"panel span-12\"><h2>用户动作到运行时流程</h2><ol><li>从一个真实用户动作或系统事件开始。</li><li>找到对应源码入口、路由、preload/API/IPC 或服务边界。</li><li>跟踪到运行时服务、数据存储、外部集成和验证命令。</li></ol></section>
@@ -602,7 +738,7 @@ def overview_html(slug_value: str, modules: list[str], evidence_entries: list[di
 """
 
 
-def module_html(name: str, evidence_entries: list[dict[str, str]], mermaid_script: bool, diagram_mode: str, project_slug: str, modules: list[str]) -> str:
+def module_html(name: str, evidence_entries: list[dict[str, str]], mermaid_script: bool, diagram_mode: str, project_slug: str, modules: list[str], function_depth: bool = False) -> str:
     title = module_title(name)
     module_slug = slug(name)
     evidence_refs = ", ".join(entry["path"] for entry in evidence_entries) or "TODO: evidence reference"
@@ -629,7 +765,7 @@ def module_html(name: str, evidence_entries: list[dict[str, str]], mermaid_scrip
     )
     use_interactive = diagram_mode in {"interactive-flow", "hybrid"}
     use_mermaid = diagram_mode in {"mermaid", "hybrid"}
-    payload = architecture_flow_payload(project_slug, modules, evidence_entries) if use_interactive else None
+    payload = architecture_flow_payload(project_slug, [module_slug], evidence_entries, function_depth=function_depth) if use_interactive else None
     if use_interactive:
         diagram = interactive_flow_block("模块边界 interactive-flow", f"module-{module_slug}")
         if use_mermaid:
@@ -650,6 +786,7 @@ def module_html(name: str, evidence_entries: list[dict[str, str]], mermaid_scrip
             '<tr><td>服务/依赖</td><td>再看 service、external、data 与 test 类型边。</td></tr></tbody></table>'
             + tech_section_body
         )
+    function_sections = function_inventory_section(module_slug, use_interactive) if function_depth else ""
     script_ref = "../assets/mermaid.min.js" if mermaid_script else None
     flow_ref = "../assets/architecture-flow.js" if use_interactive else None
     flow_css = "../assets/architecture-flow.css" if use_interactive else None
@@ -668,6 +805,7 @@ def module_html(name: str, evidence_entries: list[dict[str, str]], mermaid_scrip
 <section class=\"panel span-12\"><h2>整体运行时结构图</h2>{diagram}<p>TODO: 解释每条边代表的职责交接，以及它对应的源码位置。</p></section>
 <section class=\"panel span-12\"><h2>数据如何流动</h2><p>TODO: 按输入 → 边界 → 处理 → 输出/副作用描述数据流。</p></section>
 <section class=\"panel span-12\"><h2>用户动作到运行时流程</h2><p>TODO: 用一个具体请求、用户动作或系统事件讲清楚端到端流程。</p></section>
+{function_sections}
 <section class=\"panel span-12\"><h2>源码阅读入口</h2><ul><li>TODO: 写入 <code>{module_slug}</code> 的首读源码文件或符号。</li></ul></section>
 <section class=\"panel span-12\"><h2>源码证据地图</h2><ul><li>源码证据 refs: {evidence_refs}</li><li>GitNexus graph commands: TODO: 填入 repo-qualified <code>gitnexus context</code>/<code>gitnexus cypher</code>。</li></ul></section>
 <section class=\"panel span-12\"><h2>优先阅读文件</h2><table><thead><tr><th>文件</th><th>为什么先读</th></tr></thead><tbody><tr><td>TODO: source file</td><td>TODO: product/runtime purpose</td></tr></tbody></table></section>
@@ -707,6 +845,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--evidence", action="append", default=[], help="源码证据 file to copy/reference; repeatable")
     parser.add_argument("--mermaid-js", help="Optional local mermaid.min.js file to copy into assets/")
     parser.add_argument("--diagram-mode", choices=DIAGRAM_MODES, default="interactive-flow", help="Diagram renderer mode: mermaid, interactive-flow (default), or hybrid")
+    parser.add_argument("--function-depth", action="store_true", help="Enable function trace graph/inventory scaffold, functionDepth metadata, and canonical function map evidence")
     parser.add_argument("--no-default-mermaid-js", action="store_true", help="Do not auto-copy project-explainer-web's bundled Mermaid asset")
     parser.add_argument("--force", action="store_true", help="Overwrite existing generated files")
     args = parser.parse_args(argv)
@@ -731,6 +870,8 @@ def main(argv: list[str] | None = None) -> int:
 
     use_interactive = args.diagram_mode in {"interactive-flow", "hybrid"}
     use_mermaid = args.diagram_mode in {"mermaid", "hybrid"}
+    if args.function_depth and not use_interactive:
+        parser.error("--function-depth requires --diagram-mode interactive-flow or hybrid")
 
     if use_interactive:
         try:
@@ -791,14 +932,19 @@ def main(argv: list[str] | None = None) -> int:
         "modules": modules,
         "evidence_files": evidence_entries,
     }
+    if args.function_depth:
+        meta["functionDepth"] = {"enabled": True, "coverageScope": "in-scope-architecture-functions", "mapPath": "evidence/function-architecture-map.json", "validatorMode": "function-depth"}
 
-    write(out / "index.html", overview_html(project_slug, modules, evidence_entries, mermaid_script, args.diagram_mode), args.force)
+    write(out / "index.html", overview_html(project_slug, modules, evidence_entries, mermaid_script, args.diagram_mode, function_depth=args.function_depth), args.force)
     for module in modules:
-        write(modules_dir / f"{module}.html", module_html(module, evidence_entries, mermaid_script, args.diagram_mode, project_slug, modules), args.force)
+        write(modules_dir / f"{module}.html", module_html(module, evidence_entries, mermaid_script, args.diagram_mode, project_slug, modules, function_depth=args.function_depth), args.force)
     if use_interactive:
-        write(evidence_dir / "interactive-flow.json", json.dumps(architecture_flow_payload(project_slug, modules, evidence_entries), indent=2, ensure_ascii=False) + "\n", args.force)
+        write(evidence_dir / "interactive-flow.json", json.dumps(architecture_flow_payload(project_slug, modules, evidence_entries, function_depth=args.function_depth), indent=2, ensure_ascii=False) + "\n", args.force)
     write(evidence_dir / "module-map.json", json.dumps({"modules": module_entries}, indent=2, ensure_ascii=False) + "\n", args.force)
     write(evidence_dir / "route-service-trace.json", json.dumps(route_trace, indent=2, ensure_ascii=False) + "\n", args.force)
+    if args.function_depth:
+        write(evidence_dir / "function-architecture-map.json", json.dumps(function_architecture_map(project_slug, modules, evidence_entries, meta["git_commit"]), indent=2, ensure_ascii=False) + "\n", args.force)
+        write(evidence_dir / "visual-qa-function-drilldown.json", json.dumps(function_visual_qa_stub(modules), indent=2, ensure_ascii=False) + "\n", args.force)
     write(out / "wiki-meta.json", json.dumps(meta, indent=2, ensure_ascii=False) + "\n", args.force)
 
     print(f"Wrote architecture-web scaffold: {out}")

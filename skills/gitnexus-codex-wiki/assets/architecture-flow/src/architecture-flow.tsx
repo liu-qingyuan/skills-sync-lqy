@@ -21,6 +21,10 @@ type FlowNode = {
   id: string;
   type?: string;
   label: string;
+  symbolId?: string;
+  role?: string;
+  file?: string;
+  line?: number;
   position?: { x: number; y: number };
   width?: number;
   height?: number;
@@ -108,6 +112,8 @@ function EvidencePanel({ selection, graph }: { selection: Selection; graph: Flow
         <>
           <h4>{selection?.kind === 'edge' ? 'Edge' : 'Node'} · {'label' in item ? item.label : item.id}</h4>
           <p><strong>ID:</strong> <code>{item.id}</code></p>
+          {'symbolId' in item && item.symbolId ? <p><strong>Symbol ID:</strong> <code>{item.symbolId}</code></p> : null}
+          {'file' in item && item.file ? <p><strong>Source:</strong> <code>{item.file}{'line' in item && item.line ? `:${item.line}` : ''}</code></p> : null}
           {'type' in item && item.type ? <p><strong>Type:</strong> <span className="af-chip">{item.type}</span></p> : null}
           {'source' in item ? <p><strong>Route:</strong> <code>{item.source}</code> → <code>{item.target}</code></p> : null}
           <ul>
@@ -211,7 +217,49 @@ function parsePayload(): FlowPayload | null {
   }
 }
 
+function mountFunctionInventories() {
+  const tables = Array.from(document.querySelectorAll<HTMLTableElement>('table[data-function-inventory]'));
+  tables.forEach((table) => {
+    const scope = table.closest<HTMLElement>('[data-function-inventory-scope]') || table.parentElement || document.body;
+    const input = scope.querySelector<HTMLInputElement>('[data-function-inventory-search]');
+    const status = scope.querySelector<HTMLElement>('[data-function-inventory-count]');
+    const rows = Array.from(table.tBodies[0]?.rows || []);
+    const pageSize = Math.max(1, Number(table.dataset.pageSize || '50') || 50);
+    let page = 0;
+    let controls = scope.querySelector<HTMLElement>('[data-function-inventory-controls]');
+    if (!controls) {
+      controls = document.createElement('div');
+      controls.className = 'function-inventory-controls';
+      controls.dataset.functionInventoryControls = 'true';
+      controls.innerHTML = '<button type="button" data-function-page="prev">上一页</button><span data-function-page-status></span><button type="button" data-function-page="next">下一页</button>';
+      table.insertAdjacentElement('afterend', controls);
+    }
+    const prev = controls.querySelector<HTMLButtonElement>('[data-function-page="prev"]');
+    const next = controls.querySelector<HTMLButtonElement>('[data-function-page="next"]');
+    const pageStatus = controls.querySelector<HTMLElement>('[data-function-page-status]');
+    const apply = () => {
+      const query = (input?.value || '').trim().toLowerCase();
+      const matched = rows.filter((row) => !query || row.textContent?.toLowerCase().includes(query));
+      const totalPages = Math.max(1, Math.ceil(matched.length / pageSize));
+      page = Math.min(page, totalPages - 1);
+      const start = page * pageSize;
+      const visible = new Set(matched.slice(start, start + pageSize));
+      rows.forEach((row) => { row.hidden = !visible.has(row); });
+      if (status) status.textContent = `显示 ${matched.length} / ${rows.length} 个函数；每页 ${pageSize} 行`;
+      if (pageStatus) pageStatus.textContent = `${page + 1} / ${totalPages}`;
+      if (prev) prev.disabled = page <= 0;
+      if (next) next.disabled = page >= totalPages - 1;
+      table.dataset.filteredRows = String(matched.length);
+    };
+    input?.addEventListener('input', () => { page = 0; apply(); });
+    prev?.addEventListener('click', () => { page = Math.max(0, page - 1); apply(); });
+    next?.addEventListener('click', () => { page += 1; apply(); });
+    apply();
+  });
+}
+
 function mountAll() {
+  mountFunctionInventories();
   const payload = parsePayload();
   const containers = Array.from(document.querySelectorAll<HTMLElement>('[data-flow-graph]'));
   if (!payload) {
