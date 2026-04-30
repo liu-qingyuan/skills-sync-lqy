@@ -116,6 +116,148 @@ MODULE_HTML = f"""<!doctype html>
 </main></div></body></html>
 """
 
+
+INTERACTIVE_FLOW_PAYLOAD = {
+    "version": 1,
+    "graphs": [
+        {
+            "id": "runtime-overview",
+            "title": "整体运行时结构",
+            "nodes": [
+                {"id": "user", "type": "actor", "label": "用户 / operator", "position": {"x": 0, "y": 120}, "width": 220, "height": 92, "evidence": ["src/renderer/App.tsx", "gitnexus context src/renderer/App.tsx"]},
+                {"id": "renderer", "type": "runtime", "label": "React renderer / route", "position": {"x": 320, "y": 120}, "width": 240, "height": 92, "evidence": ["src/renderer/App.tsx", "src/renderer/routes/index.tsx"]},
+                {"id": "preload", "type": "boundary", "label": "preload electronAPI", "position": {"x": 650, "y": 120}, "width": 240, "height": 92, "evidence": ["src/preload/index.ts"]},
+                {"id": "main", "type": "runtime", "label": "ipcMain / main process", "position": {"x": 980, "y": 120}, "width": 240, "height": 92, "evidence": ["src/main/index.ts", "gitnexus cypher MATCH ipcMain"]},
+                {"id": "service", "type": "service", "label": "OpenClaw service", "position": {"x": 1310, "y": 40}, "width": 240, "height": 92, "evidence": ["src/main/services/openclaw.ts"]},
+                {"id": "storage", "type": "data", "label": "local config storage", "position": {"x": 1310, "y": 220}, "width": 240, "height": 92, "evidence": ["src/main/config.ts"]},
+            ],
+            "edges": [
+                {"id": "user-renderer", "source": "user", "target": "renderer", "sourceHandle": "right", "targetHandle": "left", "type": "call", "label": "UI action", "evidence": ["src/renderer/App.tsx"]},
+                {"id": "renderer-preload", "source": "renderer", "target": "preload", "sourceHandle": "right", "targetHandle": "left", "type": "ipc", "label": "electronAPI call", "evidence": ["src/preload/index.ts"]},
+                {"id": "preload-main", "source": "preload", "target": "main", "sourceHandle": "right", "targetHandle": "left", "type": "ipc", "label": "ipcMain handler", "evidence": ["src/main/index.ts"]},
+                {"id": "main-service", "source": "main", "target": "service", "sourceHandle": "right", "targetHandle": "left", "type": "external", "label": "provider call", "evidence": ["src/main/services/openclaw.ts"]},
+                {"id": "main-storage", "source": "main", "target": "storage", "sourceHandle": "bottom", "targetHandle": "left", "type": "data", "label": "read/write config", "evidence": ["src/main/config.ts"]},
+                {"id": "service-main-error", "source": "service", "target": "main", "sourceHandle": "left", "targetHandle": "top", "type": "error", "label": "fallback on provider error", "evidence": ["src/main/services/openclaw.ts", "tests/low-level/openclawManagedSupport.test.ts"]},
+            ],
+            "layout": {"engine": "dagre", "direction": "LR", "nodeWidth": 240, "nodeHeight": 92, "ranksep": 96, "nodesep": 64, "computedAtBuildTime": True},
+        }
+    ],
+}
+
+INTERACTIVE_STYLE = STYLE + """
+.architecture-flow { min-height: 560px; border: 1px solid var(--line); border-radius: 18px; background: #fff; }
+.evidence-panel { border-left: 4px solid var(--accent); padding-left: 12px; }
+.edge-legend { display: flex; gap: 8px; flex-wrap: wrap; }
+.edge-call { color: #315efb; }
+.edge-ipc { color: #7c3aed; }
+.edge-data { color: #0f766e; }
+.edge-error { color: #dc2626; }
+.edge-external { color: #b45309; }
+"""
+
+
+def architecture_flow_block(payload: dict | None = None) -> str:
+    payload_text = json.dumps(payload or INTERACTIVE_FLOW_PAYLOAD, ensure_ascii=False, indent=2)
+    return f"""<div class="architecture-flow" data-architecture-flow-root="runtime-overview" aria-label="interactive runtime architecture"></div>
+<script type="application/json" data-architecture-flow>{payload_text}</script>
+<div class="evidence-panel" data-architecture-flow-evidence><strong>点击节点或边查看源码证据</strong><p>Source: src/renderer/App.tsx, src/preload/index.ts, src/main/index.ts. GitNexus graph evidence backs each node and edge.</p></div>
+<div class="edge-legend"><span class="edge-call">call/control</span><span class="edge-ipc">ipc boundary</span><span class="edge-data">data/storage</span><span class="edge-error">error/fallback</span><span class="edge-external">external provider</span><span>test/verification</span></div>
+<table><tr><th>节点/边</th><th>非视觉 fallback</th><th>证据</th></tr><tr><td>renderer-preload</td><td>React renderer 通过 preload electronAPI 进入 ipcMain。</td><td>src/preload/index.ts</td></tr></table>"""
+
+
+def write_interactive_assets(root: Path) -> None:
+    import hashlib
+    assets = root / "assets"
+    assets.mkdir(parents=True, exist_ok=True)
+    js = "/* local React Flow architecture bundle fixture */\nwindow.__architectureFlowBundle = { name: 'local-react-flow-fixture' };\n"
+    css = "/* local React Flow architecture styles fixture */\n.architecture-flow { min-height: 560px; }\n"
+    (assets / "architecture-flow.js").write_text(js, encoding="utf-8")
+    (assets / "architecture-flow.css").write_text(css, encoding="utf-8")
+    provenance = {
+        "packages": [
+            {"name": "react", "version": "19.1.0", "license": "MIT"},
+            {"name": "react-dom", "version": "19.1.0", "license": "MIT"},
+            {"name": "@xyflow/react", "version": "12.8.5", "license": "MIT"},
+            {"name": "@dagrejs/dagre", "version": "1.1.5", "license": "MIT"},
+        ],
+        "build_command": "npm run build:architecture-flow",
+        "source_template_path": "templates/architecture-flow/",
+        "license_notes": "Fixture metadata mirrors required local React Flow bundle provenance fields.",
+        "assets": [
+            {"path": "assets/architecture-flow.js", "sha256": hashlib.sha256(js.encode()).hexdigest()},
+            {"path": "assets/architecture-flow.css", "sha256": hashlib.sha256(css.encode()).hexdigest()},
+        ],
+    }
+    (assets / "architecture-flow-provenance.json").write_text(json.dumps(provenance, indent=2), encoding="utf-8")
+
+
+def write_valid_interactive_architecture_web(root: Path, payload: dict | None = None) -> None:
+    (root / "modules").mkdir(parents=True)
+    (root / "evidence").mkdir()
+    write_interactive_assets(root)
+    flow = architecture_flow_block(payload)
+    index = f"""<!doctype html>
+<html lang="zh-CN"><head><style>{INTERACTIVE_STYLE}</style><link rel="stylesheet" href="assets/architecture-flow.css"><script defer src="assets/architecture-flow.js"></script></head><body><div class="shell">
+<header class="hero"><h1>交互式架构说明</h1><p>默认中文主入口。</p></header>
+<main>
+<section class="panel"><h2>总览摘要</h2><p>Source: src/renderer/App.tsx. GitNexus graph evidence explains the target application entrypoint.</p></section>
+<section class="panel"><h2>为什么要先理解它</h2><p>帮助新人先理解 renderer、preload、main、service 和 storage 边界。</p></section>
+<section class="panel"><h2>真实源码目录树</h2><pre class="tree">src/
+├─ renderer/
+├─ preload/
+└─ main/index.ts</pre></section>
+<section class="panel"><h2>整体运行时结构图</h2>{flow}<p>Non-visual fallback: 用户动作穿过 renderer、preload、main，再按 service/storage/error fallback 分支。</p></section>
+<section class="panel"><h2>用户动作到运行时流程</h2><p>route → service → IPC 流程从 App 进入 Main，并按本地/云端/runtime 分支。</p></section>
+<section class="panel"><h2>源码证据地图</h2><table><tr><td>evidence/interactive-flow.json</td><td>src/main/index.ts</td></tr></table></section>
+<section class="panel"><h2>优先阅读文件</h2><a href="modules/core.html">Core</a></section>
+<section class="panel"><h2>技术框架图</h2><pre class="tree">Electron
+├─ React Router
+├─ preload/electronAPI
+└─ ipcMain services</pre></section>
+<section class="panel"><h2>边界与不变量</h2><p>renderer/preload/main/runtime 边界必须清楚；分叉 branch 包括成功、失败和 fallback。</p></section>
+<section class="panel"><h2>安全修改方式</h2><p>先改 evidence，再改页面。</p></section>
+<section class="panel"><h2>验证命令</h2><p>Run python3 -m unittest discover tests.</p></section>
+<section class="panel"><h2>常见反模式</h2><p>不要跳过 evidence，不要把 index.html/evidence JSON 当成架构节点。</p></section>
+<section class="panel"><h2>原理与背景知识</h2><p>React Flow interactive-flow 使用本地 bundle 和嵌入 payload。</p></section>
+<section class="panel"><h2>约束与风险</h2><p>Stale index 需要标注。</p></section>
+<section class="panel"><h2>推荐维护方案</h2><p>保持单入口 index。</p></section>
+<section class="panel"><h2>后续维护动作</h2><p>补齐模块。</p></section>
+</main></div></body></html>"""
+    module = f"""<!doctype html>
+<html lang="zh-CN"><head><style>{INTERACTIVE_STYLE}</style><link rel="stylesheet" href="../assets/architecture-flow.css"><script defer src="../assets/architecture-flow.js"></script></head><body><div class="shell">
+<nav><a href="../index.html">返回主页面 index.html</a></nav>
+<header class="hero"><h1>Core</h1></header>
+<main>
+<section class="panel"><h2>模块职责</h2><p>Core receives requests. Source: src/main/index.ts.</p></section>
+<section class="panel"><h2>为什么存在</h2><p>It coordinates services from one entrypoint.</p></section>
+<section class="panel"><h2>真实源码目录树</h2><pre class="tree">src/main/
+└─ index.ts</pre></section>
+<section class="panel"><h2>整体运行时结构图</h2>{flow}<p>Non-visual fallback: Entry calls Core, then Core chooses success, error, or fallback.</p></section>
+<section class="panel"><h2>数据如何流动</h2><p>src/main/index.ts handler 通过 API/IPC/service 入口调用 Core。</p></section>
+<section class="panel"><h2>用户动作到运行时流程</h2><p>输入先到入口，再进入服务；分支表覆盖 success/error/fallback。</p></section>
+<section class="panel"><h2>源码阅读入口</h2><p>Start at src/main/index.ts.</p></section>
+<section class="panel"><h2>源码证据地图</h2><p>GitNexus: gitnexus context src/main/index.ts. Graph: Entry -> Service.</p></section>
+<section class="panel"><h2>优先阅读文件</h2><table><tr><th>文件</th><th>关键符号/handler/API</th></tr><tr><td>src/main/index.ts</td><td>ipcMain handler API service entry</td></tr></table></section>
+<section class="panel"><h2>技术框架图</h2><pre class="tree">Electron main
+└─ Core service</pre></section>
+<section class="panel"><h2>边界与不变量</h2><p>Keep entry/service boundaries.</p></section>
+<section class="panel"><h2>Branch paths</h2><table><tr><th>分支</th><th>触发条件</th></tr><tr><td>success</td><td>service returns data</td></tr><tr><td>error</td><td>handler raises error</td></tr><tr><td>fallback</td><td>service unavailable</td></tr></table></section>
+<section class="panel"><h2>安全修改方式</h2><p>Modify source and update tests.</p></section>
+<section class="panel"><h2>源码证据</h2><p>GitNexus graph evidence.</p></section>
+<section class="panel"><h2>验证命令</h2><p>Run python3 -m unittest discover tests.</p></section>
+<section class="panel"><h2>常见反模式</h2><p>Do not bypass Core.</p></section>
+<section class="panel"><h2>原理与背景知识</h2><p>Core owns orchestration.</p></section>
+<section class="panel"><h2>约束与风险</h2><p>Keep graph current.</p></section>
+<section class="panel"><h2>推荐维护方案</h2><p>Update Core evidence first.</p></section>
+<section class="panel"><h2>后续维护动作</h2><p>Run validation.</p></section>
+</main></div></body></html>"""
+    (root / "index.html").write_text(index, encoding="utf-8")
+    (root / "modules" / "core.html").write_text(module, encoding="utf-8")
+    (root / "evidence" / "interactive-flow.json").write_text(json.dumps(payload or INTERACTIVE_FLOW_PAYLOAD, ensure_ascii=False, indent=2), encoding="utf-8")
+    (root / "wiki-meta.json").write_text(json.dumps({"generated_at": "2026-04-30T00:00:00Z", "repo": "/tmp/repo", "git_commit": "abc123", "gitnexus_version": "gitnexus 1.6.3", "execution_boundary": "GitNexus supplies graph/index evidence; Codex authors architecture-web pages directly. Native gitnexus wiki provider/API-key setup is separate.", "mode": "architecture-web", "diagram_mode": "interactive-flow", "language": "zh-CN", "visual_style": "project-explainer-web", "entrypoint": "index.html", "modules": ["core"], "evidence_files": [{"source": "/tmp/preflight.md", "path": "evidence/interactive-flow.json"}]}, indent=2), encoding="utf-8")
+    (root / "evidence" / "module-map.json").write_text(json.dumps({"modules": [{"slug": "core", "title": "Core", "source_files": ["src/main/index.ts"], "graph_commands": ["gitnexus context src/main/index.ts"], "evidence_refs": ["evidence/interactive-flow.json"], "verification_commands": ["python3 -m unittest discover tests"]}]}, indent=2), encoding="utf-8")
+    (root / "evidence" / "route-service-trace.json").write_text(json.dumps({"flows": [{"slug": "entry-to-service", "title": "Entry to service", "entrypoints": ["src/main/index.ts"], "services": ["OpenClawService"], "graph_edges": ["src/main/index.ts -> OpenClawService.send"], "evidence_refs": ["evidence/interactive-flow.json"]}]}, indent=2), encoding="utf-8")
+
 def write_valid_architecture_web(root: Path) -> None:
     (root / "modules").mkdir(parents=True)
     (root / "evidence").mkdir()
@@ -236,6 +378,147 @@ class ValidateSkillTests(unittest.TestCase):
             self.assertTrue((docs / "modules" / "app.md").is_file())
             self.assertFalse((docs / "modules" / "core.md").exists())
             self.assertEqual(validator.validate_docs(docs), [])
+
+    def test_scaffold_interactive_flow_assets(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp) / "sample-architecture-wiki"
+            subprocess.check_call([
+                "python3",
+                str(ROOT / "scripts" / "scaffold-architecture-web.py"),
+                "--repo",
+                str(ROOT),
+                "--out",
+                str(out),
+                "--slug",
+                "sample",
+                "--module",
+                "renderer",
+                "--module",
+                "preload",
+                "--module",
+                "main",
+                "--force",
+            ])
+            self.assertTrue((out / "assets" / "architecture-flow.js").is_file())
+            self.assertTrue((out / "assets" / "architecture-flow.css").is_file())
+            html_and_css = "\n".join(p.read_text(encoding="utf-8") for p in [out / "index.html", out / "assets" / "architecture-flow.css"])
+            self.assertNotRegex(html_and_css, r"<script[^>]+https?://|<link[^>]+https?://|<img[^>]+https?://|url\(https?://|unpkg|jsdelivr|//cdn")
+
+    def test_scaffold_interactive_flow_payload(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp) / "sample-architecture-wiki"
+            subprocess.check_call([
+                "python3",
+                str(ROOT / "scripts" / "scaffold-architecture-web.py"),
+                "--repo",
+                str(ROOT),
+                "--out",
+                str(out),
+                "--slug",
+                "sample",
+                "--module",
+                "renderer",
+                "--module",
+                "preload",
+                "--module",
+                "main",
+                "--force",
+            ])
+            html = (out / "index.html").read_text(encoding="utf-8")
+            self.assertIn("data-architecture-flow", html)
+            payloads = validator.extract_interactive_flow_payloads(html, out / "index.html")
+            self.assertTrue(payloads)
+            graph = payloads[0]["graphs"][0]
+            self.assertTrue(graph["nodes"])
+            self.assertTrue(graph["edges"])
+            for node in graph["nodes"]:
+                self.assertIn("position", node)
+                self.assertIn("width", node)
+                self.assertIn("height", node)
+            for edge in graph["edges"]:
+                self.assertIn("sourceHandle", edge)
+                self.assertIn("targetHandle", edge)
+
+    def test_file_url_payload_does_not_require_fetch(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp) / "interactive-architecture-wiki"
+            write_valid_interactive_architecture_web(out)
+            html = (out / "index.html").read_text(encoding="utf-8")
+            self.assertIn("data-architecture-flow", html)
+            self.assertNotRegex(html, r"fetch\(['\"]evidence/")
+            self.assertEqual(validator.validate_architecture_web(out), [])
+
+    def test_validate_rejects_missing_interactive_bundle(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp) / "missing-bundle-architecture-wiki"
+            write_valid_interactive_architecture_web(out)
+            (out / "assets" / "architecture-flow.js").unlink()
+            errors = validator.validate_architecture_web(out)
+            self.assertTrue(any("architecture-flow.js" in err or "interactive bundle" in err for err in errors))
+
+    def test_validate_rejects_network_react_flow_assets(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp) / "network-asset-architecture-wiki"
+            write_valid_interactive_architecture_web(out)
+            index = out / "index.html"
+            index.write_text(
+                index.read_text(encoding="utf-8").replace(
+                    "</head>",
+                    '<script src="https://unpkg.com/@xyflow/react/dist/umd/index.js"></script><link rel="stylesheet" href="https://cdn.example/react-flow.css"><style>.bad{background:url(https://cdn.example/bg.png)}</style></head>',
+                ).replace(
+                    "</body>",
+                    '<img src="https://cdn.example/tracker.png" alt="network runtime asset"></body>',
+                ),
+                encoding="utf-8",
+            )
+            errors = validator.validate_architecture_web(out)
+            self.assertTrue(any("network" in err.lower() or "cdn" in err.lower() for err in errors))
+
+    def test_validate_requires_bundle_provenance(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp) / "missing-provenance-architecture-wiki"
+            write_valid_interactive_architecture_web(out)
+            (out / "assets" / "architecture-flow-provenance.json").unlink()
+            errors = validator.validate_architecture_web(out)
+            self.assertTrue(any("provenance" in err.lower() for err in errors))
+
+    def test_validate_rejects_nodes_without_evidence(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp) / "node-without-evidence-architecture-wiki"
+            payload = json.loads(json.dumps(INTERACTIVE_FLOW_PAYLOAD))
+            payload["graphs"][0]["nodes"][0].pop("evidence")
+            write_valid_interactive_architecture_web(out, payload)
+            errors = validator.validate_architecture_web(out)
+            self.assertTrue(any("node" in err.lower() and "evidence" in err.lower() for err in errors))
+
+    def test_validate_rejects_untyped_edges(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp) / "untyped-edge-architecture-wiki"
+            payload = json.loads(json.dumps(INTERACTIVE_FLOW_PAYLOAD))
+            payload["graphs"][0]["edges"][0].pop("type")
+            write_valid_interactive_architecture_web(out, payload)
+            errors = validator.validate_architecture_web(out)
+            self.assertTrue(any("edge" in err.lower() and "type" in err.lower() for err in errors))
+
+    def test_validate_rejects_artifact_centric_interactive_json(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp) / "artifact-interactive-architecture-wiki"
+            payload = json.loads(json.dumps(INTERACTIVE_FLOW_PAYLOAD))
+            payload["graphs"][0]["nodes"][0]["id"] = "index-html"
+            payload["graphs"][0]["nodes"][0]["label"] = "index.html 主入口"
+            payload["graphs"][0]["nodes"][0]["evidence"] = ["_learn_web/cpilot/index.html"]
+            payload["graphs"][0]["edges"][0]["label"] = "modules/*.html navigation"
+            payload["graphs"][0]["edges"][0]["evidence"] = ["wiki-meta.json", "evidence/*.json"]
+            write_valid_interactive_architecture_web(out, payload)
+            errors = validator.validate_architecture_web(out)
+            self.assertTrue(any("artifact-centric" in err for err in errors))
+
+    def test_validate_accepts_react_flow_without_mermaid_graph_tb(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp) / "interactive-no-mermaid-architecture-wiki"
+            write_valid_interactive_architecture_web(out)
+            self.assertNotIn("graph TB", (out / "index.html").read_text(encoding="utf-8"))
+            self.assertEqual(validator.validate_architecture_web(out), [])
 
     def test_architecture_scaffold_allows_placeholders_but_strict_fails(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

@@ -110,6 +110,12 @@ PLACEHOLDER_PATTERN = re.compile(r"\b(TODO|TBD|FIXME|PLACEHOLDER|LOREM IPSUM|REP
 NETWORK_SCRIPT_PATTERN = re.compile(r"<script\b[^>]*\bsrc=[\"'](?:https?:)?//", re.I)
 CDN_NAME_PATTERN = re.compile(r"\b(cdnjs|jsdelivr|unpkg)\b", re.I)
 SCRIPT_SRC_PATTERN = re.compile(r"<script\b[^>]*\bsrc=[\"']([^\"']+)[\"']", re.I)
+LINK_HREF_PATTERN = re.compile(r"<link\b[^>]*\bhref=[\"']([^\"']+)[\"']", re.I)
+IMG_SRC_PATTERN = re.compile(r"<img\b[^>]*\bsrc=[\"']([^\"']+)[\"']", re.I)
+CSS_URL_PATTERN = re.compile(r"url\(\s*[\"']?([^\)\"']+)", re.I)
+INTERACTIVE_PAYLOAD_PATTERN = re.compile(r"<script\b(?P<attrs>[^>]*\bdata-architecture-flow\b[^>]*)>(?P<body>.*?)</script>", re.I | re.S)
+INTERACTIVE_CONTAINER_PATTERN = re.compile(r"data-architecture-flow(?:-root)?\b|class=[\"'][^\"']*architecture-flow", re.I)
+ALLOWED_EDGE_TYPES = {"call", "ipc", "data", "error", "external", "test", "control"}
 TAG_PATTERN = re.compile(r"<[^>]+>")
 SCRIPT_STYLE_BLOCK_PATTERN = re.compile(r"<(script|style)\b[^>]*>.*?</\1>", re.I | re.S)
 HIDDEN_BLOCK_PATTERN = re.compile(
@@ -210,6 +216,40 @@ def unescape_html(text: str) -> str:
     return text.replace("&amp;", "&").replace("&lt;", "<").replace("&gt;", ">").replace("&quot;", '"')
 
 
+def is_network_url(value: str) -> bool:
+    stripped = value.strip().strip("'\"")
+    return stripped.startswith(("http://", "https://", "//")) or any(name in stripped.lower() for name in ("unpkg", "jsdelivr", "cdnjs", "//cdn"))
+
+
+def has_interactive_flow(html: str) -> bool:
+    return bool(INTERACTIVE_CONTAINER_PATTERN.search(html) or INTERACTIVE_PAYLOAD_PATTERN.search(html))
+
+
+def extract_interactive_flow_payloads(html: str, path: Path | str = "<html>") -> list[Any]:
+    payloads: list[Any] = []
+    for match in INTERACTIVE_PAYLOAD_PATTERN.finditer(html):
+        body = unescape_html(match.group("body")).strip()
+        if not body:
+            continue
+        try:
+            payloads.append(json.loads(body))
+        except json.JSONDecodeError as exc:
+            payloads.append({"__parse_error__": f"{path}: invalid interactive-flow JSON: {exc}"})
+    return payloads
+
+
+def validate_runtime_network_urls(path: Path, errors: list[str]) -> None:
+    html = read_text(path)
+    for label, pattern in (("script src", SCRIPT_SRC_PATTERN), ("link href", LINK_HREF_PATTERN), ("img src", IMG_SRC_PATTERN)):
+        for value in pattern.findall(html):
+            if is_network_url(value):
+                fail(errors, f"{path} contains network runtime asset in {label}: {value}")
+    for style_body in re.findall(r"<style\b[^>]*>(.*?)</style>", html, flags=re.I | re.S):
+        for value in CSS_URL_PATTERN.findall(style_body):
+            if is_network_url(value):
+                fail(errors, f"{path} contains network runtime asset in CSS url(): {value}")
+
+
 def hidden_attrs(attrs: str) -> bool:
     lowered = attrs.lower()
     return (
@@ -296,8 +336,8 @@ def validate_no_visible_raw_graph_blocks(path: Path, allow_placeholders: bool, e
     for section in DIAGRAM_SECTION_PATTERN.finditer(html):
         body = section.group("body")
         heading = section_heading(body)
-        if "技术框架图" in heading and "<svg" not in body.lower() and "class=\"mermaid\"" not in body.lower() and "class='mermaid'" not in body.lower():
-            fail(errors, f"{path} 技术框架图 section must contain a rendered SVG or local Mermaid render block, not only source text")
+        if "技术框架图" in heading and not has_interactive_flow(html) and "<svg" not in body.lower() and "class=\"mermaid\"" not in body.lower() and "class='mermaid'" not in body.lower():
+            fail(errors, f"{path} 技术框架图 section must contain a rendered SVG, local Mermaid render block, or valid interactive-flow contract elsewhere on the page")
         if re.search(r"</svg>\s*</div>\s*<pre\b[^>]*>\s*(?:graph|flowchart)\s+(?:TB|TD|BT|LR|RL)\b", body, re.I | re.S):
             fail(errors, f"{path} places raw graph source immediately after rendered SVG; wrap source in collapsed <details>")
 
@@ -449,8 +489,122 @@ def validate_required_headings(path: Path, headings: list[str], errors: list[str
             fail(errors, f"{path} missing required heading: {heading}")
 
 
+def validate_bundle_provenance(root: Path, errors: list[str]) -> None:
+    provenance_path = root / "assets" / "architecture-flow-provenance.json"
+    provenance = load_json(provenance_path, errors)
+    if not isinstance(provenance, dict):
+        return
+    text = json.dumps(provenance).lower()
+    for term in ("react", "react-dom", "@xyflow/react"):
+        if term not in text:
+            fail(errors, f"{provenance_path} missing React Flow provenance package: {term}")
+    if "dagre" not in text and "elk" not in text:
+        fail(errors, f"{provenance_path} missing layout package provenance (dagre or elk)")
+    for term in ("build", "license"):
+        if term not in text:
+            fail(errors, f"{provenance_path} missing {term} metadata")
+    for asset_name in ("architecture-flow.js", "architecture-flow.css"):
+        if asset_name not in text or "sha256" not in text:
+            fail(errors, f"{provenance_path} missing hash metadata for {asset_name}")
+
+
+def has_grounding(value: Any) -> bool:
+    if isinstance(value, list) and value:
+        return all(isinstance(item, (str, dict)) and str(item).strip() for item in value)
+    return isinstance(value, str) and bool(value.strip())
+
+
+def validate_interactive_payload(payload: Any, path: Path, errors: list[str]) -> None:
+    if isinstance(payload, dict) and "__parse_error__" in payload:
+        fail(errors, str(payload["__parse_error__"]))
+        return
+    if not isinstance(payload, dict):
+        fail(errors, f"{path} interactive-flow payload must be a JSON object")
+        return
+    if payload.get("version") != 1:
+        fail(errors, f"{path} interactive-flow payload version must be 1")
+    graphs = payload.get("graphs")
+    if not isinstance(graphs, list) or not graphs:
+        fail(errors, f"{path} interactive-flow payload must include non-empty graphs")
+        return
+    payload_text = json.dumps(payload, ensure_ascii=False)
+    if any(pattern.search(payload_text) for pattern in ARTIFACT_CENTRIC_PATTERNS):
+        fail(errors, f"{path} interactive-flow payload is artifact-centric; nodes/edges must center the target application/system")
+    for graph_index, graph in enumerate(graphs):
+        if not isinstance(graph, dict):
+            fail(errors, f"{path} interactive-flow graphs[{graph_index}] must be an object")
+            continue
+        nodes = graph.get("nodes")
+        edges = graph.get("edges")
+        if not isinstance(nodes, list) or not nodes:
+            fail(errors, f"{path} interactive-flow graphs[{graph_index}].nodes must be non-empty")
+            continue
+        if not isinstance(edges, list) or not edges:
+            fail(errors, f"{path} interactive-flow graphs[{graph_index}].edges must be non-empty")
+            continue
+        node_ids: set[str] = set()
+        for node_index, node in enumerate(nodes):
+            if not isinstance(node, dict):
+                fail(errors, f"{path} interactive-flow node {node_index} must be an object")
+                continue
+            node_id = str(node.get("id", ""))
+            if node_id:
+                node_ids.add(node_id)
+            for field in ("id", "type", "label"):
+                if not node.get(field):
+                    fail(errors, f"{path} interactive-flow node {node_id or node_index} missing {field}")
+            position = node.get("position")
+            if not isinstance(position, dict) or not isinstance(position.get("x"), (int, float)) or not isinstance(position.get("y"), (int, float)):
+                fail(errors, f"{path} interactive-flow node {node_id or node_index} missing stored position x/y")
+            if not isinstance(node.get("width"), (int, float)) or not isinstance(node.get("height"), (int, float)):
+                fail(errors, f"{path} interactive-flow node {node_id or node_index} missing width/height")
+            if not (has_grounding(node.get("evidence")) or has_grounding(node.get("rationale"))):
+                fail(errors, f"{path} interactive-flow node {node_id or node_index} missing evidence or fallback rationale")
+        for edge_index, edge in enumerate(edges):
+            if not isinstance(edge, dict):
+                fail(errors, f"{path} interactive-flow edge {edge_index} must be an object")
+                continue
+            edge_id = str(edge.get("id", edge_index))
+            for field in ("id", "source", "target", "type", "label"):
+                if not edge.get(field):
+                    fail(errors, f"{path} interactive-flow edge {edge_id} missing {field}")
+            if edge.get("type") and edge.get("type") not in ALLOWED_EDGE_TYPES:
+                fail(errors, f"{path} interactive-flow edge {edge_id} has unsupported semantic type: {edge.get('type')}")
+            if edge.get("source") not in node_ids or edge.get("target") not in node_ids:
+                fail(errors, f"{path} interactive-flow edge {edge_id} references unknown source/target")
+            if not edge.get("sourceHandle") or not edge.get("targetHandle"):
+                fail(errors, f"{path} interactive-flow edge {edge_id} missing sourceHandle/targetHandle for deterministic crossing control")
+            if not (has_grounding(edge.get("evidence")) or has_grounding(edge.get("rationale"))):
+                fail(errors, f"{path} interactive-flow edge {edge_id} missing evidence or fallback rationale")
+        layout = graph.get("layout")
+        if not isinstance(layout, dict) or layout.get("engine") not in ("dagre", "elk", "manual"):
+            fail(errors, f"{path} interactive-flow graph {graph.get('id', graph_index)} missing deterministic layout metadata")
+
+
+def validate_interactive_flow_page(path: Path, root: Path, errors: list[str]) -> None:
+    html = read_text(path)
+    if not has_interactive_flow(html):
+        return
+    validate_runtime_network_urls(path, errors)
+    for asset_name in ("architecture-flow.js", "architecture-flow.css"):
+        if not (root / "assets" / asset_name).is_file():
+            fail(errors, f"{path} uses interactive-flow but missing local interactive bundle asset: assets/{asset_name}")
+    validate_bundle_provenance(root, errors)
+    payloads = extract_interactive_flow_payloads(html, path)
+    if not payloads:
+        fail(errors, f"{path} uses interactive-flow but lacks embedded page-local data-architecture-flow payload")
+    if re.search(r"fetch\(\s*[\"']evidence/", html, re.I):
+        fail(errors, f"{path} interactive-flow must not require fetch() from evidence/*.json for file:// rendering")
+    for payload in payloads:
+        validate_interactive_payload(payload, path, errors)
+    visible = visible_text(html).lower()
+    if not any(term in visible for term in ("fallback", "非视觉", "legend", "图例", "table")):
+        fail(errors, f"{path} interactive-flow diagram missing textual fallback or legend")
+
+
 def validate_page_scripts(path: Path, root: Path, errors: list[str]) -> None:
     html = read_text(path)
+    validate_runtime_network_urls(path, errors)
     if NETWORK_SCRIPT_PATTERN.search(html) or CDN_NAME_PATTERN.search(html):
         fail(errors, f"{path} references a CDN/network Mermaid script; architecture-web output must be offline/local")
     for src in SCRIPT_SRC_PATTERN.findall(html):
@@ -458,8 +612,9 @@ def validate_page_scripts(path: Path, root: Path, errors: list[str]) -> None:
             continue
         if src.endswith("mermaid.min.js") and not (path.parent / src).resolve().is_file():
             fail(errors, f"{path} references missing local Mermaid asset: {src}")
-    if "graph TB" not in html:
-        fail(errors, f"{path} missing Mermaid graph TB source or render block")
+    validate_interactive_flow_page(path, root, errors)
+    if "graph TB" not in html and not has_interactive_flow(html):
+        fail(errors, f"{path} missing Mermaid graph TB source/render block or interactive-flow payload")
     if re.search(r"parse error|syntax error in text|diagram validation failed", visible_text(html), re.I):
         fail(errors, f"{path} contains visible Mermaid render/parser error text")
 
@@ -510,6 +665,8 @@ def validate_feynman_sections(html_pages: list[Path], module_pages: list[Path], 
 
 def validate_deep_graphs(path: Path, errors: list[str]) -> None:
     html = read_text(path)
+    if has_interactive_flow(html):
+        return
     sources = mermaid_sources(html)
     if not sources:
         return
