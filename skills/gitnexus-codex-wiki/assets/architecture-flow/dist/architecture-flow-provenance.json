@@ -1,0 +1,33 @@
+{
+  "name": "architecture-flow",
+  "generated_at": "2026-04-30T00:00:00Z",
+  "description": "Local/offline React Flow architecture diagram renderer for gitnexus-codex-wiki scaffold output.",
+  "source_template": "assets/architecture-flow/src/architecture-flow.tsx",
+  "build_command": "npm install && npm run build",
+  "packages": {
+    "@dagrejs/dagre": "3.0.0",
+    "@xyflow/react": "12.10.2",
+    "react": "19.2.5",
+    "react-dom": "19.2.5"
+  },
+  "build_tool": {
+    "esbuild": "0.28.0"
+  },
+  "license_notes": [
+    "Bundle includes React, ReactDOM, @xyflow/react, and @dagrejs/dagre runtime dependencies from npm package versions listed here.",
+    "Generated architecture-web sites are static/offline and load only local assets/architecture-flow.js and assets/architecture-flow.css.",
+    "Retain upstream package license notices when distributing the generated bundle beyond local documentation outputs."
+  ],
+  "generated_assets": [
+    {
+      "path": "dist/architecture-flow.js",
+      "sha256": "2be82b15aab244fe08214f900102f1ad0b2c0f49a0c96ee57b5a116f7bab9aa9",
+      "bytes": 1517301
+    },
+    {
+      "path": "dist/architecture-flow.css",
+      "sha256": "b01e4ef71b500220c77599845f45f0aedbfcbdef12a17341a0bd888e3d3f2377",
+      "bytes": 21272
+    }
+  ]
+}

@@ -11,13 +11,14 @@ local/offline Mermaid, and click-through module pages under modules/.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import shutil
 import subprocess
 import unicodedata
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Iterable
+from typing import Any, Iterable
 
 
 EXECUTION_BOUNDARY = (
@@ -28,6 +29,9 @@ EXECUTION_BOUNDARY = (
 DEFAULT_PROJECT_EXPLAINER_MERMAID = (
     Path.home() / ".codex" / "skills" / "project-explainer-web" / "assets" / "vendor" / "mermaid.min.js"
 )
+DEFAULT_ARCHITECTURE_FLOW_ASSETS = Path(__file__).resolve().parents[1] / "assets" / "architecture-flow" / "dist"
+
+DIAGRAM_MODES = ("mermaid", "interactive-flow", "hybrid")
 
 
 STYLE = """
@@ -94,6 +98,9 @@ pre, code { background: #f6f8fa; border-radius: 6px; }
 code { padding: .2rem .35rem; }
 .diagram-card { margin-top: 12px; }
 .diagram-card .fallback { border-left: 4px solid var(--accent); padding-left: 12px; }
+.diagram-card details { margin-top: 12px; }
+.diagram-card summary { cursor: pointer; font-weight: 700; color: var(--accent); }
+.interactive-flow-card .fallback-table { margin-top: 14px; }
 table { width: 100%; border-collapse: collapse; overflow: hidden; border-radius: 14px; }
 th, td { border-bottom: 1px solid var(--line); padding: 10px; text-align: left; vertical-align: top; }
 th { color: #314267; background: rgba(49, 94, 251, 0.07); }
@@ -157,6 +164,214 @@ def write(path: Path, text: str, force: bool) -> None:
     path.write_text(text, encoding="utf-8")
 
 
+def sha256_file(path: Path) -> str:
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def copy_architecture_flow_assets(assets_dir: Path, force: bool) -> None:
+    required = [
+        DEFAULT_ARCHITECTURE_FLOW_ASSETS / "architecture-flow.js",
+        DEFAULT_ARCHITECTURE_FLOW_ASSETS / "architecture-flow.css",
+        DEFAULT_ARCHITECTURE_FLOW_ASSETS / "architecture-flow-provenance.json",
+    ]
+    missing = [path for path in required if not path.is_file()]
+    if missing:
+        missing_text = ", ".join(path.as_posix() for path in missing)
+        raise FileNotFoundError(f"missing architecture-flow asset(s): {missing_text}")
+    assets_dir.mkdir(parents=True, exist_ok=True)
+    for source in required[:2]:
+        target = assets_dir / source.name
+        if force or not target.exists():
+            shutil.copyfile(source, target)
+    provenance = json.loads((DEFAULT_ARCHITECTURE_FLOW_ASSETS / "architecture-flow-provenance.json").read_text(encoding="utf-8"))
+    provenance.update(
+        {
+            "copied_at": generated_at(),
+            "generated_site_asset_paths": ["assets/architecture-flow.js", "assets/architecture-flow.css"],
+            "generated_assets": [
+                {
+                    "path": "assets/architecture-flow.js",
+                    "sha256": sha256_file(assets_dir / "architecture-flow.js"),
+                    "bytes": (assets_dir / "architecture-flow.js").stat().st_size,
+                },
+                {
+                    "path": "assets/architecture-flow.css",
+                    "sha256": sha256_file(assets_dir / "architecture-flow.css"),
+                    "bytes": (assets_dir / "architecture-flow.css").stat().st_size,
+                },
+            ],
+        }
+    )
+    target = assets_dir / "architecture-flow-provenance.json"
+    if force or not target.exists():
+        target.write_text(json.dumps(provenance, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+
+
+def evidence_refs(evidence_entries: list[dict[str, str]]) -> list[str]:
+    refs = [entry.get("path", "") for entry in evidence_entries if entry.get("path")]
+    return refs or ["TODO: evidence reference"]
+
+
+def flow_node(node_id: str, node_type: str, label: str, x: int, y: int, evidence: list[str]) -> dict[str, Any]:
+    return {
+        "id": node_id,
+        "type": node_type,
+        "label": label,
+        "position": {"x": x, "y": y},
+        "width": 230,
+        "height": 96,
+        "evidence": evidence,
+    }
+
+
+def flow_edge(
+    edge_id: str,
+    source: str,
+    target: str,
+    edge_type: str,
+    label: str,
+    evidence: list[str],
+    source_handle: str = "right",
+    target_handle: str = "left",
+) -> dict[str, Any]:
+    return {
+        "id": edge_id,
+        "source": source,
+        "target": target,
+        "sourceHandle": source_handle,
+        "targetHandle": target_handle,
+        "type": edge_type,
+        "label": label,
+        "evidence": evidence,
+    }
+
+
+def architecture_flow_payload(slug_value: str, modules: list[str], evidence_entries: list[dict[str, str]]) -> dict[str, Any]:
+    refs = evidence_refs(evidence_entries)
+    module_nodes = []
+    module_edges = []
+    for index, module in enumerate(modules[:4]):
+        y = 90 + index * 132
+        module_id = f"module-{module}"
+        module_nodes.append(flow_node(module_id, "service", f"{module_title(module)} module", 660, y, refs))
+        module_edges.append(flow_edge(f"runtime-{module_id}", "runtime", module_id, "call", "dispatches into module", refs))
+    nodes = [
+        flow_node("user", "actor", "用户 / operator", 0, 220, refs),
+        flow_node("entry", "entrypoint", "UI route / command entrypoint", 300, 120, refs),
+        flow_node("boundary", "boundary", "preload/API/IPC/HTTP boundary", 300, 340, refs),
+        flow_node("runtime", "runtime", "main process / runtime orchestrator", 660, 220, refs),
+        flow_node("storage", "data", "local storage / files", 1020, 90, refs),
+        flow_node("external", "external", "cloud or external integrations", 1020, 240, refs),
+        flow_node("fallback", "fallback", "error / fallback path", 1020, 390, refs),
+        flow_node("verification", "test", "verification commands", 1020, 540, refs),
+        *module_nodes,
+    ]
+    edges = [
+        flow_edge("user-entry", "user", "entry", "call", "starts action", refs),
+        flow_edge("entry-boundary", "entry", "boundary", "ipc", "crosses runtime boundary", refs, "bottom", "top"),
+        flow_edge("boundary-runtime", "boundary", "runtime", "ipc", "validated API/IPC call", refs),
+        flow_edge("runtime-storage", "runtime", "storage", "data", "reads/writes state", refs),
+        flow_edge("runtime-external", "runtime", "external", "external", "calls integration", refs),
+        flow_edge("runtime-fallback", "runtime", "fallback", "error", "handles invalid/degraded path", refs),
+        flow_edge("fallback-verification", "fallback", "verification", "test", "covered by checks", refs, "bottom", "top"),
+        *module_edges,
+    ]
+    module_graphs = []
+    for module in modules:
+        title = module_title(module)
+        module_graphs.append(
+            {
+                "id": f"module-{module}",
+                "title": f"{title} 模块运行时结构",
+                "summary": "模块页用相同 payload contract 展示入口、边界、职责、依赖和验证证据。",
+                "nodes": [
+                    flow_node("trigger", "actor", "用户动作 / system event", 0, 160, refs),
+                    flow_node("entry", "entrypoint", f"{title} source entrypoint", 300, 80, refs),
+                    flow_node("boundary", "boundary", f"{title} runtime boundary", 300, 260, refs),
+                    flow_node("logic", "service", f"{title} domain logic", 650, 160, refs),
+                    flow_node("dependencies", "external", "services / storage / integrations", 980, 80, refs),
+                    flow_node("checks", "test", "tests / lint / typecheck", 980, 260, refs),
+                ],
+                "edges": [
+                    flow_edge("trigger-entry", "trigger", "entry", "call", "starts module action", refs),
+                    flow_edge("entry-boundary", "entry", "boundary", "ipc", "enters runtime boundary", refs, "bottom", "top"),
+                    flow_edge("boundary-logic", "boundary", "logic", "call", "invokes domain logic", refs),
+                    flow_edge("logic-dependencies", "logic", "dependencies", "external", "uses dependency", refs),
+                    flow_edge("logic-checks", "logic", "checks", "test", "verified by command", refs),
+                    flow_edge("dependencies-logic", "dependencies", "logic", "data", "returns data/result", refs, "left", "right"),
+                ],
+                "layout": {
+                    "engine": "manual",
+                    "direction": "LR",
+                    "nodeWidth": 230,
+                    "nodeHeight": 96,
+                    "ranksep": 96,
+                    "nodesep": 64,
+                    "computedAtBuildTime": True,
+                },
+            }
+        )
+    return {
+        "version": 1,
+        "graphs": [
+            {
+                "id": "runtime-overview",
+                "title": f"{slug_value} 目标应用整体运行时结构",
+                "summary": "从用户动作进入目标系统边界，穿过运行时服务、模块、存储、外部集成、错误分支和验证命令。",
+                "nodes": nodes,
+                "edges": edges,
+                "layout": {
+                    "engine": "manual",
+                    "direction": "LR",
+                    "nodeWidth": 230,
+                    "nodeHeight": 96,
+                    "ranksep": 96,
+                    "nodesep": 64,
+                    "computedAtBuildTime": True,
+                },
+            },
+            *module_graphs,
+        ],
+    }
+
+
+def flow_payload_script(payload: dict[str, Any]) -> str:
+    data = json.dumps(payload, ensure_ascii=False, indent=2).replace("</", "<\\/")
+    return f'<script type="application/json" data-architecture-flow>\n{data}\n</script>'
+
+
+def interactive_flow_block(title: str, graph_id: str) -> str:
+    return f"""<section class="diagram-card interactive-flow-card">
+<h3>{title}</h3>
+<div class="architecture-flow" data-flow-graph="{graph_id}" aria-label="Interactive React Flow architecture diagram"></div>
+<div class="flow-legend" aria-label="Edge semantics legend"><span>call 控制流</span><span>ipc 边界穿越</span><span>data 数据</span><span>error 错误/降级</span><span>external 外部集成</span><span>test 验证</span></div>
+<table class="fallback-table"><thead><tr><th>非视觉 fallback</th><th>说明</th></tr></thead><tbody><tr><td>节点</td><td>按用户动作、入口、边界、运行时、模块、存储/外部集成和验证命令阅读。</td></tr><tr><td>边</td><td>每条边有 type、label、direction marker 和 evidence；点击节点或边会在证据面板显示来源。</td></tr></tbody></table>
+<p class="fallback">React Flow 交互：支持 zoom、pan、drag、fit-to-view，并通过页面内嵌 JSON payload 在 file:// 下工作。</p>
+</section>"""
+
+
+def collapsed_mermaid_source(title: str, body: str) -> str:
+    return f"""<details class="diagram-card"><summary>{title} Mermaid source audit trail</summary><pre class="mermaid-source">{body}</pre></details>"""
+
+
+def rendered_svg_block(title: str, label: str) -> str:
+    return f"""<section class="diagram-card">
+<h3>{title}</h3>
+<div class="diagram"><svg role="img" aria-label="{label}" viewBox="0 0 720 170">
+<defs><marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#315efb"/></marker></defs>
+<rect x="20" y="45" width="150" height="64" rx="14" fill="#fff" stroke="#315efb"/>
+<text x="95" y="82" text-anchor="middle" font-size="14" font-weight="700">Source</text>
+<line x1="170" y1="77" x2="270" y2="77" stroke="#315efb" stroke-width="2.4" marker-end="url(#arrow)"/>
+<rect x="270" y="45" width="170" height="64" rx="14" fill="#fff" stroke="#7c3aed"/>
+<text x="355" y="82" text-anchor="middle" font-size="14" font-weight="700">Runtime boundary</text>
+<line x1="440" y1="77" x2="540" y2="77" stroke="#315efb" stroke-width="2.4" marker-end="url(#arrow)"/>
+<rect x="540" y="45" width="160" height="64" rx="14" fill="#fff" stroke="#0f9f6e"/>
+<text x="620" y="82" text-anchor="middle" font-size="14" font-weight="700">Service / data</text>
+</svg></div>
+<p class="fallback">非视觉 fallback：Source → Runtime boundary → Service/data；详细交互图使用 React Flow payload。</p>
+</section>"""
+
+
 def module_title(name: str) -> str:
     return " ".join(part.capitalize() for part in slug(name).split("-")) or "Core"
 
@@ -169,9 +384,11 @@ def mermaid_block(title: str, body: str, mermaid_script: bool) -> str:
     return f"""<section class=\"diagram-card\">\n<h3>{title}</h3>\n{visual}\n<p class=\"fallback\">非视觉 fallback：按上到下读取节点，父节点表示系统边界，子节点表示职责或调用方向。</p>\n</section>"""
 
 
-def html_head(title: str, mermaid_ref: str | None) -> str:
-    script = f'\n<script defer src="{mermaid_ref}"></script>\n<script>window.addEventListener("DOMContentLoaded",()=>{{if(window.mermaid){{window.mermaid.initialize({{startOnLoad:true,securityLevel:"loose"}});}}}});</script>' if mermaid_ref else ""
-    return f"""<!DOCTYPE html>\n<html lang=\"zh-CN\">\n<head>\n<meta charset=\"UTF-8\" />\n<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n<title>{title}</title>\n<style>\n{STYLE}\n</style>{script}\n</head>\n<body>\n<div class=\"shell\">\n"""
+def html_head(title: str, mermaid_ref: str | None, flow_ref: str | None = None, flow_css_ref: str | None = None) -> str:
+    mermaid_script = f'\n<script defer src="{mermaid_ref}"></script>\n<script>window.addEventListener("DOMContentLoaded",()=>{{if(window.mermaid){{window.mermaid.initialize({{startOnLoad:true,securityLevel:"loose"}});}}}});</script>' if mermaid_ref else ""
+    flow_css = f'\n<link rel="stylesheet" href="{flow_css_ref}">' if flow_css_ref else ""
+    flow_script = f'\n<script defer src="{flow_ref}"></script>' if flow_ref else ""
+    return f"""<!DOCTYPE html>\n<html lang=\"zh-CN\">\n<head>\n<meta charset=\"UTF-8\" />\n<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n<title>{title}</title>{flow_css}\n<style>\n{STYLE}\n</style>{mermaid_script}{flow_script}\n</head>\n<body>\n<div class=\"shell\">\n"""
 
 
 def module_links(modules: list[str]) -> str:
@@ -181,7 +398,7 @@ def module_links(modules: list[str]) -> str:
     )
 
 
-def overview_html(slug_value: str, modules: list[str], evidence_entries: list[dict[str, str]], mermaid_script: bool) -> str:
+def overview_html(slug_value: str, modules: list[str], evidence_entries: list[dict[str, str]], mermaid_script: bool, diagram_mode: str) -> str:
     module_rows = "\n".join(
         f'<tr><td><a href="modules/{slug(name)}.html">{module_title(name)}</a></td><td>TODO: 用源码证据说明这个产品/运行时模块负责什么。</td><td>TODO: 引用 GitNexus graph/source 证据。</td></tr>'
         for name in modules
@@ -245,8 +462,31 @@ def overview_html(slug_value: str, modules: list[str], evidence_entries: list[di
   Fallback --> Verify""",
         mermaid_script,
     )
+    use_interactive = diagram_mode in {"interactive-flow", "hybrid"}
+    use_mermaid = diagram_mode in {"mermaid", "hybrid"}
+    payload = architecture_flow_payload(slug_value, modules, evidence_entries) if use_interactive else None
+    if use_interactive:
+        diagram = interactive_flow_block("目标应用整体运行时 interactive-flow", "runtime-overview")
+        if use_mermaid:
+            diagram += collapsed_mermaid_source(
+                "整体运行时结构图",
+                """graph TB
+  User["用户 / operator"] --> Entry["UI route / command entrypoint"]
+  Entry --> Boundary["preload API / HTTP / CLI boundary"]
+  Boundary --> Runtime["main process / runtime orchestrator"]
+  Runtime --> Services[domain services]
+  Services --> Storage["local storage / files"]
+  Services --> External[cloud or external integrations]
+  Services --> Tests[verification commands]""",
+            )
+        else:
+            structure_diagram = rendered_svg_block("真实源码目录树", "target source structure")
+            tech_diagram = rendered_svg_block("技术框架图", "target technology framework")
+            branch_diagram = rendered_svg_block("分叉总览图", "target branch overview")
     script_ref = "./assets/mermaid.min.js" if mermaid_script else None
-    return html_head(f"{slug_value} 应用架构说明", script_ref) + f"""
+    flow_ref = "./assets/architecture-flow.js" if use_interactive else None
+    flow_css = "./assets/architecture-flow.css" if use_interactive else None
+    return html_head(f"{slug_value} 应用架构说明", script_ref, flow_ref, flow_css) + f"""
 <nav class=\"nav\"><a href=\"index.html\">主页面</a><a href=\"#module-nav\">模块入口</a><a href=\"#verification\">验证命令</a></nav>
 <header class=\"hero\">
 <span class=\"eyebrow\">GitNexus evidence · Codex-authored · 目标系统架构</span>
@@ -274,14 +514,15 @@ def overview_html(slug_value: str, modules: list[str], evidence_entries: list[di
 <section class=\"panel span-6\"><h2>约束与风险</h2><p>TODO: 记录 stale index、dirty worktree、未验证推断等风险。</p></section>
 <section class=\"panel span-6\"><h2>推荐维护方案</h2><p>TODO: 给出下一步维护目标系统架构说明的建议。</p></section>
 <section class=\"panel span-12\"><h2>后续维护动作</h2><ol><li>补齐真实源码入口和模块页。</li><li>补齐 route/service/API/IPC trace。</li><li>运行验证命令。</li></ol></section>
-</main>
+ </main>
+{flow_payload_script(payload) if payload else ""}
 </div>
 </body>
 </html>
 """
 
 
-def module_html(name: str, evidence_entries: list[dict[str, str]], mermaid_script: bool) -> str:
+def module_html(name: str, evidence_entries: list[dict[str, str]], mermaid_script: bool, diagram_mode: str, project_slug: str, modules: list[str]) -> str:
     title = module_title(name)
     module_slug = slug(name)
     evidence_refs = ", ".join(entry["path"] for entry in evidence_entries) or "TODO: evidence reference"
@@ -306,8 +547,28 @@ def module_html(name: str, evidence_entries: list[dict[str, str]], mermaid_scrip
   Logic --> 验证命令["tests / lint / typecheck"]""",
         mermaid_script,
     )
+    use_interactive = diagram_mode in {"interactive-flow", "hybrid"}
+    use_mermaid = diagram_mode in {"mermaid", "hybrid"}
+    payload = architecture_flow_payload(project_slug, modules, evidence_entries) if use_interactive else None
+    if use_interactive:
+        diagram = interactive_flow_block("模块边界 interactive-flow", f"module-{module_slug}")
+        if use_mermaid:
+            diagram += collapsed_mermaid_source(
+                "模块边界 graph TB",
+                f"""graph TB
+  Trigger["用户动作 / system event"] --> Entry["{title} source entrypoint"]
+  Entry --> Boundary["{title} runtime boundary"]
+  Boundary --> Logic["{title} domain logic"]
+  Logic --> Dependencies["services / storage / integrations"]
+  Logic --> 验证命令["tests / lint / typecheck"]""",
+            )
+    tech_section_body = f'<pre class="tree">{tech_tree}</pre>'
+    if use_interactive and not use_mermaid:
+        tech_section_body = rendered_svg_block("技术框架图", "module technology framework") + tech_section_body
     script_ref = "../assets/mermaid.min.js" if mermaid_script else None
-    return html_head(f"{title} 模块说明", script_ref) + f"""
+    flow_ref = "../assets/architecture-flow.js" if use_interactive else None
+    flow_css = "../assets/architecture-flow.css" if use_interactive else None
+    return html_head(f"{title} 模块说明", script_ref, flow_ref, flow_css) + f"""
 <nav class=\"nav\"><a href=\"../index.html\">返回主页面 index.html</a></nav>
 <header class=\"hero\">
 <span class=\"eyebrow\">目标系统模块 · 从首页进入</span>
@@ -325,7 +586,7 @@ def module_html(name: str, evidence_entries: list[dict[str, str]], mermaid_scrip
 <section class=\"panel span-12\"><h2>源码阅读入口</h2><ul><li>TODO: 写入 <code>{module_slug}</code> 的首读源码文件或符号。</li></ul></section>
 <section class=\"panel span-12\"><h2>源码证据地图</h2><ul><li>源码证据 refs: {evidence_refs}</li><li>GitNexus graph commands: TODO: 填入 repo-qualified <code>gitnexus context</code>/<code>gitnexus cypher</code>。</li></ul></section>
 <section class=\"panel span-12\"><h2>优先阅读文件</h2><table><thead><tr><th>文件</th><th>为什么先读</th></tr></thead><tbody><tr><td>TODO: source file</td><td>TODO: product/runtime purpose</td></tr></tbody></table></section>
-<section class=\"panel span-12\"><h2>技术框架图</h2><pre class=\"tree\">{tech_tree}</pre></section>
+<section class=\"panel span-12\"><h2>技术框架图</h2>{tech_section_body}</section>
 <section class=\"panel span-6\"><h2>边界与不变量</h2><p>TODO: 写出这个目标系统模块不能随便跨越的 API/IPC/service/data 边界。</p></section>
 <section class=\"panel span-6\"><h2>安全修改方式</h2><p>TODO: 说明修改顺序：先读源码证据，再改代码/页面，再验证。</p></section>
 <section class=\"panel span-12\"><h2>源码证据</h2><p>GitNexus/source evidence: {evidence_refs}</p></section>
@@ -336,6 +597,7 @@ def module_html(name: str, evidence_entries: list[dict[str, str]], mermaid_scrip
 <section class=\"panel span-6\"><h2>推荐维护方案</h2><p>TODO: 给出维护这个目标系统模块的建议。</p></section>
 <section class=\"panel span-12\"><h2>后续维护动作</h2><ol><li>替换 TODO 为证据化内容。</li><li>运行 architecture-web 验证器。</li></ol></section>
 </main>
+{flow_payload_script(payload) if payload else ""}
 </div>
 </body>
 </html>
@@ -359,6 +621,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--module", action="append", default=[], help="Module page name to create; repeatable")
     parser.add_argument("--evidence", action="append", default=[], help="源码证据 file to copy/reference; repeatable")
     parser.add_argument("--mermaid-js", help="Optional local mermaid.min.js file to copy into assets/")
+    parser.add_argument("--diagram-mode", choices=DIAGRAM_MODES, default="hybrid", help="Diagram renderer mode: mermaid, interactive-flow, or hybrid (default)")
     parser.add_argument("--no-default-mermaid-js", action="store_true", help="Do not auto-copy project-explainer-web's bundled Mermaid asset")
     parser.add_argument("--force", action="store_true", help="Overwrite existing generated files")
     args = parser.parse_args(argv)
@@ -381,9 +644,18 @@ def main(argv: list[str] | None = None) -> int:
     modules_dir.mkdir(parents=True, exist_ok=True)
     evidence_dir.mkdir(parents=True, exist_ok=True)
 
+    use_interactive = args.diagram_mode in {"interactive-flow", "hybrid"}
+    use_mermaid = args.diagram_mode in {"mermaid", "hybrid"}
+
+    if use_interactive:
+        try:
+            copy_architecture_flow_assets(assets_dir, args.force)
+        except FileNotFoundError as exc:
+            parser.error(str(exc))
+
     mermaid_script = False
-    source = resolve_mermaid_source(args.mermaid_js, args.no_default_mermaid_js)
-    if source:
+    source = resolve_mermaid_source(args.mermaid_js, args.no_default_mermaid_js) if use_mermaid else None
+    if source and args.diagram_mode in ("mermaid", "hybrid"):
         if not source.is_file():
             parser.error(f"Mermaid asset does not exist: {source}")
         assets_dir.mkdir(parents=True, exist_ok=True)
@@ -428,14 +700,18 @@ def main(argv: list[str] | None = None) -> int:
         "mode": "architecture-web",
         "language": "zh-CN",
         "visual_style": "project-explainer-web",
+        "diagram_mode": args.diagram_mode,
+        "interactive_flow": use_interactive,
         "entrypoint": "index.html",
         "modules": modules,
         "evidence_files": evidence_entries,
     }
 
-    write(out / "index.html", overview_html(project_slug, modules, evidence_entries, mermaid_script), args.force)
+    write(out / "index.html", overview_html(project_slug, modules, evidence_entries, mermaid_script, args.diagram_mode), args.force)
     for module in modules:
-        write(modules_dir / f"{module}.html", module_html(module, evidence_entries, mermaid_script), args.force)
+        write(modules_dir / f"{module}.html", module_html(module, evidence_entries, mermaid_script, args.diagram_mode, project_slug, modules), args.force)
+    if use_interactive:
+        write(evidence_dir / "interactive-flow.json", json.dumps(architecture_flow_payload(project_slug, modules, evidence_entries), indent=2, ensure_ascii=False) + "\n", args.force)
     write(evidence_dir / "module-map.json", json.dumps({"modules": module_entries}, indent=2, ensure_ascii=False) + "\n", args.force)
     write(evidence_dir / "route-service-trace.json", json.dumps(route_trace, indent=2, ensure_ascii=False) + "\n", args.force)
     write(out / "wiki-meta.json", json.dumps(meta, indent=2, ensure_ascii=False) + "\n", args.force)
