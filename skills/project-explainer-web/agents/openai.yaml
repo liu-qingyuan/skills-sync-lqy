@@ -1,4 +1,4 @@
 interface:
   display_name: "Project Explainer Web"
-  short_description: "Generate a structured explainer page"
-  default_prompt: "Use $project-explainer-web to turn this repo, project, or task brief into a Chinese explainer webpage under _learn_web with ASCII-only file paths, unless I explicitly ask for English."
+  short_description: "Create or extend an explainer page with Mermaid maps"
+  default_prompt: "Use $project-explainer-web to create or update a Chinese explainer webpage under _learn_web for this repo, project, or task. Reuse an existing relevant page when possible, preserve valid existing content, keep ASCII-only file paths, and use offline-safe Mermaid graph TB diagrams unless I explicitly ask for English."
