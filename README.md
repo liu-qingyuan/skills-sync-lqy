@@ -8,6 +8,7 @@
 - `feature-release-verifier`：用于验证功能是否具备发布条件，聚合 mock-ui、real-runtime、packaged-smoke 等验证证据并输出发布结论。
 - `gitnexus`：为 OMX/Codex 工作流提供 GitNexus 代码图谱 grounding；需要本机已安装/配置 GitNexus CLI/MCP，并且目标仓库已有 GitNexus index；可作为 `$deep-interview`、`$ralplan`、`$team`、`$autopilot` 等 workflow 的上下文 modifier。
 - `gitnexus-codex-wiki`：基于 GitNexus graph/index evidence 生成源码证据驱动的 markdown wiki 或 project-explainer-web 风格架构介绍网页；需要本机可运行 `gitnexus` CLI 和目标仓库 index，推荐与 `$gitnexus` skill 一起安装。
+- `playwright-cli`：用于通过 playwright-cli 做终端优先的浏览器自动化、截图/视频/trace、测试代码生成，并记录 Electron `_electron.launch()` 应用的录屏注意事项。
 
 ## GitNexus 依赖说明
 
@@ -28,6 +29,7 @@ skills/
   feature-release-verifier/
   gitnexus/
   gitnexus-codex-wiki/
+  playwright-cli/
 ```
 
 规则：
@@ -87,6 +89,14 @@ python ~/.codex/skills/.system/skill-installer/scripts/install-skill-from-github
   --path skills/gitnexus-codex-wiki
 ```
 
+### 安装 `playwright-cli`
+
+```bash
+python ~/.codex/skills/.system/skill-installer/scripts/install-skill-from-github.py \
+  --repo liu-qingyuan/skills-sync-lqy \
+  --path skills/playwright-cli
+```
+
 安装完成后请重启 Codex：
 
 ```text
@@ -106,6 +116,7 @@ rm -rf ~/.codex/skills/project-explainer-web
 rm -rf ~/.codex/skills/feature-release-verifier
 rm -rf ~/.codex/skills/gitnexus
 rm -rf ~/.codex/skills/gitnexus-codex-wiki
+rm -rf ~/.codex/skills/playwright-cli
 ```
 
 然后重新运行安装命令并重启 Codex。
@@ -122,6 +133,7 @@ ln -s ~/skills-sync-lqy/skills/project-explainer-web ~/.codex/skills/project-exp
 ln -s ~/skills-sync-lqy/skills/feature-release-verifier ~/.codex/skills/feature-release-verifier
 ln -s ~/skills-sync-lqy/skills/gitnexus ~/.codex/skills/gitnexus
 ln -s ~/skills-sync-lqy/skills/gitnexus-codex-wiki ~/.codex/skills/gitnexus-codex-wiki
+ln -s ~/skills-sync-lqy/skills/playwright-cli ~/.codex/skills/playwright-cli
 ```
 
 之后只需要：
