@@ -17,6 +17,7 @@ Use this matrix when `$gitnexus` is composed with another OMX workflow.
 | `$visual-ralph` | Locate UI files/components/routes before visual implementation. | Do not skip `$visual-verdict` visual gates. |
 | `$visual-verdict` | Map visual findings back to implementation files when code context matters. | Do not force GitNexus for pure image-only verdicts. |
 | `$trace` | Add code graph interpretation to OMX runtime trace/log evidence. | Do not replace trace logs or state files. |
+| `$ralph-omx-plan` | Produce a context snapshot that can be embedded in the Open Ralph prompt packet and command-generation output. | Do not run `ralph-omx`; do not replace ralph-omx-plan's parameter guide or lane chooser. |
 
 ## Launch brief pattern
 

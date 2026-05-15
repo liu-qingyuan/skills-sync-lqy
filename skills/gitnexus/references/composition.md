@@ -17,6 +17,8 @@ Use `$gitnexus` as a modifier when another workflow is present.
 - `$visual-ralph $gitnexus ...`: Visual Ralph remains primary. GitNexus finds UI implementation touchpoints before visual iteration.
 - `$visual-verdict $gitnexus ...`: Visual Verdict remains primary. GitNexus is used only to connect verdict findings to code locations.
 - `$trace $gitnexus ...`: Trace remains primary. GitNexus adds code graph context to OMX runtime trace interpretation.
+- `$ralph-omx-plan $gitnexus ...` or `$gitnexus $ralph-omx-plan ...`: ralph-omx-plan remains primary. GitNexus runs preflight/grounding first, then the context path is embedded in the generated Open Ralph prompt and command.
+- `$ralplan $gitnexus $ralph-omx-plan ...`: ralplan remains the planning workflow and ralph-omx-plan remains the command-generation handoff. GitNexus supplies brownfield evidence to both; output should include the ralplan command plus the ralph-omx command.
 
 ## Handoff artifact contract
 
@@ -34,6 +36,7 @@ Write `.omx/context/gitnexus-{slug}-{timestamp}.md` with:
 - Ask fewer code-location questions; discover code facts directly.
 - Phrase brownfield interview questions as: "I found X in file Y. Should the new behavior follow that pattern?"
 - Keep user-facing output concise: context path, most relevant findings, next command.
+- For `$ralph-omx-plan`, include the GitNexus context path in the prompt packet and list it as an input to the ralph-omx command.
 
 ## Bad behavior
 

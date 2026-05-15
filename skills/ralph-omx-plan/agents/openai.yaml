@@ -1,0 +1,3 @@
+display_name: Ralph OMX Plan
+short_description: Prepare ready-to-run ralph-omx and OMX alternative commands.
+default_prompt: Use $ralph-omx-plan to turn this task into an Open Ralph via OMX prompt and copy-paste command with configurable parameters.

@@ -33,6 +33,8 @@ $security-review $gitnexus "review auth/session changes"
 $visual-ralph $gitnexus "match this reference UI in the existing app"
 $visual-verdict $gitnexus "score this screenshot against the app implementation"
 $trace $gitnexus "explain the agent flow and code context for this run"
+$ralph-omx-plan $gitnexus "prepare an Open Ralph via OMX command for this task"
+$ralplan $gitnexus $ralph-omx-plan "plan this change and give me execution commands"
 ```
 
 Behavior:
@@ -86,6 +88,7 @@ If `$gitnexus` is invoked alone, run the grounding workflow and return the conte
    - For `$visual-ralph`: use GitNexus to locate UI implementation files before visual iterations; still run `$visual-verdict` every visual edit loop.
    - For `$visual-verdict`: use GitNexus only when a screenshot verdict must be tied back to code locations; pure image comparison can skip graph context.
    - For `$trace`: use GitNexus context as a codebase layer in the execution trace, not as a replacement for OMX trace logs.
+   - For `$ralph-omx-plan`: treat ralph-omx-plan as the primary planning surface. Run GitNexus grounding first, save the context path, and feed it into the generated Open Ralph prompt/command. Do not launch `ralph-omx`; the ralph-omx-plan skill only prepares copy-paste commands unless the user separately asks to execute.
 
 ## Command Patterns
 
@@ -124,7 +127,7 @@ gitnexus serve
 
 Load only what is needed:
 - `references/composition.md` — how `$gitnexus` composes with OMX workflows.
-- `references/workflow-matrix.md` — per-workflow GitNexus integration rules.
+- `references/workflow-matrix.md` — per-workflow GitNexus integration rules, including `$ralph-omx-plan`.
 - `references/cli-vs-mcp.md` — CLI/MCP decision table and local experiment findings.
 - `references/query-patterns.md` — practical query/context/impact/cypher patterns.
 - `references/official-sources.md` — official source notes used to design this skill.
