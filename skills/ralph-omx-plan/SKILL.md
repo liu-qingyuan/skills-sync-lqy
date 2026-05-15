@@ -12,7 +12,7 @@ Create a runnable handoff for `ralph-omx` while preserving optional OMX-native l
 Produce a concise artifact with:
 
 1. **Task packet**: a polished prompt for Open Ralph's loop.
-2. **Primary `ralph-omx` command**: copy-paste ready, with safe defaults and explicit completion promise.
+2. **Primary `ralph-omx` command**: copy-paste ready, with loop-hardened defaults: Tasks Mode on, task promise on, non-trivial minimum iterations, safety cap, and a strict slug-specific completion promise.
 3. **Parameter guide**: explain every included flag/env var and list common knobs.
 4. **Optional OMX alternatives**: include `$ralph`, `$team`, and/or `$ralplan` commands when those workflows were requested or useful.
 5. **GitNexus context hook**: when `$gitnexus` is present, include graph-grounding preflight/context commands or reference the existing GitNexus context path.
@@ -44,15 +44,26 @@ OMX_RALPH_SANDBOX=danger-full-access
 OMX_RALPH_REASONING=high
 ```
 
-Open Ralph iteration defaults:
+Open Ralph's built-in iteration defaults are intentionally permissive:
 
 ```text
 --min-iterations 1
 --max-iterations unlimited
 --completion-promise COMPLETE
+--tasks disabled
 ```
 
-Prefer an explicit `--max-iterations` in generated commands as a safety net. Common range: `10-30`; use `20` unless the task clearly needs less or more.
+Do **not** mirror those permissive defaults in generated commands. They allow the loop to stop as soon as the agent emits `<promise>COMPLETE</promise>`, often exactly at the requested minimum iteration count. Generated `ralph-omx` commands should override them with loop-hardened defaults:
+
+```text
+--tasks
+--task-promise READY_FOR_NEXT_TASK
+--min-iterations 3
+--max-iterations 20
+--completion-promise <SLUG_UPPER>_VERIFIED
+```
+
+Use `--min-iterations 3` for normal implementation tasks, `5-8` for product/multi-feature work, and `1` only for explicit smoke tests or tiny fixes. Prefer an explicit `--max-iterations` as a safety net. Common range: `20-30`; use `20` unless the task clearly needs less or more.
 
 ## Command template
 
@@ -63,23 +74,45 @@ RALPH_OMX_MODEL=gpt-5.5 \
 OMX_RALPH_REASONING=high \
 OMX_RALPH_SANDBOX=danger-full-access \
 ralph-omx \
-  --min-iterations 1 \
+  --tasks \
+  --task-promise READY_FOR_NEXT_TASK \
+  --min-iterations 3 \
   --max-iterations 20 \
-  --completion-promise COMPLETE \
+  --completion-promise <SLUG_UPPER>_VERIFIED \
+  --last-activity-timeout 30m \
   --prompt-file .omx/prompts/<slug>-ralph-omx.md
 ```
 
-When the prompt is short, inline it instead of writing a prompt-file:
+For substantial product work, raise the minimum iteration count:
+
+```bash
+RALPH_OMX_MODEL=gpt-5.5 \
+OMX_RALPH_REASONING=high \
+OMX_RALPH_SANDBOX=danger-full-access \
+ralph-omx \
+  --tasks \
+  --task-promise READY_FOR_NEXT_TASK \
+  --min-iterations 5 \
+  --max-iterations 30 \
+  --completion-promise <SLUG_UPPER>_VERIFIED \
+  --last-activity-timeout 30m \
+  --prompt-file .omx/prompts/<slug>-ralph-omx.md
+```
+
+When the prompt is genuinely short, inline it instead of writing a prompt-file, but still keep Tasks Mode and a strict completion promise unless the user explicitly asks for a smoke test:
 
 ```bash
 RALPH_OMX_MODEL=gpt-5.5 OMX_RALPH_REASONING=high \
-ralph-omx "<task>. When done, output <promise>COMPLETE</promise>." \
-  --min-iterations 1 \
+ralph-omx "<task>. Maintain .ralph/ralph-tasks.md. Output <promise>READY_FOR_NEXT_TASK</promise> while work remains, and only output <promise><SLUG_UPPER>_VERIFIED</promise> after all tasks and verification are complete." \
+  --tasks \
+  --task-promise READY_FOR_NEXT_TASK \
+  --min-iterations 3 \
   --max-iterations 20 \
-  --completion-promise COMPLETE
+  --completion-promise <SLUG_UPPER>_VERIFIED \
+  --last-activity-timeout 30m
 ```
 
-Use `--prompt-file` for long tasks, multi-step specs, secret-safety constraints, or GitNexus/ralplan context.
+Use `--prompt-file` for long tasks, multi-step specs, secret-safety constraints, GitNexus/ralplan context, or any task expected to run for more than one iteration.
 
 ## Prompt packet requirements
 
@@ -90,8 +123,10 @@ The generated Open Ralph prompt should include:
 - Scope: what to change and what not to change.
 - Deliverables: files/features/docs/tests expected.
 - Verification: exact commands or evidence required.
+- Task ledger: instruct the agent to create or maintain `.ralph/ralph-tasks.md` with checkboxes and keep every in-scope deliverable represented there.
+- Tasks Mode behavior: instruct the agent to output `<promise>READY_FOR_NEXT_TASK</promise>` when a task or iteration is complete but final completion is not yet proven.
 - Safety: secret handling, no production side effects, no destructive operations unless already authorized.
-- Completion marker: `When fully verified, output <promise>COMPLETE</promise>.`
+- Completion marker: use a strict slug-specific phrase such as `When every checkbox in .ralph/ralph-tasks.md is complete and all verification evidence is fresh, output <promise><SLUG_UPPER>_VERIFIED</promise>. Do not output this promise while any task, test, UI check, review, or artifact scan remains.`
 - Optional abort marker: if prerequisites may be missing, define an abort phrase and suggest `--abort-promise`.
 
 ## Parameter guide to include in every output
@@ -101,22 +136,23 @@ Explain these included parameters:
 - `RALPH_OMX_MODEL`: Open Ralph/Codex model; local default is `gpt-5.5`.
 - `OMX_RALPH_REASONING`: Codex `model_reasoning_effort`; typical values `low`, `medium`, `high`, `xhigh`; default `high`.
 - `OMX_RALPH_SANDBOX`: OMX/Codex sandbox; current default `danger-full-access`.
-- `--min-iterations`: minimum loop rounds before completion promise can stop the loop.
+- `--tasks`: enabled by default in generated commands; makes Open Ralph gate final completion on `.ralph/ralph-tasks.md` checkboxes instead of trusting an early completion promise alone.
+- `--task-promise READY_FOR_NEXT_TASK`: enabled by default with Tasks Mode; lets the agent advance/continue when a task or iteration is done but final completion is not proven.
+- `--min-iterations`: minimum loop rounds before completion promise can stop the loop. Generated commands should default to `3`, or `5-8` for substantial product work; use `1` only for explicit smoke tests.
 - `--max-iterations`: hard safety cap; `0`/omitted means unlimited, but generated commands should set one.
-- `--completion-promise`: text Open Ralph looks for inside `<promise>...</promise>` to stop.
+- `--completion-promise`: text Open Ralph looks for inside `<promise>...</promise>` to stop. Generated commands should use a strict slug-specific phrase like `<SLUG_UPPER>_VERIFIED`, not generic `COMPLETE`, to avoid premature exits.
 - `--abort-promise`: optional early-abort phrase for unmet prerequisites.
+- `--last-activity-timeout 30m`: optional but preferred for long autonomous runs; kills/restarts an iteration after prolonged silence when supported by the installed Open Ralph.
 - `--no-commit`: optional safety switch that prevents Open Ralph auto-commit behavior. Do **not** include it by default; list it under optional knobs unless the user asks for no commits or review-before-commit behavior.
 - `--prompt-file`: safer for long prompts; generated path should be under `.omx/prompts/`. Keep the path on one shell line; never wrap a filename in the middle.
 - `RALPH_OMX_SHIM_DEBUG=1`: optional debug to print adapter command.
 
 Mention extra Open Ralph knobs when relevant:
 
-- `--tasks` / `-t`: structured Tasks Mode.
-- `--task-promise READY_FOR_NEXT_TASK`: used with Tasks Mode to advance tasks.
 - `--continue`: resume existing Open Ralph state if appropriate.
 - `--status`: inspect state instead of running.
 - `--no-stream`: reduce live streaming noise if needed.
-- `--last-activity-timeout-ms <ms>`: stop if the agent is silent too long, when supported by current Open Ralph.
+- `--last-activity-timeout <duration>`: stop/restart if the agent is silent too long, when supported by current Open Ralph; examples: `30m`, `1h`, `300s`.
 - `--no-commit`: use only when the operator wants to inspect changes before committing.
 - `-- <extra codex/omx flags>`: pass extra backend flags through the Open Ralph agent template.
 
@@ -142,6 +178,8 @@ Rules:
 ## Command formatting rules
 
 - Prefer auto-commit by default. Open Ralph's default behavior commits completed iterations; show `--no-commit` only as an optional variation.
+- Prefer Tasks Mode by default. Include `--tasks` and `--task-promise READY_FOR_NEXT_TASK` unless the user explicitly asks for a one-shot smoke test.
+- Avoid generic completion promises in generated commands. Use a slug-specific promise such as `LOCAL_WEB_CONSOLE_VERIFIED` or `IMPORT_LOOP_VERIFIED`; reserve `COMPLETE` only for throwaway smoke tests.
 - Keep every shell-continuation line syntactically valid: a trailing `\` must be the final character on the line and must not be separated from the next flag by blank lines.
 - Keep `--prompt-file .omx/prompts/<slug>-ralph-omx.md` on one line. Do not wrap long paths across lines.
 - If a command becomes too wide, use a variable:
@@ -166,6 +204,8 @@ Use this structure:
 
 ## Parameter customization
 - ...
+- Default: keep `--tasks` and `--task-promise READY_FOR_NEXT_TASK` on for real work.
+- Default: use a strict slug-specific `--completion-promise`, not generic `COMPLETE`.
 - Optional: add `--no-commit` if you want review-before-commit behavior.
 
 ## Optional OMX alternatives
