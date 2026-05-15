@@ -65,6 +65,34 @@ Do **not** mirror those permissive defaults in generated commands. They allow th
 
 Use `--min-iterations 3` for normal implementation tasks, `5-8` for product/multi-feature work, and `1` only for explicit smoke tests or tiny fixes. Prefer an explicit `--max-iterations` as a safety net. Common range: `20-30`; use `20` unless the task clearly needs less or more.
 
+## Task ledger defaults
+
+For real implementation work, the handoff should include an initial `.ralph/ralph-tasks.md` plan, not just a prompt that asks the agent to invent tasks later. When the user asks to create files or when the plan is execution-ready, write the task ledger alongside the prompt file. If the user only asks for a draft, include the proposed task ledger content in the output.
+
+Default task-ledger shape:
+
+```markdown
+# Ralph Tasks
+
+## Phase 0: Planning and acceptance baseline
+- [ ] Read the referenced PRD/test spec/context and summarize acceptance criteria in the working notes
+- [ ] Audit current implementation gaps against the acceptance criteria
+
+## Phase 1: Core implementation
+- [ ] Implement the first coherent backend/core slice and targeted tests
+- [ ] Implement the next coherent UI/API/integration slice and targeted tests
+
+## Phase 2: Product polish and documentation
+- [ ] Update user-facing docs, run instructions, and examples
+- [ ] Verify safety constraints such as secret redaction, offline/mock behavior, and non-goals
+
+## Phase 3: Final verification
+- [ ] Run required lint/typecheck/test/build/smoke commands
+- [ ] Review generated artifacts and summarize evidence for final handoff
+```
+
+Adapt the phase/task names to the actual PRD. Keep tasks coarse enough that one Ralph iteration can complete one task, but detailed enough that final completion is objectively gated. Use nested subtasks only when they improve clarity; Open Ralph treats any unchecked nested checkbox as incomplete for final completion.
+
 ## Command template
 
 Use this shape by default:
@@ -112,7 +140,7 @@ ralph-omx "<task>. Maintain .ralph/ralph-tasks.md. Output <promise>READY_FOR_NEX
   --last-activity-timeout 30m
 ```
 
-Use `--prompt-file` for long tasks, multi-step specs, secret-safety constraints, GitNexus/ralplan context, or any task expected to run for more than one iteration.
+Use `--prompt-file` for long tasks, multi-step specs, secret-safety constraints, GitNexus/ralplan context, or any task expected to run for more than one iteration. When writing the prompt file, also write or refresh `.ralph/ralph-tasks.md` unless the user explicitly asks not to.
 
 ## Prompt packet requirements
 
@@ -123,7 +151,7 @@ The generated Open Ralph prompt should include:
 - Scope: what to change and what not to change.
 - Deliverables: files/features/docs/tests expected.
 - Verification: exact commands or evidence required.
-- Task ledger: instruct the agent to create or maintain `.ralph/ralph-tasks.md` with checkboxes and keep every in-scope deliverable represented there.
+- Task ledger: create/propose `.ralph/ralph-tasks.md` with checkboxes before the loop starts; also instruct the agent to maintain it and keep every in-scope deliverable represented there.
 - Tasks Mode behavior: instruct the agent to output `<promise>READY_FOR_NEXT_TASK</promise>` when a task or iteration is complete but final completion is not yet proven.
 - Safety: secret handling, no production side effects, no destructive operations unless already authorized.
 - Completion marker: use a strict slug-specific phrase such as `When every checkbox in .ralph/ralph-tasks.md is complete and all verification evidence is fresh, output <promise><SLUG_UPPER>_VERIFIED</promise>. Do not output this promise while any task, test, UI check, review, or artifact scan remains.`
@@ -197,6 +225,9 @@ Use this structure:
 ## Ralph OMX task packet
 <polished prompt or path proposal>
 
+## Ralph tasks ledger
+<path `.ralph/ralph-tasks.md` if written, otherwise proposed markdown content>
+
 ## Primary command: ralph-omx
 ```bash
 ...
@@ -218,4 +249,4 @@ Use this structure:
 <short recommendation based on task shape>
 ```
 
-If the user asks to create the prompt file, write it to `.omx/prompts/<slug>-ralph-omx.md` and report the path plus command. Otherwise, provide the content and command without modifying the repo.
+If the user asks to create the prompt file, write it to `.omx/prompts/<slug>-ralph-omx.md`; for real implementation work also write `.ralph/ralph-tasks.md` from the task ledger and report both paths plus command. Otherwise, provide the prompt content, proposed task ledger, and command without modifying the repo.
