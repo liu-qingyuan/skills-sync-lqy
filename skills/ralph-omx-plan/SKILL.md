@@ -66,7 +66,6 @@ ralph-omx \
   --min-iterations 1 \
   --max-iterations 20 \
   --completion-promise COMPLETE \
-  --no-commit \
   --prompt-file .omx/prompts/<slug>-ralph-omx.md
 ```
 
@@ -77,8 +76,7 @@ RALPH_OMX_MODEL=gpt-5.5 OMX_RALPH_REASONING=high \
 ralph-omx "<task>. When done, output <promise>COMPLETE</promise>." \
   --min-iterations 1 \
   --max-iterations 20 \
-  --completion-promise COMPLETE \
-  --no-commit
+  --completion-promise COMPLETE
 ```
 
 Use `--prompt-file` for long tasks, multi-step specs, secret-safety constraints, or GitNexus/ralplan context.
@@ -107,8 +105,8 @@ Explain these included parameters:
 - `--max-iterations`: hard safety cap; `0`/omitted means unlimited, but generated commands should set one.
 - `--completion-promise`: text Open Ralph looks for inside `<promise>...</promise>` to stop.
 - `--abort-promise`: optional early-abort phrase for unmet prerequisites.
-- `--no-commit`: prevents Open Ralph auto-commit behavior; include by default unless the user wants commits.
-- `--prompt-file`: safer for long prompts; generated path should be under `.omx/prompts/`.
+- `--no-commit`: optional safety switch that prevents Open Ralph auto-commit behavior. Do **not** include it by default; list it under optional knobs unless the user asks for no commits or review-before-commit behavior.
+- `--prompt-file`: safer for long prompts; generated path should be under `.omx/prompts/`. Keep the path on one shell line; never wrap a filename in the middle.
 - `RALPH_OMX_SHIM_DEBUG=1`: optional debug to print adapter command.
 
 Mention extra Open Ralph knobs when relevant:
@@ -119,6 +117,7 @@ Mention extra Open Ralph knobs when relevant:
 - `--status`: inspect state instead of running.
 - `--no-stream`: reduce live streaming noise if needed.
 - `--last-activity-timeout-ms <ms>`: stop if the agent is silent too long, when supported by current Open Ralph.
+- `--no-commit`: use only when the operator wants to inspect changes before committing.
 - `-- <extra codex/omx flags>`: pass extra backend flags through the Open Ralph agent template.
 
 ## Optional OMX-native command block
@@ -140,6 +139,18 @@ Rules:
 - Keep `ralph-omx` separate from OMX-native `$ralph`: Open Ralph owns the outer loop; OMX is only the backend executor.
 - If `$gitnexus` appears after `$ralph-omx-plan` (for example `$ralph-omx-plan $gitnexus ...`), still include only GitNexus context plus `ralph-omx` unless the user also requested `$ralplan`, `$ralph`, or `$team`.
 
+## Command formatting rules
+
+- Prefer auto-commit by default. Open Ralph's default behavior commits completed iterations; show `--no-commit` only as an optional variation.
+- Keep every shell-continuation line syntactically valid: a trailing `\` must be the final character on the line and must not be separated from the next flag by blank lines.
+- Keep `--prompt-file .omx/prompts/<slug>-ralph-omx.md` on one line. Do not wrap long paths across lines.
+- If a command becomes too wide, use a variable:
+
+```bash
+PROMPT_FILE=.omx/prompts/<slug>-ralph-omx.md
+ralph-omx ... --prompt-file "$PROMPT_FILE"
+```
+
 ## Output format
 
 Use this structure:
@@ -155,6 +166,7 @@ Use this structure:
 
 ## Parameter customization
 - ...
+- Optional: add `--no-commit` if you want review-before-commit behavior.
 
 ## Optional OMX alternatives
 ```bash
