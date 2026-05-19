@@ -16,6 +16,7 @@ Produce a concise artifact with:
 3. **Parameter guide**: explain every included flag/env var and list common knobs.
 4. **Optional OMX alternatives**: include `$ralph`, `$team`, and/or `$ralplan` commands when those workflows were requested or useful.
 5. **GitNexus context hook**: when `$gitnexus` is present, include graph-grounding preflight/context commands or reference the existing GitNexus context path.
+6. **Task ledger freshness guard**: ensure `.ralph/ralph-tasks.md` exists, belongs to the current task/prompt, and contains unchecked work before any generated `ralph-omx --tasks` command can run.
 
 ## Composition behavior
 
@@ -93,11 +94,37 @@ Default task-ledger shape:
 
 Adapt the phase/task names to the actual PRD. Keep tasks coarse enough that one Ralph iteration can complete one task, but detailed enough that final completion is objectively gated. Use nested subtasks only when they improve clarity; Open Ralph treats any unchecked nested checkbox as incomplete for final completion.
 
-## Command template
+### Task ledger freshness guard
 
-Use this shape by default:
+When generating or refreshing a runnable `ralph-omx` handoff, treat `.ralph/ralph-tasks.md` as an execution artifact, not a static note. This prevents `ralph-omx --tasks` from exiting immediately because an older ledger is already fully checked.
+
+Required behavior:
+
+- If you write or refresh `.omx/prompts/<slug>-ralph-omx.md` for real implementation work, also write or refresh `.ralph/ralph-tasks.md` in the same repo root unless the user explicitly asks for a draft/no-write plan.
+- Never leave a prior fully checked task ledger in place for a new or revised handoff. If the existing ledger has `0` unchecked boxes, a different title/slug/objective, stale referenced plan files, or a different completion promise, rewrite it from the current task plan.
+- A newly generated ledger should start with unchecked tasks (`- [ ]`) for every required deliverable and validation. Only pre-check an item when it was completed and verified in the current active execution and the ledger records that evidence.
+- The prompt file must name the authoritative ledger path, for example: `Use /path/to/repo/.ralph/ralph-tasks.md as the task ledger; do not use a parent directory ledger.`
+- Before presenting a command, include a quick sanity line in the report: unchecked count, checked count, prompt path, and repo root. If unchecked count is zero for real work, fix the ledger before showing the run command.
+- If the user reports that Ralph exits immediately, first inspect the repo-local `.ralph/ralph-tasks.md`; if every checkbox is checked or the ledger is missing, regenerate the ledger and prompt before retrying.
+
+Recommended local validation after writing files:
 
 ```bash
+cd <repo-root>
+test -f .omx/prompts/<slug>-ralph-omx.md
+test -f .ralph/ralph-tasks.md
+grep -q '^- \[ \]' .ralph/ralph-tasks.md
+printf 'unchecked=%s checked=%s\n' "$(grep -c '^- \[ \]' .ralph/ralph-tasks.md || true)" "$(grep -c '^- \[x\]' .ralph/ralph-tasks.md || true)"
+```
+
+If the `grep -q` check fails for a real implementation task, do not tell the user to run `ralph-omx`; rewrite the ledger first.
+
+## Command template
+
+Use this shape by default from the repo root that owns `.ralph/ralph-tasks.md` and `.omx/prompts/<slug>-ralph-omx.md`:
+
+```bash
+cd <repo-root>
 RALPH_OMX_MODEL=gpt-5.5 \
 OMX_RALPH_REASONING=high \
 OMX_RALPH_SANDBOX=danger-full-access \
@@ -114,6 +141,7 @@ ralph-omx \
 For substantial product work, raise the minimum iteration count:
 
 ```bash
+cd <repo-root>
 RALPH_OMX_MODEL=gpt-5.5 \
 OMX_RALPH_REASONING=high \
 OMX_RALPH_SANDBOX=danger-full-access \
@@ -140,7 +168,7 @@ ralph-omx "<task>. Maintain .ralph/ralph-tasks.md. Output <promise>READY_FOR_NEX
   --last-activity-timeout 30m
 ```
 
-Use `--prompt-file` for long tasks, multi-step specs, secret-safety constraints, GitNexus/ralplan context, or any task expected to run for more than one iteration. When writing the prompt file, also write or refresh `.ralph/ralph-tasks.md` unless the user explicitly asks not to.
+Use `--prompt-file` for long tasks, multi-step specs, secret-safety constraints, GitNexus/ralplan context, or any task expected to run for more than one iteration. When writing the prompt file, also write or refresh `.ralph/ralph-tasks.md` unless the user explicitly asks not to. Validate that the ledger contains at least one unchecked task before presenting a `--tasks` command.
 
 ## Prompt packet requirements
 
@@ -151,7 +179,7 @@ The generated Open Ralph prompt should include:
 - Scope: what to change and what not to change.
 - Deliverables: files/features/docs/tests expected.
 - Verification: exact commands or evidence required.
-- Task ledger: create/propose `.ralph/ralph-tasks.md` with checkboxes before the loop starts; also instruct the agent to maintain it and keep every in-scope deliverable represented there.
+- Task ledger: create/propose `.ralph/ralph-tasks.md` with checkboxes before the loop starts; also instruct the agent to maintain it and keep every in-scope deliverable represented there. Include a stale-ledger warning: if all boxes are checked, regenerate/reset the ledger for the current objective before running `ralph-omx --tasks`.
 - Tasks Mode behavior: instruct the agent to output `<promise>READY_FOR_NEXT_TASK</promise>` when a task or iteration is complete but final completion is not yet proven.
 - Safety: secret handling, no production side effects, no destructive operations unless already authorized.
 - Completion marker: use a strict slug-specific phrase such as `When every checkbox in .ralph/ralph-tasks.md is complete and all verification evidence is fresh, output <promise><SLUG_UPPER>_VERIFIED</promise>. Do not output this promise while any task, test, UI check, review, or artifact scan remains.`
@@ -164,7 +192,7 @@ Explain these included parameters:
 - `RALPH_OMX_MODEL`: Open Ralph/Codex model; local default is `gpt-5.5`.
 - `OMX_RALPH_REASONING`: Codex `model_reasoning_effort`; typical values `low`, `medium`, `high`, `xhigh`; default `high`.
 - `OMX_RALPH_SANDBOX`: OMX/Codex sandbox; current default `danger-full-access`.
-- `--tasks`: enabled by default in generated commands; makes Open Ralph gate final completion on `.ralph/ralph-tasks.md` checkboxes instead of trusting an early completion promise alone.
+- `--tasks`: enabled by default in generated commands; makes Open Ralph gate final completion on `.ralph/ralph-tasks.md` checkboxes instead of trusting an early completion promise alone. If that ledger is already fully checked, `ralph-omx --tasks` can exit immediately, so the skill must refresh/validate the ledger before recommending the command.
 - `--task-promise READY_FOR_NEXT_TASK`: enabled by default with Tasks Mode; lets the agent advance/continue when a task or iteration is done but final completion is not proven.
 - `--min-iterations`: minimum loop rounds before completion promise can stop the loop. Generated commands should default to `3`, or `5-8` for substantial product work; use `1` only for explicit smoke tests.
 - `--max-iterations`: hard safety cap; `0`/omitted means unlimited, but generated commands should set one.
@@ -206,7 +234,7 @@ Rules:
 ## Command formatting rules
 
 - Prefer auto-commit by default. Open Ralph's default behavior commits completed iterations; show `--no-commit` only as an optional variation.
-- Prefer Tasks Mode by default. Include `--tasks` and `--task-promise READY_FOR_NEXT_TASK` unless the user explicitly asks for a one-shot smoke test.
+- Prefer Tasks Mode by default. Include `--tasks` and `--task-promise READY_FOR_NEXT_TASK` unless the user explicitly asks for a one-shot smoke test. For real work, do not emit the command until `.ralph/ralph-tasks.md` exists in the same repo root and has at least one unchecked task.
 - Avoid generic completion promises in generated commands. Use a slug-specific promise such as `LOCAL_WEB_CONSOLE_VERIFIED` or `IMPORT_LOOP_VERIFIED`; reserve `COMPLETE` only for throwaway smoke tests.
 - Keep every shell-continuation line syntactically valid: a trailing `\` must be the final character on the line and must not be separated from the next flag by blank lines.
 - Keep `--prompt-file .omx/prompts/<slug>-ralph-omx.md` on one line. Do not wrap long paths across lines.
@@ -227,6 +255,13 @@ Use this structure:
 
 ## Ralph tasks ledger
 <path `.ralph/ralph-tasks.md` if written, otherwise proposed markdown content>
+
+## Ledger sanity
+- repo root: `<repo-root>`
+- prompt file: `.omx/prompts/<slug>-ralph-omx.md`
+- unchecked tasks: `<n>`
+- checked tasks: `<n>`
+- stale-ledger action: `<rewritten|created|proposed-only|not-needed>`
 
 ## Primary command: ralph-omx
 ```bash
@@ -249,4 +284,4 @@ Use this structure:
 <short recommendation based on task shape>
 ```
 
-If the user asks to create the prompt file, write it to `.omx/prompts/<slug>-ralph-omx.md`; for real implementation work also write `.ralph/ralph-tasks.md` from the task ledger and report both paths plus command. Otherwise, provide the prompt content, proposed task ledger, and command without modifying the repo.
+If the user asks to create the prompt file, write it to `.omx/prompts/<slug>-ralph-omx.md`; for real implementation work also write or refresh `.ralph/ralph-tasks.md` from the current task ledger, validate that it has unchecked tasks, and report both paths plus command. Otherwise, provide the prompt content, proposed task ledger, and command without modifying the repo. If an existing ledger is fully checked or belongs to an older objective, explicitly report that it was stale and was rewritten/reset.
