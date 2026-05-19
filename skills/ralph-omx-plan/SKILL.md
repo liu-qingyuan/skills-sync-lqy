@@ -134,7 +134,7 @@ ralph-omx \
   --min-iterations 3 \
   --max-iterations 20 \
   --completion-promise <SLUG_UPPER>_VERIFIED \
-  --last-activity-timeout 30m \
+  --last-activity-timeout 10m \
   --prompt-file .omx/prompts/<slug>-ralph-omx.md
 ```
 
@@ -151,7 +151,7 @@ ralph-omx \
   --min-iterations 5 \
   --max-iterations 30 \
   --completion-promise <SLUG_UPPER>_VERIFIED \
-  --last-activity-timeout 30m \
+  --last-activity-timeout 10m \
   --prompt-file .omx/prompts/<slug>-ralph-omx.md
 ```
 
@@ -165,7 +165,7 @@ ralph-omx "<task>. Maintain .ralph/ralph-tasks.md. Output <promise>READY_FOR_NEX
   --min-iterations 3 \
   --max-iterations 20 \
   --completion-promise <SLUG_UPPER>_VERIFIED \
-  --last-activity-timeout 30m
+  --last-activity-timeout 10m
 ```
 
 Use `--prompt-file` for long tasks, multi-step specs, secret-safety constraints, GitNexus/ralplan context, or any task expected to run for more than one iteration. When writing the prompt file, also write or refresh `.ralph/ralph-tasks.md` unless the user explicitly asks not to. Validate that the ledger contains at least one unchecked task before presenting a `--tasks` command.
@@ -198,7 +198,7 @@ Explain these included parameters:
 - `--max-iterations`: hard safety cap; `0`/omitted means unlimited, but generated commands should set one.
 - `--completion-promise`: text Open Ralph looks for inside `<promise>...</promise>` to stop. Generated commands should use a strict slug-specific phrase like `<SLUG_UPPER>_VERIFIED`, not generic `COMPLETE`, to avoid premature exits.
 - `--abort-promise`: optional early-abort phrase for unmet prerequisites.
-- `--last-activity-timeout 30m`: optional but preferred for long autonomous runs; kills/restarts an iteration after prolonged silence when supported by the installed Open Ralph.
+- `--last-activity-timeout 10m`: optional but preferred for long autonomous runs; kills/restarts an iteration after prolonged silence when supported by the installed Open Ralph. Default generated value is `10m` to avoid long silent stalls.
 - `--no-commit`: optional safety switch that prevents Open Ralph auto-commit behavior. Do **not** include it by default; list it under optional knobs unless the user asks for no commits or review-before-commit behavior.
 - `--prompt-file`: safer for long prompts; generated path should be under `.omx/prompts/`. Keep the path on one shell line; never wrap a filename in the middle.
 - `RALPH_OMX_SHIM_DEBUG=1`: optional debug to print adapter command.
@@ -208,7 +208,7 @@ Mention extra Open Ralph knobs when relevant:
 - `--continue`: resume existing Open Ralph state if appropriate.
 - `--status`: inspect state instead of running.
 - `--no-stream`: reduce live streaming noise if needed.
-- `--last-activity-timeout <duration>`: stop/restart if the agent is silent too long, when supported by current Open Ralph; examples: `30m`, `1h`, `300s`.
+- `--last-activity-timeout <duration>`: stop/restart if the agent is silent too long, when supported by current Open Ralph; examples: `10m`, `30m`, `1h`, `300s`.
 - `--no-commit`: use only when the operator wants to inspect changes before committing.
 - `-- <extra codex/omx flags>`: pass extra backend flags through the Open Ralph agent template.
 
