@@ -10,6 +10,7 @@
 - `gitnexus-codex-wiki`：基于 GitNexus graph/index evidence 生成源码证据驱动的 markdown wiki 或 project-explainer-web 风格架构介绍网页；需要本机可运行 `gitnexus` CLI 和目标仓库 index，推荐与 `$gitnexus` skill 一起安装。
 - `playwright-cli`：用于通过 playwright-cli 做终端优先的浏览器自动化、截图/视频/trace、测试代码生成，并记录 Electron `_electron.launch()` 应用的录屏注意事项。
 - `ralph-omx-plan`：把待办任务整理成 Open Ralph via OMX 的 prompt packet 和可复制的 `ralph-omx` 运行命令，同时列出 `$ralplan`、`$ralph`、`$team` 等可选 OMX-native 执行路径。
+- `visual-explainer`：链接同步自 `nicobailon/visual-explainer` 的 HTML 视觉说明 skill，用于生成架构图、计划评审、diff review、slide deck 和数据表等可视化页面。
 
 ## GitNexus 依赖说明
 
@@ -32,6 +33,7 @@ skills/
   gitnexus-codex-wiki/
   playwright-cli/
   ralph-omx-plan/
+  visual-explainer/
 ```
 
 规则：
@@ -107,6 +109,14 @@ python ~/.codex/skills/.system/skill-installer/scripts/install-skill-from-github
   --path skills/ralph-omx-plan
 ```
 
+### 安装 `visual-explainer`
+
+```bash
+python ~/.codex/skills/.system/skill-installer/scripts/install-skill-from-github.py \
+  --repo liu-qingyuan/skills-sync-lqy \
+  --path skills/visual-explainer
+```
+
 安装完成后请重启 Codex：
 
 ```text
@@ -128,6 +138,7 @@ rm -rf ~/.codex/skills/gitnexus
 rm -rf ~/.codex/skills/gitnexus-codex-wiki
 rm -rf ~/.codex/skills/playwright-cli
 rm -rf ~/.codex/skills/ralph-omx-plan
+rm -rf ~/.codex/skills/visual-explainer
 ```
 
 然后重新运行安装命令并重启 Codex。
@@ -146,6 +157,7 @@ ln -s ~/skills-sync-lqy/skills/gitnexus ~/.codex/skills/gitnexus
 ln -s ~/skills-sync-lqy/skills/gitnexus-codex-wiki ~/.codex/skills/gitnexus-codex-wiki
 ln -s ~/skills-sync-lqy/skills/playwright-cli ~/.codex/skills/playwright-cli
 ln -s ~/skills-sync-lqy/skills/ralph-omx-plan ~/.codex/skills/ralph-omx-plan
+ln -s ~/skills-sync-lqy/skills/visual-explainer ~/.codex/skills/visual-explainer
 ```
 
 之后只需要：
@@ -154,6 +166,20 @@ ln -s ~/skills-sync-lqy/skills/ralph-omx-plan ~/.codex/skills/ralph-omx-plan
 cd ~/skills-sync-lqy
 git pull
 ```
+
+---
+
+
+## 外部链接同步说明
+
+`visual-explainer` 是从外部仓库链接同步进来的 skill：
+
+- Upstream: https://github.com/nicobailon/visual-explainer.git
+- Upstream skill path: `plugins/visual-explainer`
+- 本仓库安装路径: `skills/visual-explainer`
+- 同步记录: `skills/visual-explainer/UPSTREAM.md`
+
+这里保留一份可安装镜像，而不是 git submodule：Codex `skill-installer` 默认通过 GitHub archive 安装，archive 里不会自动展开 submodule，纯 submodule 会导致安装时找不到 `SKILL.md`。
 
 ---
 
