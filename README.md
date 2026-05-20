@@ -6,6 +6,7 @@
 
 - `project-explainer-web`：生成项目或任务的说明型静态网页，默认输出中文，适合快速帮助人类或 AI 理解仓库、架构和任务背景。
 - `feature-release-verifier`：用于验证功能是否具备发布条件，聚合 mock-ui、real-runtime、packaged-smoke 等验证证据并输出发布结论。
+- `frontend-slides`：用于创建或转换零依赖 HTML 演示文稿；本镜像把嵌套 plugin skill 文件实体化，避免 GitHub archive/安装器把 symlink 转成无 frontmatter 文本导致 Codex 跳过加载。
 - `gitnexus`：为 OMX/Codex 工作流提供 GitNexus 代码图谱 grounding；需要本机已安装/配置 GitNexus CLI/MCP，并且目标仓库已有 GitNexus index；可作为 `$deep-interview`、`$ralplan`、`$team`、`$autopilot`、`$ralph-omx-plan` 等 workflow 的上下文 modifier。
 - `gitnexus-codex-wiki`：基于 GitNexus graph/index evidence 生成源码证据驱动的 markdown wiki 或 project-explainer-web 风格架构介绍网页；需要本机可运行 `gitnexus` CLI 和目标仓库 index，推荐与 `$gitnexus` skill 一起安装。
 - `playwright-cli`：用于通过 playwright-cli 做终端优先的浏览器自动化、截图/视频/trace、测试代码生成，并记录 Electron `_electron.launch()` 应用的录屏注意事项。
@@ -29,6 +30,7 @@
 skills/
   project-explainer-web/
   feature-release-verifier/
+  frontend-slides/
   gitnexus/
   gitnexus-codex-wiki/
   playwright-cli/
@@ -75,6 +77,14 @@ python ~/.codex/skills/.system/skill-installer/scripts/install-skill-from-github
 python ~/.codex/skills/.system/skill-installer/scripts/install-skill-from-github.py \
   --repo liu-qingyuan/skills-sync-lqy \
   --path skills/feature-release-verifier
+```
+
+### 安装 `frontend-slides`
+
+```bash
+python ~/.codex/skills/.system/skill-installer/scripts/install-skill-from-github.py \
+  --repo liu-qingyuan/skills-sync-lqy \
+  --path skills/frontend-slides
 ```
 
 ### 安装 `gitnexus`
@@ -134,6 +144,7 @@ Restart Codex to pick up new skills.
 ```bash
 rm -rf ~/.codex/skills/project-explainer-web
 rm -rf ~/.codex/skills/feature-release-verifier
+rm -rf ~/.codex/skills/frontend-slides
 rm -rf ~/.codex/skills/gitnexus
 rm -rf ~/.codex/skills/gitnexus-codex-wiki
 rm -rf ~/.codex/skills/playwright-cli
@@ -153,6 +164,7 @@ rm -rf ~/.codex/skills/visual-explainer
 git clone https://github.com/liu-qingyuan/skills-sync-lqy.git ~/skills-sync-lqy
 ln -s ~/skills-sync-lqy/skills/project-explainer-web ~/.codex/skills/project-explainer-web
 ln -s ~/skills-sync-lqy/skills/feature-release-verifier ~/.codex/skills/feature-release-verifier
+ln -s ~/skills-sync-lqy/skills/frontend-slides ~/.codex/skills/frontend-slides
 ln -s ~/skills-sync-lqy/skills/gitnexus ~/.codex/skills/gitnexus
 ln -s ~/skills-sync-lqy/skills/gitnexus-codex-wiki ~/.codex/skills/gitnexus-codex-wiki
 ln -s ~/skills-sync-lqy/skills/playwright-cli ~/.codex/skills/playwright-cli
@@ -171,6 +183,13 @@ git pull
 
 
 ## 外部链接同步说明
+
+`frontend-slides` 是从外部仓库/插件格式同步进来的 skill：
+
+- Upstream: https://github.com/zarazhangrui/frontend-slides
+- Upstream plugin path: `plugins/frontend-slides`
+- 本仓库安装路径: `skills/frontend-slides`
+- 维护说明: `skills/frontend-slides/plugins/frontend-slides/skills/frontend-slides/` 内的文件必须保留为实体文件副本，不要改回 symlink 或只含相对路径的占位文本；否则 Codex 会把嵌套 `SKILL.md` 判定为缺少 YAML frontmatter。
 
 `visual-explainer` 是从外部仓库链接同步进来的 skill：
 
