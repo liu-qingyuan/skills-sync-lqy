@@ -12,6 +12,8 @@ metadata:
 
 Generate self-contained HTML files for technical diagrams, visualizations, and data tables. Always open the result in the browser. Never fall back to ASCII art when this skill is loaded.
 
+**Default output contract.** Write generated HTML artifacts under the current workspace's `_learn_web/` directory (create it if needed). Use Simplified Chinese as the default page voice and UI language: set `<html lang="zh-CN">`, write headings/body text/navigation/status labels in Chinese, and only switch to another language when the user explicitly asks or the source content must stay verbatim.
+
 **Proactive table rendering.** When you're about to present tabular data as an ASCII box-drawing table in the terminal (comparisons, audits, feature matrices, status reports, any structured rows/columns), generate an HTML page instead. The threshold: if the table has 4+ rows or 3+ columns, it belongs in the browser. Don't wait for the user to ask — render it as HTML automatically and tell them the file path. You can still include a brief text summary in the chat, but the table itself should be the HTML page.
 
 ## Available Commands
@@ -191,11 +193,11 @@ Keep animations purposeful: entrance reveals, hover feedback, and user-initiated
 
 ### 4. Deliver
 
-**Output location:** Write to `~/.agent/diagrams/`. Use a descriptive filename based on content: `modem-architecture.html`, `pipeline-flow.html`, `schema-overview.html`. The directory persists across sessions.
+**Output location:** Write to the current workspace's `_learn_web/` directory (create it if needed). Use a descriptive filename based on content: `modem-architecture.html`, `pipeline-flow.html`, `schema-overview.html`. Keep all visual-explainer artifacts there by default.
 
 **Open in browser:**
-- macOS: `open ~/.agent/diagrams/filename.html`
-- Linux: `xdg-open ~/.agent/diagrams/filename.html`
+- macOS: `open _learn_web/filename.html`
+- Linux: `xdg-open _learn_web/filename.html`
 
 **Tell the user** the file path so they can re-open or share it.
 
@@ -337,11 +339,11 @@ An alternative output format for presenting content as a magazine-quality slide 
 
 ## File Structure
 
-Every diagram is a single self-contained `.html` file. No external assets except CDN links (fonts, optional libraries). Structure:
+Every diagram is a single self-contained `.html` file. Default page voice is Simplified Chinese, with `<html lang="zh-CN">`; keep source quotations or code identifiers verbatim when needed. No external assets except CDN links (fonts, optional libraries). Structure:
 
 ```html
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -372,7 +374,7 @@ If the skill lives somewhere else, use that install path instead, such as `~/.co
 
 **Example:**
 ```bash
-bash ~/.pi/agent/skills/visual-explainer/scripts/share.sh ~/.agent/diagrams/my-diagram.html
+bash ~/.pi/agent/skills/visual-explainer/scripts/share.sh _learn_web/my-diagram.html
 
 # Output:
 # ✓ Shared successfully!
