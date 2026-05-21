@@ -12,11 +12,11 @@ Create a runnable handoff for `ralph-omx` while preserving optional OMX-native l
 Produce a concise artifact with:
 
 1. **Task packet**: a polished prompt for Open Ralph's loop.
-2. **Primary `ralph-omx` command**: copy-paste ready, with loop-hardened defaults: Tasks Mode on, task promise on, non-trivial minimum iterations, safety cap, and a strict slug-specific completion promise.
+2. **Mode choice**: decide whether the handoff should use Prompt Loop Mode (no `--tasks`) or Task Ledger Mode (`--tasks`).
 3. **Parameter guide**: explain every included flag/env var and list common knobs.
 4. **Optional OMX alternatives**: include `$ralph`, `$team`, and/or `$ralplan` commands when those workflows were requested or useful.
 5. **GitNexus context hook**: when `$gitnexus` is present, include graph-grounding preflight/context commands or reference the existing GitNexus context path.
-6. **Task ledger freshness guard**: ensure `.ralph/ralph-tasks.md` exists, belongs to the current task/prompt, and contains unchecked work before any generated `ralph-omx --tasks` command can run.
+6. **Task ledger freshness guard**: in Task Ledger Mode, ensure `.ralph/ralph-tasks.md` exists, belongs to the current task/prompt, and contains unchecked work before any generated `ralph-omx --tasks` command can run.
 
 ## Composition behavior
 
@@ -28,6 +28,39 @@ Produce a concise artifact with:
 - If invoked with `$ralph`: include an OMX-native `$ralph ...` execution command alongside `ralph-omx`, and explain when to choose each.
 - If invoked with `$team`: include an OMX `$team ...` / `omx team ...` command alongside `ralph-omx`, and explain that Team is tmux-runtime parallel execution.
 - If both `$ralplan` and execution lanes are present, make the sequencing explicit: run planning first, then choose one execution lane.
+
+## Mode selection
+
+Choose the execution mode before writing the command. Make the chosen mode explicit in the output.
+
+### Prompt Loop Mode (no `--tasks`)
+
+Use this mode when the user explicitly asks for any of these:
+
+- "不带 task", "不用 tasks", "不要 task list", "不维护 `.ralph/ralph-tasks.md`"
+- "同一个 prompt 跑 N 次", "一个 prompt 执行 N 轮", "重复执行 N 次"
+- small investigation/smoke/fix work where a task ledger would be overhead
+
+Prompt Loop Mode means Open Ralph runs the same prompt across multiple iterations. The agent may make and revise its own plan inside the prompt, but final completion is **not** gated by `.ralph/ralph-tasks.md`. Do not include `--tasks` or `--task-promise`. Do not write or require `.ralph/ralph-tasks.md`. Still use loop-hardened iteration bounds and a strict slug-specific completion promise.
+
+Prompt Loop Mode prompt requirements:
+
+- State: `Do not use .ralph/ralph-tasks.md for this run.`
+- State: `Continue iterating from the same objective across rounds; use each round to inspect, implement, verify, and tighten the result based on prior evidence.`
+- Completion marker must require: minimum iterations reached, objective complete, no known unresolved errors, and fresh verification evidence collected.
+- If the user asks for exactly N runs, set both `--min-iterations N` and `--max-iterations N`; warn that this is a hard cap and may stop before completion.
+- If the user asks for at least N runs, set `--min-iterations N` and a higher safety cap such as `--max-iterations 10` or `20`.
+
+### Task Ledger Mode (`--tasks`)
+
+Use this mode when the user asks for task mode, ToDo lists, multi-phase implementation, substantial product work, or when the task is complex enough that early completion would be risky. This remains the default for real implementation work unless the user explicitly asks for Prompt Loop Mode. Include `--tasks`, `--task-promise READY_FOR_NEXT_TASK`, and the `.ralph/ralph-tasks.md` freshness guard.
+
+Task Ledger Mode semantics to explain when relevant:
+
+- One Open Ralph iteration is the loop unit, not one checkbox.
+- One iteration may complete one task, multiple small tasks, or only part of a large task.
+- The whole ledger is not "done once and then repeated". The loop keeps advancing unchecked work; once all in-scope checkboxes and verification are complete, final completion is allowed after `--min-iterations` is satisfied.
+- While any task or verification remains, the agent should output `<promise>READY_FOR_NEXT_TASK</promise>`, not the final completion promise.
 
 ## Defaults to assume for local `ralph-omx`
 
@@ -54,7 +87,18 @@ Open Ralph's built-in iteration defaults are intentionally permissive:
 --tasks disabled
 ```
 
-Do **not** mirror those permissive defaults in generated commands. They allow the loop to stop as soon as the agent emits `<promise>COMPLETE</promise>`, often exactly at the requested minimum iteration count. Generated `ralph-omx` commands should override them with loop-hardened defaults:
+Do **not** mirror those permissive defaults in generated commands. They allow the loop to stop as soon as the agent emits `<promise>COMPLETE</promise>`, often exactly at the requested minimum iteration count. Generated `ralph-omx` commands should override them with loop-hardened defaults.
+
+Prompt Loop Mode defaults:
+
+```text
+--min-iterations 3
+--max-iterations 10
+--completion-promise <SLUG_UPPER>_VERIFIED
+# no --tasks, no --task-promise
+```
+
+Task Ledger Mode defaults:
 
 ```text
 --tasks
@@ -68,7 +112,7 @@ Use `--min-iterations 3` for normal implementation tasks, `5-8` for product/mult
 
 ## Task ledger defaults
 
-For real implementation work, the handoff should include an initial `.ralph/ralph-tasks.md` plan, not just a prompt that asks the agent to invent tasks later. When the user asks to create files or when the plan is execution-ready, write the task ledger alongside the prompt file. If the user only asks for a draft, include the proposed task ledger content in the output.
+In Task Ledger Mode, the handoff should include an initial `.ralph/ralph-tasks.md` plan, not just a prompt that asks the agent to invent tasks later. When the user asks to create files or when the plan is execution-ready, write the task ledger alongside the prompt file. If the user only asks for a draft, include the proposed task ledger content in the output. In Prompt Loop Mode, do not create or require a task ledger unless the user switches modes.
 
 Default task-ledger shape:
 
@@ -96,7 +140,7 @@ Adapt the phase/task names to the actual PRD. Keep tasks coarse enough that one 
 
 ### Task ledger freshness guard
 
-When generating or refreshing a runnable `ralph-omx` handoff, treat `.ralph/ralph-tasks.md` as an execution artifact, not a static note. This prevents `ralph-omx --tasks` from exiting immediately because an older ledger is already fully checked.
+When generating or refreshing a runnable Task Ledger Mode `ralph-omx` handoff, treat `.ralph/ralph-tasks.md` as an execution artifact, not a static note. This prevents `ralph-omx --tasks` from exiting immediately because an older ledger is already fully checked. Skip this guard in Prompt Loop Mode because that mode intentionally does not use `--tasks`.
 
 Required behavior:
 
@@ -121,7 +165,41 @@ If the `grep -q` check fails for a real implementation task, do not tell the use
 
 ## Command template
 
-Use this shape by default from the repo root that owns `.ralph/ralph-tasks.md` and `.omx/prompts/<slug>-ralph-omx.md`:
+### Prompt Loop Mode command (no `--tasks`)
+
+Use this shape when the user asks for the same prompt to run multiple rounds without task-list gating:
+
+```bash
+cd <repo-root>
+RALPH_OMX_MODEL=gpt-5.5 \
+OMX_RALPH_REASONING=high \
+OMX_RALPH_SANDBOX=danger-full-access \
+ralph-omx \
+  --min-iterations 3 \
+  --max-iterations 10 \
+  --completion-promise <SLUG_UPPER>_VERIFIED \
+  --last-activity-timeout 10m \
+  --prompt-file .omx/prompts/<slug>-ralph-omx.md
+```
+
+For exactly three iterations, use a hard cap only when the user explicitly wants that behavior:
+
+```bash
+cd <repo-root>
+RALPH_OMX_MODEL=gpt-5.5 \
+OMX_RALPH_REASONING=high \
+OMX_RALPH_SANDBOX=danger-full-access \
+ralph-omx \
+  --min-iterations 3 \
+  --max-iterations 3 \
+  --completion-promise <SLUG_UPPER>_VERIFIED \
+  --last-activity-timeout 10m \
+  --prompt-file .omx/prompts/<slug>-ralph-omx.md
+```
+
+### Task Ledger Mode command (`--tasks`)
+
+Use this shape by default for substantial implementation work from the repo root that owns `.ralph/ralph-tasks.md` and `.omx/prompts/<slug>-ralph-omx.md`:
 
 ```bash
 cd <repo-root>
@@ -155,7 +233,7 @@ ralph-omx \
   --prompt-file .omx/prompts/<slug>-ralph-omx.md
 ```
 
-When the prompt is genuinely short, inline it instead of writing a prompt-file, but still keep Tasks Mode and a strict completion promise unless the user explicitly asks for a smoke test:
+When the prompt is genuinely short in Task Ledger Mode, inline it instead of writing a prompt-file, but still keep `--tasks`, `--task-promise`, and a strict completion promise. If the user explicitly asks for Prompt Loop Mode or a smoke test, use the no-ledger prompt-loop command shape instead:
 
 ```bash
 RALPH_OMX_MODEL=gpt-5.5 OMX_RALPH_REASONING=high \
@@ -168,7 +246,7 @@ ralph-omx "<task>. Maintain .ralph/ralph-tasks.md. Output <promise>READY_FOR_NEX
   --last-activity-timeout 10m
 ```
 
-Use `--prompt-file` for long tasks, multi-step specs, secret-safety constraints, GitNexus/ralplan context, or any task expected to run for more than one iteration. When writing the prompt file, also write or refresh `.ralph/ralph-tasks.md` unless the user explicitly asks not to. Validate that the ledger contains at least one unchecked task before presenting a `--tasks` command.
+Use `--prompt-file` for long tasks, multi-step specs, secret-safety constraints, GitNexus/ralplan context, or any task expected to run for more than one iteration. In Task Ledger Mode, when writing the prompt file, also write or refresh `.ralph/ralph-tasks.md` unless the user explicitly asks not to. Validate that the ledger contains at least one unchecked task before presenting a `--tasks` command. In Prompt Loop Mode, write only the prompt file and state that no task ledger is used.
 
 ## Prompt packet requirements
 
@@ -179,10 +257,11 @@ The generated Open Ralph prompt should include:
 - Scope: what to change and what not to change.
 - Deliverables: files/features/docs/tests expected.
 - Verification: exact commands or evidence required.
-- Task ledger: create/propose `.ralph/ralph-tasks.md` with checkboxes before the loop starts; also instruct the agent to maintain it and keep every in-scope deliverable represented there. Include a stale-ledger warning: if all boxes are checked, regenerate/reset the ledger for the current objective before running `ralph-omx --tasks`.
-- Tasks Mode behavior: instruct the agent to output `<promise>READY_FOR_NEXT_TASK</promise>` when a task or iteration is complete but final completion is not yet proven.
+- Mode behavior:
+  - Prompt Loop Mode: explicitly say not to use `.ralph/ralph-tasks.md`; instruct the agent to continue iterating on the same objective across rounds and only emit the final promise after the minimum iterations, objective completion, and fresh verification.
+  - Task Ledger Mode: create/propose `.ralph/ralph-tasks.md` with checkboxes before the loop starts; instruct the agent to maintain it and keep every in-scope deliverable represented there. Include a stale-ledger warning: if all boxes are checked, regenerate/reset the ledger for the current objective before running `ralph-omx --tasks`. Instruct the agent to output `<promise>READY_FOR_NEXT_TASK</promise>` when a task or iteration is complete but final completion is not yet proven.
 - Safety: secret handling, no production side effects, no destructive operations unless already authorized.
-- Completion marker: use a strict slug-specific phrase such as `When every checkbox in .ralph/ralph-tasks.md is complete and all verification evidence is fresh, output <promise><SLUG_UPPER>_VERIFIED</promise>. Do not output this promise while any task, test, UI check, review, or artifact scan remains.`
+- Completion marker: use a strict slug-specific phrase. In Prompt Loop Mode, require minimum iterations reached plus objective completion and fresh verification before `<promise><SLUG_UPPER>_VERIFIED</promise>`. In Task Ledger Mode, use wording such as `When every checkbox in .ralph/ralph-tasks.md is complete and all verification evidence is fresh, output <promise><SLUG_UPPER>_VERIFIED</promise>. Do not output this promise while any task, test, UI check, review, or artifact scan remains.`
 - Optional abort marker: if prerequisites may be missing, define an abort phrase and suggest `--abort-promise`.
 
 ## Parameter guide to include in every output
@@ -192,9 +271,9 @@ Explain these included parameters:
 - `RALPH_OMX_MODEL`: Open Ralph/Codex model; local default is `gpt-5.5`.
 - `OMX_RALPH_REASONING`: Codex `model_reasoning_effort`; typical values `low`, `medium`, `high`, `xhigh`; default `high`.
 - `OMX_RALPH_SANDBOX`: OMX/Codex sandbox; current default `danger-full-access`.
-- `--tasks`: enabled by default in generated commands; makes Open Ralph gate final completion on `.ralph/ralph-tasks.md` checkboxes instead of trusting an early completion promise alone. If that ledger is already fully checked, `ralph-omx --tasks` can exit immediately, so the skill must refresh/validate the ledger before recommending the command.
-- `--task-promise READY_FOR_NEXT_TASK`: enabled by default with Tasks Mode; lets the agent advance/continue when a task or iteration is done but final completion is not proven.
-- `--min-iterations`: minimum loop rounds before completion promise can stop the loop. Generated commands should default to `3`, or `5-8` for substantial product work; use `1` only for explicit smoke tests.
+- `--tasks`: included in Task Ledger Mode; omitted in Prompt Loop Mode. In Task Ledger Mode it makes Open Ralph gate final completion on `.ralph/ralph-tasks.md` checkboxes instead of trusting an early completion promise alone. If that ledger is already fully checked, `ralph-omx --tasks` can exit immediately, so the skill must refresh/validate the ledger before recommending the command.
+- `--task-promise READY_FOR_NEXT_TASK`: included only with Task Ledger Mode; lets the agent advance/continue when a task or iteration is done but final completion is not proven. Do not include it in Prompt Loop Mode.
+- `--min-iterations`: minimum loop rounds before completion promise can stop the loop. Generated commands should default to `3`, or `5-8` for substantial product work; use `1` only for explicit smoke tests. If the user says "execute this prompt N times" and does not say "at least", ask no follow-up: generate exactly-N Prompt Loop Mode with `--min-iterations N --max-iterations N` and warn it is a hard cap.
 - `--max-iterations`: hard safety cap; `0`/omitted means unlimited, but generated commands should set one.
 - `--completion-promise`: text Open Ralph looks for inside `<promise>...</promise>` to stop. Generated commands should use a strict slug-specific phrase like `<SLUG_UPPER>_VERIFIED`, not generic `COMPLETE`, to avoid premature exits.
 - `--abort-promise`: optional early-abort phrase for unmet prerequisites.
@@ -234,7 +313,7 @@ Rules:
 ## Command formatting rules
 
 - Prefer auto-commit by default. Open Ralph's default behavior commits completed iterations; show `--no-commit` only as an optional variation.
-- Prefer Tasks Mode by default. Include `--tasks` and `--task-promise READY_FOR_NEXT_TASK` unless the user explicitly asks for a one-shot smoke test. For real work, do not emit the command until `.ralph/ralph-tasks.md` exists in the same repo root and has at least one unchecked task.
+- Prefer Task Ledger Mode by default for substantial real work. Include `--tasks` and `--task-promise READY_FOR_NEXT_TASK` unless the user explicitly asks for Prompt Loop Mode (for example "不带 task", "不用 tasks", or "同一个 prompt 跑 N 次") or a one-shot smoke test. For Task Ledger Mode real work, do not emit the command until `.ralph/ralph-tasks.md` exists in the same repo root and has at least one unchecked task. For Prompt Loop Mode, do not create or require `.ralph/ralph-tasks.md`.
 - Avoid generic completion promises in generated commands. Use a slug-specific promise such as `LOCAL_WEB_CONSOLE_VERIFIED` or `IMPORT_LOOP_VERIFIED`; reserve `COMPLETE` only for throwaway smoke tests.
 - Keep every shell-continuation line syntactically valid: a trailing `\` must be the final character on the line and must not be separated from the next flag by blank lines.
 - Keep `--prompt-file .omx/prompts/<slug>-ralph-omx.md` on one line. Do not wrap long paths across lines.
@@ -253,15 +332,19 @@ Use this structure:
 ## Ralph OMX task packet
 <polished prompt or path proposal>
 
+## Mode
+<Prompt Loop Mode or Task Ledger Mode, with one-line reason>
+
 ## Ralph tasks ledger
-<path `.ralph/ralph-tasks.md` if written, otherwise proposed markdown content>
+<Task Ledger Mode: path `.ralph/ralph-tasks.md` if written, otherwise proposed markdown content. Prompt Loop Mode: `not used` and explicitly say no task ledger is required.>
 
 ## Ledger sanity
 - repo root: `<repo-root>`
 - prompt file: `.omx/prompts/<slug>-ralph-omx.md`
-- unchecked tasks: `<n>`
-- checked tasks: `<n>`
-- stale-ledger action: `<rewritten|created|proposed-only|not-needed>`
+- mode: `<prompt-loop|task-ledger>`
+- unchecked tasks: `<n|not-applicable>`
+- checked tasks: `<n|not-applicable>`
+- stale-ledger action: `<rewritten|created|proposed-only|not-needed|not-applicable>`
 
 ## Primary command: ralph-omx
 ```bash
@@ -270,7 +353,8 @@ Use this structure:
 
 ## Parameter customization
 - ...
-- Default: keep `--tasks` and `--task-promise READY_FOR_NEXT_TASK` on for real work.
+- Default for substantial real work: keep `--tasks` and `--task-promise READY_FOR_NEXT_TASK` on.
+- Default for explicit same-prompt multi-run requests: omit `--tasks` and `--task-promise`; use Prompt Loop Mode.
 - Default: use a strict slug-specific `--completion-promise`, not generic `COMPLETE`.
 - Optional: add `--no-commit` if you want review-before-commit behavior.
 
@@ -284,4 +368,4 @@ Use this structure:
 <short recommendation based on task shape>
 ```
 
-If the user asks to create the prompt file, write it to `.omx/prompts/<slug>-ralph-omx.md`; for real implementation work also write or refresh `.ralph/ralph-tasks.md` from the current task ledger, validate that it has unchecked tasks, and report both paths plus command. Otherwise, provide the prompt content, proposed task ledger, and command without modifying the repo. If an existing ledger is fully checked or belongs to an older objective, explicitly report that it was stale and was rewritten/reset.
+If the user asks to create the prompt file, write it to `.omx/prompts/<slug>-ralph-omx.md`. In Task Ledger Mode, also write or refresh `.ralph/ralph-tasks.md` from the current task ledger, validate that it has unchecked tasks, and report both paths plus command. In Prompt Loop Mode, do not write `.ralph/ralph-tasks.md`; report `task ledger: not used`. Otherwise, provide the prompt content, proposed mode, and command without modifying the repo. If an existing ledger is fully checked or belongs to an older objective and Task Ledger Mode is selected, explicitly report that it was stale and was rewritten/reset.
