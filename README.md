@@ -9,7 +9,9 @@
 - `frontend-slides`：用于创建或转换零依赖 HTML 演示文稿；本镜像把嵌套 plugin skill 文件实体化，避免 GitHub archive/安装器把 symlink 转成无 frontmatter 文本导致 Codex 跳过加载。
 - `gitnexus`：为 OMX/Codex 工作流提供 GitNexus 代码图谱 grounding；需要本机已安装/配置 GitNexus CLI/MCP，并且目标仓库已有 GitNexus index；可作为 `$deep-interview`、`$ralplan`、`$team`、`$autopilot`、`$ralph-omx-plan` 等 workflow 的上下文 modifier。
 - `gitnexus-codex-wiki`：基于 GitNexus graph/index evidence 生成源码证据驱动的 markdown wiki 或 project-explainer-web 风格架构介绍网页；需要本机可运行 `gitnexus` CLI 和目标仓库 index，推荐与 `$gitnexus` skill 一起安装。
+- `karpathy-guidelines`：写代码、评审或重构时的行为准则，强调先明确假设、保持简单、外科手术式修改和可验证成功标准。
 - `playwright-cli`：用于通过 playwright-cli 做终端优先的浏览器自动化、截图/视频/trace、测试代码生成，并记录 Electron `_electron.launch()` 应用的录屏注意事项。
+- `skill`：用于管理本地 Codex/OMX skills，包含 list/add/remove/edit/search/info/sync/setup/scan 等 CLI 式工作流说明。
 - `ralph-omx-plan`：把待办任务整理成 Open Ralph via OMX 的 prompt packet 和可复制的 `ralph-omx` 运行命令，同时列出 `$ralplan`、`$ralph`、`$team` 等可选 OMX-native 执行路径。
 - `visual-explainer`：链接同步自 `nicobailon/visual-explainer` 的 HTML 视觉说明 skill，用于生成架构图、计划评审、diff review、slide deck 和数据表等可视化页面。
 
@@ -33,7 +35,9 @@ skills/
   frontend-slides/
   gitnexus/
   gitnexus-codex-wiki/
+  karpathy-guidelines/
   playwright-cli/
+  skill/
   ralph-omx-plan/
   visual-explainer/
 ```
@@ -103,12 +107,30 @@ python ~/.codex/skills/.system/skill-installer/scripts/install-skill-from-github
   --path skills/gitnexus-codex-wiki
 ```
 
+
+### 安装 `karpathy-guidelines`
+
+```bash
+python ~/.codex/skills/.system/skill-installer/scripts/install-skill-from-github.py \
+  --repo liu-qingyuan/skills-sync-lqy \
+  --path skills/karpathy-guidelines
+```
+
 ### 安装 `playwright-cli`
 
 ```bash
 python ~/.codex/skills/.system/skill-installer/scripts/install-skill-from-github.py \
   --repo liu-qingyuan/skills-sync-lqy \
   --path skills/playwright-cli
+```
+
+
+### 安装 `skill`
+
+```bash
+python ~/.codex/skills/.system/skill-installer/scripts/install-skill-from-github.py \
+  --repo liu-qingyuan/skills-sync-lqy \
+  --path skills/skill
 ```
 
 ### 安装 `ralph-omx-plan`
@@ -147,7 +169,9 @@ rm -rf ~/.codex/skills/feature-release-verifier
 rm -rf ~/.codex/skills/frontend-slides
 rm -rf ~/.codex/skills/gitnexus
 rm -rf ~/.codex/skills/gitnexus-codex-wiki
+rm -rf ~/.codex/skills/karpathy-guidelines
 rm -rf ~/.codex/skills/playwright-cli
+rm -rf ~/.codex/skills/skill
 rm -rf ~/.codex/skills/ralph-omx-plan
 rm -rf ~/.codex/skills/visual-explainer
 ```
@@ -167,7 +191,9 @@ ln -s ~/skills-sync-lqy/skills/feature-release-verifier ~/.codex/skills/feature-
 ln -s ~/skills-sync-lqy/skills/frontend-slides ~/.codex/skills/frontend-slides
 ln -s ~/skills-sync-lqy/skills/gitnexus ~/.codex/skills/gitnexus
 ln -s ~/skills-sync-lqy/skills/gitnexus-codex-wiki ~/.codex/skills/gitnexus-codex-wiki
+ln -s ~/skills-sync-lqy/skills/karpathy-guidelines ~/.codex/skills/karpathy-guidelines
 ln -s ~/skills-sync-lqy/skills/playwright-cli ~/.codex/skills/playwright-cli
+ln -s ~/skills-sync-lqy/skills/skill ~/.codex/skills/skill
 ln -s ~/skills-sync-lqy/skills/ralph-omx-plan ~/.codex/skills/ralph-omx-plan
 ln -s ~/skills-sync-lqy/skills/visual-explainer ~/.codex/skills/visual-explainer
 ```
