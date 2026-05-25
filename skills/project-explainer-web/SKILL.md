@@ -24,16 +24,20 @@ Produce a page that lets a reader answer these questions in a few minutes:
 - What is this project or task trying to do?
 - Which framework, runtime, and layers matter?
 - How do the important parts connect in one top-down Mermaid graph?
-- How does the relevant flow work end to end?
+- How are the architecture, structure/hierarchy, and key interactions shown as diagrams?
+- How does the relevant flow work end to end, including the important sequence of component interactions?
 - Which files, documents, or logs are the real source of truth for this explanation?
 - Which architecture boundaries or invariants must not be broken?
+- Which runtime principles explain why the system behaves this way?
+- Which AI blind spots, missing evidence, or handoff constraints should a human keep visible before asking AI to design, debug, or modify this area?
 - Which principles or background knowledge should the reader know?
 - Which files should the next developer read first?
 - If someone needs to change this area, where should they start and what should they avoid?
 - Which commands should they run to verify understanding or validate changes?
 - What solution direction is recommended next, and why?
 - Which parts are involved, in a visible structure tree?
-- Which technical topics are involved, in a visible technology tree?
+- Which technical topics are involved, in a visible technology tree when technology is materially involved?
+- What should the next AI or human read, preserve, verify, and avoid?
 
 Support both scopes:
 
@@ -76,11 +80,16 @@ Always include these sections:
 - Why it matters
 - **Affected structure tree**
 - Architecture at a glance
+- **Sequence / interaction view**
 - Flow explanation
+- Runtime principles
 - Source of truth / evidence map
 - Key files to read first
-- **Related technology tree** when technology is involved
+- **Related technology tree** when technology is materially involved
 - Boundaries and invariants
+- AI blind spots / uncertainty map
+- Handoff to AI
+- Debugging guide
 - How to modify this safely
 - Verification commands
 - Principles and background knowledge
@@ -88,8 +97,13 @@ Always include these sections:
 - Recommended solution
 - Next actions
 
-Always include at least one Mermaid `graph TB` diagram for the main project/task architecture.
-Keep Mermaid rendering offline-safe by using bundled local assets, not CDN-only script references.
+Always include these minimum diagrams unless the user explicitly asks for a text-only artifact:
+
+- a Mermaid `graph TB` diagram for the main project/task architecture
+- a Mermaid `graph TB` structure/hierarchy diagram plus the required plain-text tree
+- a Mermaid `sequenceDiagram` for the most important runtime, request, event, or developer/AI handoff sequence
+
+Keep Mermaid rendering offline-safe by using bundled local assets, not CDN-only script references. In HTML output, all Mermaid diagrams, including `sequenceDiagram`, must render through the page-local `./assets/mermaid.min.js`.
 
 The structure tree must show:
 
@@ -139,17 +153,61 @@ Do not treat these as substitutes for each other. The Mermaid view explains rela
 
 When relationships between technologies matter, prefer Mermaid `graph TB` there as well. Keep node labels short and human-readable.
 
+The sequence / interaction view must show:
+
+- the key actors, components, modules, services, or human/AI handoff participants
+- the order in which information, control, state, or evidence moves between them
+- where validation, decisions, retries, or failure/rollback points happen
+- the smallest sequence that explains the reader goal, not every internal call
+
+Use Mermaid `sequenceDiagram` for this view. Keep participant names short and stable. Prefer labels such as `Human`, `AI`, `CLI`, `Service`, `Store`, `Runtime`, `Test`, or concrete module names when known.
+
+Mermaid diagram quality rules:
+
+- Prefer `graph TB` for architecture, structure, and technology hierarchy diagrams.
+- Use `sequenceDiagram` for interactions over time.
+- Avoid node labels with `number. space` patterns such as `[1. Start]`; use `Step 1 - Start`, `① Start`, or no numbering.
+- Use stable node IDs and subgraph IDs; do not reference display names directly.
+- Use subgraph syntax like `subgraph core["Core Layer"]` when the display name contains spaces.
+- Keep node labels short, human-readable, and free of emoji.
+- Borrow diagram discipline from `mermaid-visualizer`, but do not copy large prose or code blocks from that skill.
+
+
 The evidence map must show:
 
 - which files, docs, diffs, logs, or commands support the explanation
 - which conclusions are direct facts vs reasoned interpretation
 - any open questions that still require confirmation
 
+The runtime principles section must show:
+
+- which entry points, runtimes, schedulers, processes, hooks, routes, jobs, or event loops matter
+- the core state, data, or control-flow model a reader must know before changing behavior
+- what happens normally, what happens on failure, and which logs/tests prove it
+
 The boundaries and invariants section must show:
 
 - layer or ownership boundaries that should not be crossed casually
 - critical invariants that future modifiers must preserve
 - anti-patterns or tempting shortcuts that would weaken the design
+
+The AI blind spots / uncertainty map must show:
+
+- where the explanation is evidence-backed vs inferred
+- which files, logs, runtime states, credentials, production constraints, or user decisions AI cannot safely assume
+- what a human should verify before delegating architecture design, bug fixes, or risky refactors to AI
+
+The handoff-to-AI section must show:
+
+- the minimal context packet an AI needs: objective, boundaries, source-of-truth files, expected evidence, and stop conditions
+- which parts AI may edit first and which parts require human confirmation
+- how to ask AI for design, debugging, or implementation work without breaking boundaries
+
+The debugging guide must show:
+
+- the fastest high-truth probes and logs for this project/task
+- how to distinguish symptom, owner layer, root cause, and verification evidence
+- where to start when a future AI or human needs to explain a failure
 
 The safe-modification section must show:
 
@@ -182,6 +240,24 @@ Task mode should bias toward:
 - exact change points and safe modification path
 - task-specific verification commands
 - implementation recommendation for the current decision
+
+## Stable section anchor contract
+
+Generated pages should keep a modular section contract so future updates can patch the right part instead of rebuilding the page. When a section exists in HTML, keep all three forms stable unless there is a strong reason to migrate them together:
+
+- `<!-- section: <key> -->` / `<!-- endsection: <key> -->` comments
+- `id="section-<key>"`
+- `data-section="<key>"`
+
+Unconditional section keys for project/task explainers:
+
+- `hero`, `summary`, `why`, `boundaries`, `runtime-principles`, `structure`, `architecture`, `sequence`, `flow`, `evidence`, `key-files`, `ai-blind-spots`, `handoff-to-ai`, `debugging-guide`, `knowledge`, `safe-change`, `verification-commands`, `anti-patterns`, `risks`, `recommendation`, `next-actions`
+
+Conditional section key:
+
+- `technology-tree` is required when technology is materially involved. The default static scaffold includes a `technology-tree` placeholder so new pages are easy to fill; during the first real content pass, either fill it with the relevant stack or explicitly mark it not applicable / remove it cleanly when no technology stack, framework, runtime, protocol, or parameter is material to the explanation.
+
+When updating an existing page, first map existing sections to these keys, preserve useful content, then refresh stale details with evidence. Do not create duplicate near-equivalent sections such as both `structure-tree` and `structure` unless you are intentionally migrating old content and keeping compatibility notes.
 
 ## Workflow
 
@@ -218,7 +294,7 @@ Do not mix languages unless the user explicitly asks for bilingual output.
 
 ### 2.5 Decide whether this is a new page or an update
 
-Look for an existing explainer page before scaffolding a new one.
+Look for an existing explainer page before scaffolding a new one. Use stable section anchors as the update contract: preserve `<!-- section: ... -->`, `id="section-..."`, and `data-section="..."` where present, and update the matching section instead of appending disconnected duplicates.
 
 Check in this order:
 
@@ -240,7 +316,7 @@ Keep sections short. Prefer bullets, callout cards, and tree blocks over dense p
 
 Explain each important term once in plain language.
 
-Draft the Mermaid `graph TB` blocks early so the page has a clear top-down architecture view before you polish the prose.
+Draft the required Mermaid blocks early so the page has a clear visual model before you polish the prose: architecture `graph TB`, structure/hierarchy `graph TB`, and one `sequenceDiagram` for the key interaction or handoff flow.
 
 ### 4. Choose the simplest implementation path
 
@@ -338,12 +414,15 @@ At minimum, include:
 - the relevant stack or framework snapshot
 - a Mermaid `graph TB` architecture diagram that shows the main relationships
 - a visible structure tree of involved parts and functions in **both** Mermaid and plain-text file-tree form
+- a Mermaid `sequenceDiagram` that shows the key runtime, request, event, or AI handoff interaction
 - a flow explanation of how the relevant part works
+- runtime principles that explain entry points, state/control flow, normal behavior, and failure behavior
 - a source-of-truth / evidence map
 - key files and why they matter
 - a visible technology tree when technology is involved
 - the technology tree in **both** Mermaid and plain-text hierarchy form when technology is involved
 - boundaries and invariants
+- AI blind spots / uncertainty, handoff-to-AI guidance, and debugging entry points
 - a safe-modification guide
 - concrete verification commands
 - common anti-patterns or tempting mistakes to avoid
@@ -398,9 +477,12 @@ Check that the page:
 - includes a concrete recommended solution or next step
 - includes a Mermaid `graph TB` diagram for the main architecture
 - includes the structure tree in both Mermaid and plain-text file-tree form
+- includes a rendered Mermaid `sequenceDiagram` for the key interaction or handoff flow
 - includes the technology tree in both Mermaid and plain-text hierarchy form when relevant
 - includes a source-of-truth / evidence map
 - includes boundaries and invariants
+- includes runtime principles
+- includes AI blind spots, handoff-to-AI guidance, and a debugging guide
 - includes a safe-modification guide
 - includes verification commands
 - includes a common anti-patterns section when architectural understanding would benefit from it

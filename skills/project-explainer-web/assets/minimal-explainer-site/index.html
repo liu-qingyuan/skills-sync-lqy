@@ -355,8 +355,8 @@
         </aside>
         <!-- endsection: why -->
 
-        <!-- section: structure-tree -->
-        <article class="panel span-12" id="section-structure-tree" data-section="structure-tree">
+        <!-- section: structure -->
+        <article class="panel span-12" id="section-structure" data-section="structure">
           <div class="section-title">
             <div>
               <h2>{{SECTION_STRUCTURE_TREE}}</h2>
@@ -374,12 +374,12 @@
 
   root --> partA
   root --> partB
-            partA --> subA1
-            partA --> subA2</pre>
+  partA --> subA1
+  partA --> subA2</pre>
           </div>
           <pre class="tree">{{STRUCTURE_TREE_TEXT}}</pre>
         </article>
-        <!-- endsection: structure-tree -->
+        <!-- endsection: structure -->
 
         <!-- section: architecture -->
         <article class="panel span-12" id="section-architecture" data-section="architecture">
@@ -389,6 +389,19 @@
               <p>{{SECTION_ARCH_SUB}}</p>
             </div>
             <span class="tag">{{TAG_OVERVIEW}}</span>
+          </div>
+          <div class="diagram">
+            <pre class="mermaid">graph TB
+  user["Reader / AI"]
+  entry["Entry point<br/>{{ARCH_A}}"]
+  core["Owning logic<br/>{{ARCH_B}}"]
+  evidence["Evidence / output<br/>{{ARCH_C}}"]
+  boundary["Boundary / invariant"]
+
+  user --> entry
+  entry --> core
+  core --> evidence
+  boundary -.-> core</pre>
           </div>
           <div class="grid">
             <div class="card span-4">
@@ -406,6 +419,47 @@
           </div>
         </article>
         <!-- endsection: architecture -->
+
+        <!-- section: sequence -->
+        <article class="panel span-12" id="section-sequence" data-section="sequence">
+          <div class="section-title">
+            <div>
+              <h2>{{SECTION_SEQUENCE}}</h2>
+              <p>{{SECTION_SEQUENCE_SUB}}</p>
+            </div>
+            <span class="tag">{{TAG_FLOW}}</span>
+          </div>
+          <div class="diagram">
+            <pre class="mermaid">sequenceDiagram
+  participant Human as Human / AI
+  participant Entry as {{SEQUENCE_1}}
+  participant Logic as {{SEQUENCE_2}}
+  participant Evidence as {{SEQUENCE_3}}
+
+  Human->>Entry: objective + context
+  Entry->>Logic: route to owning layer
+  Logic->>Evidence: produce result or verification
+  Evidence-->>Human: {{SEQUENCE_3_BODY}}
+  alt missing evidence
+    Human->>Evidence: request logs / tests / runtime proof
+  end</pre>
+          </div>
+          <ul class="list">
+            <li class="card">
+              <strong>{{SEQUENCE_1}}</strong>
+              <p>{{SEQUENCE_1_BODY}}</p>
+            </li>
+            <li class="card">
+              <strong>{{SEQUENCE_2}}</strong>
+              <p>{{SEQUENCE_2_BODY}}</p>
+            </li>
+            <li class="card">
+              <strong>{{SEQUENCE_3}}</strong>
+              <p>{{SEQUENCE_3_BODY}}</p>
+            </li>
+          </ul>
+        </article>
+        <!-- endsection: sequence -->
 
         <!-- section: flow -->
         <article class="panel span-7" id="section-flow" data-section="flow">
@@ -432,6 +486,32 @@
           </ol>
         </article>
         <!-- endsection: flow -->
+
+        <!-- section: runtime-principles -->
+        <article class="panel span-12" id="section-runtime-principles" data-section="runtime-principles">
+          <div class="section-title">
+            <div>
+              <h2>{{SECTION_RUNTIME}}</h2>
+              <p>{{SECTION_RUNTIME_SUB}}</p>
+            </div>
+            <span class="tag">{{TAG_KNOWLEDGE}}</span>
+          </div>
+          <ul class="list">
+            <li class="card">
+              <strong>{{RUNTIME_1}}</strong>
+              <p>{{RUNTIME_1_BODY}}</p>
+            </li>
+            <li class="card">
+              <strong>{{RUNTIME_2}}</strong>
+              <p>{{RUNTIME_2_BODY}}</p>
+            </li>
+            <li class="card">
+              <strong>{{RUNTIME_3}}</strong>
+              <p>{{RUNTIME_3_BODY}}</p>
+            </li>
+          </ul>
+        </article>
+        <!-- endsection: runtime-principles -->
 
         <!-- section: key-files -->
         <aside class="panel span-5" id="section-key-files" data-section="key-files">
@@ -506,8 +586,8 @@
   tech --> runtime
   tech --> integration
   runtime --> conceptA
-            runtime --> parameterB
-            runtime --> tradeoffC</pre>
+  runtime --> parameterB
+  runtime --> tradeoffC</pre>
           </div>
           <pre class="tree">{{TECH_TREE_TEXT}}</pre>
         </article>
@@ -534,6 +614,72 @@
           </ul>
         </article>
         <!-- endsection: boundaries -->
+
+        <!-- section: ai-blind-spots -->
+        <article class="panel span-6" id="section-ai-blind-spots" data-section="ai-blind-spots">
+          <div class="section-title">
+            <div>
+              <h2>{{SECTION_AI_BLIND_SPOTS}}</h2>
+              <p>{{SECTION_AI_BLIND_SPOTS_SUB}}</p>
+            </div>
+            <span class="tag">{{TAG_RISK}}</span>
+          </div>
+          <ul class="list">
+            <li class="card">
+              <strong>{{AI_BLIND_SPOT_1}}</strong>
+              <p>{{AI_BLIND_SPOT_1_BODY}}</p>
+            </li>
+            <li class="card">
+              <strong>{{AI_BLIND_SPOT_2}}</strong>
+              <p>{{AI_BLIND_SPOT_2_BODY}}</p>
+            </li>
+          </ul>
+        </article>
+        <!-- endsection: ai-blind-spots -->
+
+        <!-- section: handoff-to-ai -->
+        <article class="panel span-6" id="section-handoff-to-ai" data-section="handoff-to-ai">
+          <div class="section-title">
+            <div>
+              <h2>{{SECTION_HANDOFF_AI}}</h2>
+              <p>{{SECTION_HANDOFF_AI_SUB}}</p>
+            </div>
+            <span class="tag">{{TAG_ACTION}}</span>
+          </div>
+          <ul class="list">
+            <li class="card">
+              <strong>{{HANDOFF_AI_1}}</strong>
+              <p>{{HANDOFF_AI_1_BODY}}</p>
+            </li>
+            <li class="card">
+              <strong>{{HANDOFF_AI_2}}</strong>
+              <p>{{HANDOFF_AI_2_BODY}}</p>
+            </li>
+          </ul>
+        </article>
+        <!-- endsection: handoff-to-ai -->
+
+        <!-- section: debugging-guide -->
+        <article class="panel span-12" id="section-debugging-guide" data-section="debugging-guide">
+          <div class="section-title">
+            <div>
+              <h2>{{SECTION_DEBUGGING}}</h2>
+              <p>{{SECTION_DEBUGGING_SUB}}</p>
+            </div>
+            <span class="tag">{{TAG_CODE}}</span>
+          </div>
+          <ul class="list">
+            <li class="card">
+              <strong>{{DEBUGGING_1}}</strong>
+              <p>{{DEBUGGING_1_BODY}}</p>
+            </li>
+            <li class="card">
+              <strong>{{DEBUGGING_2}}</strong>
+              <p>{{DEBUGGING_2_BODY}}</p>
+            </li>
+          </ul>
+        </article>
+        <!-- endsection: debugging-guide -->
 
         <!-- section: safe-change -->
         <article class="panel span-6" id="section-safe-change" data-section="safe-change">

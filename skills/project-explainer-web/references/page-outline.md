@@ -1,97 +1,145 @@
 # Default page outline
 
-Use the smallest subset that fits the task, but keep the two tree sections mandatory.
+Use the smallest subset that fits the task, but keep the required diagram and handoff sections unless the user explicitly asks for a narrower text-only artifact.
 
-Default to Mermaid `graph TB` for the structure/technology tree views when relationships are easier to understand visually. For the structure tree, always pair the Mermaid diagram with a plain-text file/tree block so the reader can also see the concrete filesystem shape.
-When generating a static page, assume the diagram must still work offline from a local file path.
+Default to Mermaid `graph TB` for architecture, structure/hierarchy, and technology tree views. Use Mermaid `sequenceDiagram` for interactions over time. Static pages must work offline from a local file path through `./assets/mermaid.min.js`.
+
+## Stable section contract
+
+Use stable section comments and DOM anchors so future updates can patch sections instead of rebuilding the page:
+
+- `<!-- section: <key> -->` / `<!-- endsection: <key> -->`
+- `id="section-<key>"`
+- `data-section="<key>"`
+
+Unconditional section keys: `hero`, `summary`, `why`, `boundaries`, `runtime-principles`, `structure`, `architecture`, `sequence`, `flow`, `evidence`, `key-files`, `ai-blind-spots`, `handoff-to-ai`, `debugging-guide`, `knowledge`, `safe-change`, `verification-commands`, `anti-patterns`, `risks`, `recommendation`, `next-actions`.
+
+Conditional section key: `technology-tree` is required only when technology is materially involved. The default static scaffold includes a `technology-tree` placeholder so new pages are easy to fill; during the first real content pass, either fill it with the relevant stack or explicitly mark it not applicable / remove it cleanly when technology is not material.
 
 ## 1. Hero summary
 - Project/task name
 - One-sentence purpose
 - One-sentence current objective
-- Language marker when the page is not in the repository default language
+- What the reader should understand after 3-5 minutes
 
 ## 2. Why this matters
 - What problem is being solved
 - Who benefits or what workflow improves
+- Why this explanation helps humans brief AI safely
 
-## 3. Affected structure tree (mandatory)
+## 3. Boundaries and invariants
+- Ownership and layer boundaries
+- Responsibilities that must not be mixed casually
+- Invariants future humans and AI agents must preserve
+- Tempting shortcuts that would damage the design
+
+## 4. Runtime principles
+- Entry points, process/runtime/hook/route/job model, or event loop involved
+- State and control-flow model
+- Normal path, failure path, retry/rollback path
+- Logs, tests, or probes that prove runtime behavior
+
+## 5. Affected structure tree (mandatory)
 - Show which parts are involved
 - Show each part's concrete function
 - Include a Mermaid `graph TB` with top-down grouping
 - Also include a plain-text file/tree block that mirrors the concrete structure
 - Do not collapse everything into a flat bullet dump
 
-## 4. Architecture at a glance
-- Relevant layers or modules
-- Short bullets for responsibilities
-- Keep it visual with cards or grouped boxes when helpful
+## 6. Architecture at a glance (mandatory)
+- Include a Mermaid `graph TB` architecture diagram
+- Show major layers, ownership, dependencies, and integration boundaries
+- Keep node labels short and human-readable
 
-## 5. How the flow works
+## 7. Sequence / interaction view (mandatory)
+- Include a Mermaid `sequenceDiagram`
+- Show the smallest useful interaction over time: user/AI/request/event -> entry point -> owning logic -> state/integration -> output/evidence
+- Include validation, decision, retry, or failure points when they matter
+
+## 8. Flow explanation
 - Step-by-step path through the system
-- Focus on the path touched by the current task
+- Focus on the path touched by the current task or the main project path
+- Tie the prose back to the architecture and sequence diagrams
 
-## 6. Source of truth / evidence map
-- Show which files, docs, logs, commands, or diffs support the explanation
-- Distinguish direct evidence from interpretation when useful
-- Call out open questions instead of hiding uncertainty
+## 9. Source of truth / evidence map
+- Files, docs, logs, commands, diffs, screenshots, or traces supporting the explanation
+- Direct facts vs reasoned interpretation
+- Open questions that still require confirmation
 
-## 7. Key files to read first
+## 10. Key files to read first
 - File path
 - Why it matters
-- What a developer should look for inside it
+- What a developer or AI agent should inspect inside it first
 
-## 8. Related technology tree (mandatory when technology is involved)
-- Frameworks, runtimes, protocols, parameters, concepts, tradeoffs
-- Sort them structurally so the reader can see what is involved
-- Show dependency or influence relationships when useful
-- Include a Mermaid `graph TB` when the technical relationships are important to the decision
-- Also include a plain-text technology hierarchy or layered outline
+## 11. Related technology tree (conditional)
+- Required when frameworks, runtimes, protocols, parameters, or technical tradeoffs materially affect the explanation
+- Include both Mermaid `graph TB` and a plain-text hierarchy
+- Explain what each technology point means and which dependency/tradeoff matters
 
-## 9. Boundaries and invariants
-- Show ownership boundaries, layering rules, and responsibilities
-- State what future modifiers should preserve
-- Mention anti-patterns or shortcuts that would damage the design
+## 12. AI blind spots / uncertainty map
+- What AI cannot safely infer from static code alone
+- Runtime state, credentials, production constraints, user intent, logs, or external systems that need human confirmation
+- What evidence is missing before architecture design, bug fixing, or risky refactoring
 
-## 10. How to modify this safely
-- State where a developer should start
-- Indicate the likely owning files or layers
-- Mention what to change first and what should only change secondarily
+## 13. Handoff to AI
+- Minimal context packet: objective, scope in/out, boundaries, source-of-truth files, expected evidence, stop condition
+- What AI may edit first vs what requires human confirmation
+- How to ask AI for design, debugging, implementation, or review without breaking boundaries
 
-## 11. Verification commands
-- Give the most useful commands for understanding or validating the area
-- Explain what each command proves
-- Mark commands that are optional, expensive, or environment-sensitive
+## 14. Debugging guide
+- Fastest high-truth probes and logs
+- How to move from symptom -> owner layer -> root cause -> fix -> verification
+- Common failure modes and where to start reading
 
-## 12. Common anti-patterns
-- Name the most tempting mistakes or shortcuts
-- Explain why they are attractive but harmful
-- Point to the safer alternative, boundary, or guardrail
 
-## 13. Principles and background knowledge
-- Concepts the reader must understand first
+## 15. Principles and background knowledge
+- Concepts the reader must understand before changing this area
 - Domain rules, invariants, or framework-specific behavior
+- How these principles affect architecture, debugging, and AI handoff
 
-## 14. Constraints and risks
-- Technical constraints
-- Product constraints
-- Current unknowns or decisions that could change the solution
+## 16. How to modify this safely
+- Where a developer should start
+- Likely owning files/layers
+- What to change first and what should only change as a consequence
 
-## 15. Recommended solution
+## 17. Verification commands
+- Most useful commands for understanding or validating the area
+- What each command proves
+- Which commands are optional, expensive, or environment-sensitive
+
+## 18. Common anti-patterns
+- Tempting mistakes or shortcuts
+- Why they look convenient but are harmful
+- Safer alternative or guardrail
+
+## 19. Constraints and risks
+- Technical/product constraints
+- Unknowns or decisions that could change the solution
+- Rollback or escalation conditions when relevant
+
+## 20. Recommended solution
 - Preferred next step
 - Why it is the best tradeoff
 - Alternatives rejected or deferred
 
-## 16. Next actions
-- Concrete follow-up steps for implementation or investigation
+## 21. Next actions
+- Concrete follow-up steps for implementation, validation, or investigation
+
+## Mermaid syntax guardrails
+
+- Avoid node labels with `number. space`; prefer `Step 1 - Name`, `① Name`, or no numbering.
+- Use IDs for nodes and subgraphs; do not reference display labels directly.
+- Use `subgraph core["Core Layer"]` when display names contain spaces.
+- Keep node labels short and avoid emoji.
+- Prefer `graph TB` for architecture/structure/technology and `sequenceDiagram` for interactions over time.
 
 ## Scope emphasis
 
 ### Project mode
-- Emphasize major layers, ownership, subsystem boundaries, and reading order
+- Emphasize major layers, ownership, subsystem boundaries, runtime principles, and reading order
 - Explain why the architecture is shaped this way over time
-- Prefer recommendations about long-lived structure, not just the next local patch
+- Include AI handoff guidance for future architecture/design/debug work
 
 ### Task mode
-- Emphasize the exact flow being changed, the touched files, and the safe modification path
-- Prefer recommendations about the current decision, verification plan, and concrete next implementation steps
+- Emphasize the exact flow being changed, touched files, safe modification path, and task-specific verification
+- Include AI blind spots and debugging probes for this change
