@@ -60,6 +60,7 @@ Use for substantial implementation, multi-phase work, ToDo/ledger requests, or w
 Rules:
 
 - Include `--tasks --task-promise READY_FOR_NEXT_TASK`.
+- When the user asks for a task/todo to run N Ralph rounds (for example `每个 todo 循环三次`, `task 最小循环次数 3`, or per-task verification pressure), include `--task-min-iterations N`. Do not confuse this with global `--min-iterations`.
 - Ensure repo-local `.ralph/ralph-tasks.md` exists and belongs to this objective.
 - Before showing a runnable command, report unchecked/checked counts. If unchecked count is `0` for real work, rewrite/reset the ledger first.
 - While work remains, the agent should output `<promise>READY_FOR_NEXT_TASK</promise>`, not the final completion promise.
@@ -74,6 +75,7 @@ OMX_RALPH_SANDBOX=danger-full-access \
 ralph-omx \
   --tasks \
   --task-promise READY_FOR_NEXT_TASK \
+  --task-min-iterations 3 \
   --min-iterations 3 \
   --max-iterations 20 \
   --completion-promise <SLUG_UPPER>_VERIFIED \
@@ -81,7 +83,7 @@ ralph-omx \
   --prompt-file .omx/prompts/<slug>-ralph-omx.md
 ```
 
-Use `--min-iterations 5-8 --max-iterations 30` for large product work. Use `--min-iterations 1` only for explicit tiny smoke tests.
+Use `--min-iterations 5-8 --max-iterations 30` for large product work. Use `--min-iterations 1` only for explicit tiny smoke tests. Use `--task-min-iterations N` only in Task Ledger Mode when each top-level todo must receive N Ralph outer-loop attempts before it may complete.
 
 ## Codex goal overlay
 
@@ -133,6 +135,7 @@ ralph-omx \
   --codex-backend omx \
   --tasks \
   --task-promise READY_FOR_NEXT_TASK \
+  --task-min-iterations 3 \
   --min-iterations 3 \
   --max-iterations 20 \
   --completion-promise <SLUG_UPPER>_VERIFIED \
@@ -204,7 +207,8 @@ Explain every included item briefly:
 - `--codex-backend omx`: run goal mode through OMX backend.
 - `--tasks`: Task Ledger Mode only; final completion gated by `.ralph/ralph-tasks.md`.
 - `--task-promise READY_FOR_NEXT_TASK`: Task Ledger Mode continuation marker.
-- `--min-iterations`: minimum outer Ralph rounds before final completion can stop.
+- `--task-min-iterations`: Task Ledger Mode only; minimum Ralph outer-loop attempts required for each top-level `.ralph/ralph-tasks.md` item before task/final completion is accepted.
+- `--min-iterations`: minimum outer Ralph rounds for the whole run before final completion can stop; this is global and separate from per-task `--task-min-iterations`.
 - `--max-iterations`: safety cap; set one instead of relying on unlimited defaults.
 - `--completion-promise`: strict slug-specific final marker.
 - `--last-activity-timeout 10m`: stop/restart a silent iteration when supported.
