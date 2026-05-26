@@ -1,3 +1,4 @@
-display_name: Ralph OMX Plan
-short_description: Prepare ready-to-run ralph-omx and OMX alternative commands.
-default_prompt: Use $ralph-omx-plan to turn this task into an Open Ralph via OMX prompt and copy-paste command with configurable parameters.
+interface:
+  display_name: "Ralph OMX Plan"
+  short_description: "Prepare ralph-omx and Codex goal commands."
+  default_prompt: "Use $ralph-omx-plan to turn this task into an Open Ralph via OMX prompt and copy-paste command. Include Codex goal mode when an outer Ralph loop with inner /goal behavior is requested."

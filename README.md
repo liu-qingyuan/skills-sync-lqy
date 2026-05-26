@@ -15,7 +15,7 @@
 - `karpathy-guidelines`：写代码、评审或重构时的行为准则，强调先明确假设、保持简单、外科手术式修改和可验证成功标准。
 - `playwright-cli`：用于通过 playwright-cli 做终端优先的浏览器自动化、截图/视频/trace、测试代码生成，并记录 Electron `_electron.launch()` 应用的录屏注意事项。
 - `skill`：用于管理本地 Codex/OMX skills，包含 list/add/remove/edit/search/info/sync/setup/scan 等 CLI 式工作流说明。
-- `ralph-omx-plan`：把待办任务整理成 Open Ralph via OMX 的 prompt packet 和可复制的 `ralph-omx` 运行命令，同时列出 `$ralplan`、`$ralph`、`$team` 等可选 OMX-native 执行路径。
+- `ralph-omx-plan`：把待办任务整理成 Open Ralph via OMX 的 prompt packet 和可复制的 `ralph-omx` 运行命令，支持外层 Ralph + 内层 Codex `/goal` 的 `--codex-goal --codex-backend omx` 模式，并列出 `$ralplan`、`$ralph`、`$team` 等可选 OMX-native 执行路径。
 - `visual-explainer`：链接同步自 `nicobailon/visual-explainer` 的 HTML 视觉说明 skill，用于生成架构图、计划评审、diff review、slide deck 和数据表等可视化页面。
 
 ## GitNexus 依赖说明

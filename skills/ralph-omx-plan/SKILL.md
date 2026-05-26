@@ -1,6 +1,6 @@
 ---
 name: ralph-omx-plan
-description: "Prepare an execution-ready Open Ralph via OMX plan and command. Use when the user invokes `$ralph-omx-plan`, especially with `$gitnexus`, `$ralplan`, `$ralph`, or `$team`, and wants the task rewritten into a clear ralph-omx prompt plus copy-paste commands with all important parameters explained for customization."
+description: "Prepare an execution-ready Open Ralph via OMX plan and command, including optional Codex /goal inner-loop mode. Use when the user invokes `$ralph-omx-plan`, especially with `$gitnexus`, `$ralplan`, `$ralph`, `$team`, `/goal`, `--codex-goal`, or Ralph outer loop + Codex goal inner loop requests, and wants the task rewritten into a clear ralph-omx prompt plus copy-paste commands with all important parameters explained for customization."
 ---
 
 # Ralph OMX Plan
@@ -13,10 +13,11 @@ Produce a concise artifact with:
 
 1. **Task packet**: a polished prompt for Open Ralph's loop.
 2. **Mode choice**: decide whether the handoff should use Prompt Loop Mode (no `--tasks`) or Task Ledger Mode (`--tasks`).
-3. **Parameter guide**: explain every included flag/env var and list common knobs.
-4. **Optional OMX alternatives**: include `$ralph`, `$team`, and/or `$ralplan` commands when those workflows were requested or useful.
-5. **GitNexus context hook**: when `$gitnexus` is present, include graph-grounding preflight/context commands or reference the existing GitNexus context path.
-6. **Task ledger freshness guard**: in Task Ledger Mode, ensure `.ralph/ralph-tasks.md` exists, belongs to the current task/prompt, and contains unchecked work before any generated `ralph-omx --tasks` command can run.
+3. **Codex goal choice**: decide whether to enable Open Ralph `--codex-goal --codex-backend omx` for an inner Codex `/goal` loop inside each Ralph iteration.
+4. **Parameter guide**: explain every included flag/env var and list common knobs.
+5. **Optional OMX alternatives**: include `$ralph`, `$team`, and/or `$ralplan` commands when those workflows were requested or useful.
+6. **GitNexus context hook**: when `$gitnexus` is present, include graph-grounding preflight/context commands or reference the existing GitNexus context path.
+7. **Task ledger freshness guard**: in Task Ledger Mode, ensure `.ralph/ralph-tasks.md` exists, belongs to the current task/prompt, and contains unchecked work before any generated `ralph-omx --tasks` command can run.
 
 ## Composition behavior
 
@@ -61,6 +62,30 @@ Task Ledger Mode semantics to explain when relevant:
 - One iteration may complete one task, multiple small tasks, or only part of a large task.
 - The whole ledger is not "done once and then repeated". The loop keeps advancing unchecked work; once all in-scope checkboxes and verification are complete, final completion is allowed after `--min-iterations` is satisfied.
 - While any task or verification remains, the agent should output `<promise>READY_FOR_NEXT_TASK</promise>`, not the final completion promise.
+
+## Codex goal mode overlay
+
+Treat Codex goal mode as an inner-session overlay, not as a replacement for Prompt Loop Mode or Task Ledger Mode. Open Ralph still owns the outer loop: fresh process per iteration, min/max iterations, promise detection, `.ralph/ralph-history.json`, git/file-system state, and optional commits. Codex `/goal` owns sustained work **inside one Ralph iteration**.
+
+Enable this overlay when the user asks for any of these:
+
+- `--codex-goal`, `RALPH_CODEX_GOAL`, `/goal`, `goal mode`, `Codex goal`, or `ultragoal`-style mechanics
+- "外层 Ralph / 内层 /goal", "Ralph outer loop + Codex goal inner loop"
+- One Ralph iteration should keep pushing within a single Codex session instead of behaving like a plain one-shot prompt
+
+Generated command requirements when enabled:
+
+- Prefer explicit flags: `--codex-goal --codex-backend omx`.
+- Equivalent env form is allowed: `RALPH_CODEX_GOAL=1 RALPH_CODEX_BACKEND=omx`.
+- Keep `ralph-omx` as the launcher; it still selects Open Ralph's built-in `codex` agent and model.
+- Do not place `/goal` manually at the top of the task packet. Open Ralph goal mode constructs the final backend prompt so `/goal` is the first token sent to `omx exec`; putting `/goal` inside the normal Ralph prompt is not equivalent because Ralph wraps prompts.
+- Mention durable state: `.harness/progress.md`, project progress files, git diff/history, `.ralph/ralph-history.json`, and `.ralph/codex-goal-ledger.jsonl`. Do not rely on old Codex thread state across Ralph iterations.
+- Mention observability: `.ralph/codex-goal-ledger.jsonl` should contain `"promptStartsWithGoal":true`; if OMX/Codex output lacks stable native goal evidence, Ralph warns instead of silently claiming confirmation.
+
+Goal mode can combine with either outer-loop mode:
+
+- Prompt Loop + goal overlay: no `.ralph/ralph-tasks.md`; each iteration sends the same Ralph prompt inside a `/goal` objective.
+- Task Ledger + goal overlay: keep `--tasks` and `--task-promise READY_FOR_NEXT_TASK`; each iteration sends the task-ledger-aware Ralph prompt inside a `/goal` objective.
 
 ## Defaults to assume for local `ralph-omx`
 
@@ -197,6 +222,25 @@ ralph-omx \
   --prompt-file .omx/prompts/<slug>-ralph-omx.md
 ```
 
+### Prompt Loop Mode with Codex goal overlay
+
+Use this shape when the user wants Open Ralph outer loop plus OMX/Codex `/goal` inner loop without task-list gating:
+
+```bash
+cd <repo-root>
+RALPH_OMX_MODEL=gpt-5.5 \
+OMX_RALPH_REASONING=high \
+OMX_RALPH_SANDBOX=danger-full-access \
+ralph-omx \
+  --codex-goal \
+  --codex-backend omx \
+  --min-iterations 3 \
+  --max-iterations 10 \
+  --completion-promise <SLUG_UPPER>_VERIFIED \
+  --last-activity-timeout 10m \
+  --prompt-file .omx/prompts/<slug>-ralph-omx.md
+```
+
 ### Task Ledger Mode command (`--tasks`)
 
 Use this shape by default for substantial implementation work from the repo root that owns `.ralph/ralph-tasks.md` and `.omx/prompts/<slug>-ralph-omx.md`:
@@ -207,6 +251,27 @@ RALPH_OMX_MODEL=gpt-5.5 \
 OMX_RALPH_REASONING=high \
 OMX_RALPH_SANDBOX=danger-full-access \
 ralph-omx \
+  --tasks \
+  --task-promise READY_FOR_NEXT_TASK \
+  --min-iterations 3 \
+  --max-iterations 20 \
+  --completion-promise <SLUG_UPPER>_VERIFIED \
+  --last-activity-timeout 10m \
+  --prompt-file .omx/prompts/<slug>-ralph-omx.md
+```
+
+### Task Ledger Mode with Codex goal overlay
+
+Use this shape for substantial implementation when the user wants both `.ralph/ralph-tasks.md` gating and an inner Codex `/goal` session per Ralph iteration:
+
+```bash
+cd <repo-root>
+RALPH_OMX_MODEL=gpt-5.5 \
+OMX_RALPH_REASONING=high \
+OMX_RALPH_SANDBOX=danger-full-access \
+ralph-omx \
+  --codex-goal \
+  --codex-backend omx \
   --tasks \
   --task-promise READY_FOR_NEXT_TASK \
   --min-iterations 3 \
@@ -260,6 +325,7 @@ The generated Open Ralph prompt should include:
 - Mode behavior:
   - Prompt Loop Mode: explicitly say not to use `.ralph/ralph-tasks.md`; instruct the agent to continue iterating on the same objective across rounds and only emit the final promise after the minimum iterations, objective completion, and fresh verification.
   - Task Ledger Mode: create/propose `.ralph/ralph-tasks.md` with checkboxes before the loop starts; instruct the agent to maintain it and keep every in-scope deliverable represented there. Include a stale-ledger warning: if all boxes are checked, regenerate/reset the ledger for the current objective before running `ralph-omx --tasks`. Instruct the agent to output `<promise>READY_FOR_NEXT_TASK</promise>` when a task or iteration is complete but final completion is not yet proven.
+  - Codex Goal Mode: state that Open Ralph owns cross-round state and Codex `/goal` owns only the current iteration; require failures/partial progress to be written to repo files such as `.harness/progress.md` or project progress files.
 - Safety: secret handling, no production side effects, no destructive operations unless already authorized.
 - Completion marker: use a strict slug-specific phrase. In Prompt Loop Mode, require minimum iterations reached plus objective completion and fresh verification before `<promise><SLUG_UPPER>_VERIFIED</promise>`. In Task Ledger Mode, use wording such as `When every checkbox in .ralph/ralph-tasks.md is complete and all verification evidence is fresh, output <promise><SLUG_UPPER>_VERIFIED</promise>. Do not output this promise while any task, test, UI check, review, or artifact scan remains.`
 - Optional abort marker: if prerequisites may be missing, define an abort phrase and suggest `--abort-promise`.
@@ -271,6 +337,10 @@ Explain these included parameters:
 - `RALPH_OMX_MODEL`: Open Ralph/Codex model; local default is `gpt-5.5`.
 - `OMX_RALPH_REASONING`: Codex `model_reasoning_effort`; typical values `low`, `medium`, `high`, `xhigh`; default `high`.
 - `OMX_RALPH_SANDBOX`: OMX/Codex sandbox; current default `danger-full-access`.
+- `--codex-goal`: optional Codex goal overlay; include when the user wants Open Ralph outer loop plus Codex `/goal` inner loop. It makes Open Ralph construct the final backend prompt with `/goal` as the first token.
+- `--codex-backend omx`: pair with `--codex-goal` for OMX backend execution; prefer explicit backend selection over relying on auto-detection in handoff commands.
+- `RALPH_CODEX_GOAL=1 RALPH_CODEX_BACKEND=omx`: env-var equivalent to the two flags; use only when an env-style command is clearer.
+- `.ralph/codex-goal-ledger.jsonl`: durable goal-mode audit ledger; after a run, `"promptStartsWithGoal":true` proves Ralph sent `/goal` at the front of the final backend prompt.
 - `--tasks`: included in Task Ledger Mode; omitted in Prompt Loop Mode. In Task Ledger Mode it makes Open Ralph gate final completion on `.ralph/ralph-tasks.md` checkboxes instead of trusting an early completion promise alone. If that ledger is already fully checked, `ralph-omx --tasks` can exit immediately, so the skill must refresh/validate the ledger before recommending the command.
 - `--task-promise READY_FOR_NEXT_TASK`: included only with Task Ledger Mode; lets the agent advance/continue when a task or iteration is done but final completion is not proven. Do not include it in Prompt Loop Mode.
 - `--min-iterations`: minimum loop rounds before completion promise can stop the loop. Generated commands should default to `3`, or `5-8` for substantial product work; use `1` only for explicit smoke tests. If the user says "execute this prompt N times" and does not say "at least", ask no follow-up: generate exactly-N Prompt Loop Mode with `--min-iterations N --max-iterations N` and warn it is a hard cap.
@@ -313,6 +383,7 @@ Rules:
 ## Command formatting rules
 
 - Prefer auto-commit by default. Open Ralph's default behavior commits completed iterations; show `--no-commit` only as an optional variation.
+- Include `--codex-goal --codex-backend omx` whenever the task asks for Codex `/goal`, ultragoal-style inner-loop behavior, or Open Ralph outer loop + Codex goal inner loop. Do not add those flags for ordinary `ralph-omx` handoffs unless the user or task shape calls for them.
 - Prefer Task Ledger Mode by default for substantial real work. Include `--tasks` and `--task-promise READY_FOR_NEXT_TASK` unless the user explicitly asks for Prompt Loop Mode (for example "不带 task", "不用 tasks", or "同一个 prompt 跑 N 次") or a one-shot smoke test. For Task Ledger Mode real work, do not emit the command until `.ralph/ralph-tasks.md` exists in the same repo root and has at least one unchecked task. For Prompt Loop Mode, do not create or require `.ralph/ralph-tasks.md`.
 - Avoid generic completion promises in generated commands. Use a slug-specific promise such as `LOCAL_WEB_CONSOLE_VERIFIED` or `IMPORT_LOOP_VERIFIED`; reserve `COMPLETE` only for throwaway smoke tests.
 - Keep every shell-continuation line syntactically valid: a trailing `\` must be the final character on the line and must not be separated from the next flag by blank lines.
@@ -335,6 +406,9 @@ Use this structure:
 ## Mode
 <Prompt Loop Mode or Task Ledger Mode, with one-line reason>
 
+## Codex goal mode
+<enabled|disabled; if enabled, say `--codex-goal --codex-backend omx` and note `.ralph/codex-goal-ledger.jsonl` evidence>
+
 ## Ralph tasks ledger
 <Task Ledger Mode: path `.ralph/ralph-tasks.md` if written, otherwise proposed markdown content. Prompt Loop Mode: `not used` and explicitly say no task ledger is required.>
 
@@ -353,6 +427,7 @@ Use this structure:
 
 ## Parameter customization
 - ...
+- Default for Codex goal requests: add `--codex-goal --codex-backend omx` and expect `.ralph/codex-goal-ledger.jsonl` to record `promptStartsWithGoal:true`.
 - Default for substantial real work: keep `--tasks` and `--task-promise READY_FOR_NEXT_TASK` on.
 - Default for explicit same-prompt multi-run requests: omit `--tasks` and `--task-promise`; use Prompt Loop Mode.
 - Default: use a strict slug-specific `--completion-promise`, not generic `COMPLETE`.
