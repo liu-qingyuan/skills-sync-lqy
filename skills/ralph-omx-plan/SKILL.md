@@ -16,7 +16,8 @@ Always produce:
 3. A Codex goal decision: enabled or disabled.
 4. A primary `ralph-omx` command with safe iteration limits.
 5. A short parameter guide for every included flag/env var.
-6. Optional OMX-native alternatives only when requested or useful: `$ralplan`, `$ralph`, `$team`.
+6. A post-run cleanup/review gate modeled after `$ultragoal`: verify, run `$ai-slop-cleaner` on Ralph-owned changed files only, rerun verification, and optionally `$code-review` for substantial code changes.
+7. Optional OMX-native alternatives only when requested or useful: `$ralplan`, `$ralph`, `$team`.
 
 If the user asks you to write files, write `.omx/prompts/<slug>-ralph-omx.md`. In Task Ledger Mode also write or refresh `.ralph/ralph-tasks.md` and validate it has unchecked tasks.
 
@@ -158,6 +159,7 @@ Include only task-relevant detail:
   - Codex goal overlay: do not rely on old Codex thread state; write partial progress/failures to repo files.
 - Safety constraints: secrets, destructive operations, external production side effects.
 - Final promise: use a strict slug-specific marker like `<promise><SLUG_UPPER>_VERIFIED</promise>`, not generic `COMPLETE` except throwaway tests.
+- Post-run cleanup gate: after final verification, capture Ralph-owned changed files, run a bounded `$ai-slop-cleaner` pass only on that file list, then rerun verification. Do not run `$ai-slop-cleaner` inside this planning skill. Do not let cleanup modify unrelated dirty files.
 
 ## Task ledger guard
 
@@ -216,6 +218,42 @@ Explain every included item briefly:
 
 Optional knobs when relevant: `--abort-promise`, `--continue`, `--status`, `--no-stream`, `--no-commit`, `RALPH_OMX_SHIM_DEBUG=1`, and `-- <extra backend flags>`.
 
+
+## Post-run cleanup and review gate
+
+Mirror the `$ultragoal` final quality gate for implementation/refactor/doc-heavy Ralph runs. Treat this as a post-run handoff, not something this planning skill executes.
+
+Final gate sequence:
+
+1. Run targeted verification for the Ralph objective.
+2. Run `$ai-slop-cleaner` on Ralph-owned changed files only; if there are no relevant edits, still record a passed/no-op cleanup report.
+3. Rerun verification after the cleaner pass.
+4. Recommend `$code-review` for substantial code changes; clean means approve/clear. If review is not clean, keep the Ralph handoff open with blocker work instead of claiming done.
+
+Changed-files scoping rules:
+
+- Prefer a pre-run baseline ref/commit when available: `git diff --name-only <baseline>...HEAD`.
+- Otherwise compare a pre-run `git status --short` snapshot with post-run `git diff --name-only` and `git diff --cached --name-only`.
+- Include only files owned by the just-finished Ralph run. Do not clean unrelated dirty files.
+- If `.ralph/ralph-history.json` or final handoff notes list modified files, use them as evidence but still verify with git status/diff.
+- Do not recommend nested `$ralplan` from inside cleanup when the active lane already came from ralplan/ralph; record ambiguous cleanup findings in the final handoff.
+
+Include this in generated prompt packets:
+
+```text
+Final quality gate: after implementation and targeted verification, report the exact Ralph-owned changed-files list for a bounded $ai-slop-cleaner pass. The cleanup pass must preserve behavior, run regression tests first, avoid unrelated dirty files, and be followed by verification again.
+```
+
+Include this in generated output as a follow-up lane, not inside the `ralph-omx` command:
+
+```text
+Post-run cleanup gate:
+1. Capture Ralph-owned changed files from git status/diff and .ralph/ralph-history.json.
+2. Run $ai-slop-cleaner on that file list only; record PASS/no-op if no relevant edits.
+3. Rerun the targeted verification commands.
+4. For substantial code changes, run $code-review and resolve blockers before final handoff.
+```
+
 ## Optional OMX-native alternatives
 
 Only include lanes the user asked for or that genuinely help:
@@ -265,6 +303,9 @@ Keep distinctions clear:
 
 ## Parameter customization
 - <brief bullets for included flags/env vars>
+
+## Post-run cleanup/review gate
+<verify first; run `$ai-slop-cleaner` on Ralph-owned changed files only; rerun verification; recommend `$code-review` for substantial code changes>
 
 ## Optional OMX alternatives
 ```bash
