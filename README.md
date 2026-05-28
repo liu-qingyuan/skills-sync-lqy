@@ -9,6 +9,7 @@
 - `excalidraw-diagram`：从文本生成 Excalidraw 图，支持 Obsidian Markdown、标准 `.excalidraw` 和动画顺序 `.excalidraw` 输出。
 - `obsidian-canvas-creator`：把文本、提纲或文章转换为 Obsidian Canvas，支持 mind map 和 freeform 空间组织布局。
 - `feature-release-verifier`：用于验证功能是否具备发布条件，聚合 mock-ui、real-runtime、packaged-smoke 等验证证据并输出发布结论。
+- `figma-pixel-implementation`：用于从 Figma 节点进行像素级 UI 还原，强调先提取颜色/尺寸/图标/状态资产事实，再用 DOM/style/geometry 合约和截图验证，避免默认态误用选中态颜色或 SVG。
 - `frontend-slides`：用于创建或转换零依赖 HTML 演示文稿；本镜像把嵌套 plugin skill 文件实体化，避免 GitHub archive/安装器把 symlink 转成无 frontmatter 文本导致 Codex 跳过加载。
 - `gitnexus`：为 OMX/Codex 工作流提供 GitNexus 代码图谱 grounding；需要本机已安装/配置 GitNexus CLI/MCP，并且目标仓库已有 GitNexus index；可作为 `$deep-interview`、`$ralplan`、`$team`、`$autopilot`、`$ralph-omx-plan` 等 workflow 的上下文 modifier。
 - `gitnexus-codex-wiki`：基于 GitNexus graph/index evidence 生成源码证据驱动的 markdown wiki 或 project-explainer-web 风格架构介绍网页；需要本机可运行 `gitnexus` CLI 和目标仓库 index，推荐与 `$gitnexus` skill 一起安装。
@@ -38,6 +39,7 @@ skills/
   excalidraw-diagram/
   obsidian-canvas-creator/
   feature-release-verifier/
+  figma-pixel-implementation/
   frontend-slides/
   gitnexus/
   gitnexus-codex-wiki/
@@ -111,6 +113,14 @@ python ~/.codex/skills/.system/skill-installer/scripts/install-skill-from-github
 python ~/.codex/skills/.system/skill-installer/scripts/install-skill-from-github.py \
   --repo liu-qingyuan/skills-sync-lqy \
   --path skills/feature-release-verifier
+```
+
+### 安装 `figma-pixel-implementation`
+
+```bash
+python ~/.codex/skills/.system/skill-installer/scripts/install-skill-from-github.py \
+  --repo liu-qingyuan/skills-sync-lqy \
+  --path skills/figma-pixel-implementation
 ```
 
 ### 安装 `frontend-slides`
@@ -199,6 +209,7 @@ rm -rf ~/.codex/skills/mermaid-visualizer
 rm -rf ~/.codex/skills/excalidraw-diagram
 rm -rf ~/.codex/skills/obsidian-canvas-creator
 rm -rf ~/.codex/skills/feature-release-verifier
+rm -rf ~/.codex/skills/figma-pixel-implementation
 rm -rf ~/.codex/skills/frontend-slides
 rm -rf ~/.codex/skills/gitnexus
 rm -rf ~/.codex/skills/gitnexus-codex-wiki
@@ -224,6 +235,7 @@ ln -s ~/skills-sync-lqy/skills/mermaid-visualizer ~/.codex/skills/mermaid-visual
 ln -s ~/skills-sync-lqy/skills/excalidraw-diagram ~/.codex/skills/excalidraw-diagram
 ln -s ~/skills-sync-lqy/skills/obsidian-canvas-creator ~/.codex/skills/obsidian-canvas-creator
 ln -s ~/skills-sync-lqy/skills/feature-release-verifier ~/.codex/skills/feature-release-verifier
+ln -s ~/skills-sync-lqy/skills/figma-pixel-implementation ~/.codex/skills/figma-pixel-implementation
 ln -s ~/skills-sync-lqy/skills/frontend-slides ~/.codex/skills/frontend-slides
 ln -s ~/skills-sync-lqy/skills/gitnexus ~/.codex/skills/gitnexus
 ln -s ~/skills-sync-lqy/skills/gitnexus-codex-wiki ~/.codex/skills/gitnexus-codex-wiki

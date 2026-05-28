@@ -1,0 +1,4 @@
+interface:
+  display_name: "Figma Pixel Implementation"
+  short_description: "Implement UI from Figma with exact visual contracts."
+  default_prompt: "Use the Figma Pixel Implementation skill to inspect Figma facts, implement exact colors/sizes/assets, preserve product exceptions, and verify with DOM/style/geometry contracts plus screenshots."
