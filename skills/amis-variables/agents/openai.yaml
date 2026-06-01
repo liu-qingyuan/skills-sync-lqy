@@ -1,0 +1,4 @@
+interface:
+  display_name: "Amis Variables"
+  short_description: "Apply Amis V1.0 design system variables."
+  default_prompt: "Use the Amis V1.0 semantic variables for backgrounds, borders, text, and icons, preserving light and dark mode token usage."

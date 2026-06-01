@@ -4,6 +4,7 @@
 
 当前包含的 skills：
 
+- `amis-variables`：记录 Amis V1.0 设计系统语义变量，用于选择 surface/background、border/divider、text、icon token，并保留 light/dark mode 值、使用规则和 pairing rules。
 - `project-explainer-web`：生成项目或任务的说明型静态网页，默认输出中文，适合快速帮助人类或 AI 理解仓库、架构和任务背景。
 - `mermaid-visualizer`：把文本内容转换为 Mermaid 图表，适合流程图、系统架构图、对比图、mindmap、sequence diagram 等文档/演示场景。
 - `excalidraw-diagram`：从文本生成 Excalidraw 图，支持 Obsidian Markdown、标准 `.excalidraw` 和动画顺序 `.excalidraw` 输出。
@@ -34,6 +35,7 @@
 
 ```text
 skills/
+  amis-variables/
   project-explainer-web/
   mermaid-visualizer/
   excalidraw-diagram/
@@ -74,6 +76,14 @@ skills/
 ## 如何安装
 
 使用 Codex 自带的 `skill-installer`：
+
+### 安装 `amis-variables`
+
+```bash
+python ~/.codex/skills/.system/skill-installer/scripts/install-skill-from-github.py \
+  --repo liu-qingyuan/skills-sync-lqy \
+  --path skills/amis-variables
+```
 
 ### 安装 `project-explainer-web`
 
@@ -204,6 +214,7 @@ Restart Codex to pick up new skills.
 如果本地已经存在同名 skill，更新时建议先删除，再重新安装：
 
 ```bash
+rm -rf ~/.codex/skills/amis-variables
 rm -rf ~/.codex/skills/project-explainer-web
 rm -rf ~/.codex/skills/mermaid-visualizer
 rm -rf ~/.codex/skills/excalidraw-diagram
@@ -230,6 +241,7 @@ rm -rf ~/.codex/skills/visual-explainer
 
 ```bash
 git clone https://github.com/liu-qingyuan/skills-sync-lqy.git ~/skills-sync-lqy
+ln -s ~/skills-sync-lqy/skills/amis-variables ~/.codex/skills/amis-variables
 ln -s ~/skills-sync-lqy/skills/project-explainer-web ~/.codex/skills/project-explainer-web
 ln -s ~/skills-sync-lqy/skills/mermaid-visualizer ~/.codex/skills/mermaid-visualizer
 ln -s ~/skills-sync-lqy/skills/excalidraw-diagram ~/.codex/skills/excalidraw-diagram
