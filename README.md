@@ -2,7 +2,7 @@
 
 这是一个用于同步和分发自定义 Codex Skills 的仓库。
 
-当前包含的 skills：
+当前包含的可安装 skills：
 
 - `amis-variables`：记录 Amis V1.0 设计系统语义变量，用于选择 surface/background、border/divider、text、icon token，并保留 light/dark mode 值、使用规则和 pairing rules。
 - `project-explainer-web`：生成项目或任务的说明型静态网页，默认输出中文，适合快速帮助人类或 AI 理解仓库、架构和任务背景。
@@ -10,15 +10,16 @@
 - `excalidraw-diagram`：从文本生成 Excalidraw 图，支持 Obsidian Markdown、标准 `.excalidraw` 和动画顺序 `.excalidraw` 输出。
 - `obsidian-canvas-creator`：把文本、提纲或文章转换为 Obsidian Canvas，支持 mind map 和 freeform 空间组织布局。
 - `feature-release-verifier`：用于验证功能是否具备发布条件，聚合 mock-ui、real-runtime、packaged-smoke 等验证证据并输出发布结论。
-- `figma-pixel-implementation`：用于从 Figma 节点进行像素级 UI 还原，强调先提取颜色/尺寸/图标/状态资产事实，再用 DOM/style/geometry 合约和截图验证，避免默认态误用选中态颜色或 SVG。
-- `frontend-slides`：用于创建或转换零依赖 HTML 演示文稿；本镜像把嵌套 plugin skill 文件实体化，避免 GitHub archive/安装器把 symlink 转成无 frontmatter 文本导致 Codex 跳过加载。
-- `gitnexus`：为 OMX/Codex 工作流提供 GitNexus 代码图谱 grounding；需要本机已安装/配置 GitNexus CLI/MCP，并且目标仓库已有 GitNexus index；可作为 `$deep-interview`、`$ralplan`、`$team`、`$autopilot`、`$ralph-omx-plan` 等 workflow 的上下文 modifier。
-- `gitnexus-codex-wiki`：基于 GitNexus graph/index evidence 生成源码证据驱动的 markdown wiki 或 project-explainer-web 风格架构介绍网页；需要本机可运行 `gitnexus` CLI 和目标仓库 index，推荐与 `$gitnexus` skill 一起安装。
+- `figma-pixel-implementation`：用于从 Figma 节点进行像素级 UI 还原，强调先提取颜色/尺寸/图标/状态资产事实，再用 DOM/style/geometry 合约和截图验证。
+- `gitnexus`：为 OMX/Codex 工作流提供 GitNexus 代码图谱 grounding；需要本机已安装/配置 GitNexus CLI/MCP，并且目标仓库已有 GitNexus index。
+- `gitnexus-codex-wiki`：基于 GitNexus graph/index evidence 生成源码证据驱动的 markdown wiki 或 project-explainer-web 风格架构介绍网页。
 - `karpathy-guidelines`：写代码、评审或重构时的行为准则，强调先明确假设、保持简单、外科手术式修改和可验证成功标准。
+- `handoff`：原样镜像自 Matt Pocock skills，用于把当前对话压缩成交接文档，方便下一个 agent/session 接手继续工作。
+- `playwright-ci`：生产级 Playwright CI/CD 配置参考，覆盖 GitHub Actions、GitLab CI、Docker、并行分片、报告和全局 setup/teardown。
 - `playwright-cli`：用于通过 playwright-cli 做终端优先的浏览器自动化、截图/视频/trace、测试代码生成，并记录 Electron `_electron.launch()` 应用的录屏注意事项。
+- `playwright-core`：Playwright E2E/API/component/visual/accessibility/security 测试模式参考，覆盖 locator、assertions、fixtures、mock、auth、trace 调试与框架配方。
 - `skill`：用于管理本地 Codex/OMX skills，包含 list/add/remove/edit/search/info/sync/setup/scan 等 CLI 式工作流说明。
-- `ralph-omx-plan`：把待办任务整理成 Open Ralph via OMX 的 prompt packet 和可复制的 `ralph-omx` 运行命令，支持外层 Ralph + 内层 Codex `/goal` 的 `--codex-goal --codex-backend omx` 模式，并列出 `$ralplan`、`$ralph`、`$team` 等可选 OMX-native 执行路径。
-- `visual-explainer`：链接同步自 `nicobailon/visual-explainer` 的 HTML 视觉说明 skill，用于生成架构图、计划评审、diff review、slide deck 和数据表等可视化页面。
+- `ralph-omx-plan`：把待办任务整理成 Open Ralph via OMX 的 prompt packet 和可复制的 `ralph-omx` 运行命令。
 
 ## GitNexus 依赖说明
 
@@ -42,21 +43,26 @@ skills/
   obsidian-canvas-creator/
   feature-release-verifier/
   figma-pixel-implementation/
-  frontend-slides/
   gitnexus/
   gitnexus-codex-wiki/
   karpathy-guidelines/
+  handoff/
+  playwright-ci/
   playwright-cli/
+  playwright-core/
   skill/
   ralph-omx-plan/
-  visual-explainer/
+
+docs/external-skill-links/
+  mattpocock-skills.md
 ```
 
 规则：
 
-- 每个 skill 放在 `skills/<skill-name>/`
-- 每个 skill 目录必须包含 `SKILL.md`
+- 每个可安装 skill 放在 `skills/<skill-name>/`
+- 每个可安装 skill 目录必须包含 `SKILL.md`
 - 额外的 `scripts/`、`assets/`、`references/`、`agents/` 等目录会和 skill 一起维护
+- `docs/external-skill-links/` 只放外部参考链接，不是安装镜像，也不是 Codex skill 目录
 
 ---
 
@@ -70,10 +76,17 @@ skills/
 4. 相对路径优先相对于 skill 自身目录解析
 5. 不要假设 README 之外存在未写明的全局规则
 6. 若 skill 自带脚本或模板，优先复用，不要手写重复逻辑
+7. `docs/external-skill-links/` 下的内容只供人类跳转阅读；不要自动安装、不要当成本仓库 skill、不要从这些链接推断本仓库提供对应 skill
 
 ---
 
-## 如何安装
+## 外部 skill 链接（只读参考，不自动安装）
+
+- [Matt Pocock / Skills For Real Engineers](docs/external-skill-links/mattpocock-skills.md)：除本仓库已明确放入 `skills/` 的 `handoff` 外，其余 Matt Pocock skills 只保存 upstream README 和各 skill 的链接，方便自行阅读后跳转安装；不镜像到 `skills/`，也不通过本仓库的安装命令安装。
+
+---
+
+## 如何安装本仓库 skills
 
 使用 Codex 自带的 `skill-installer`：
 
@@ -133,14 +146,6 @@ python ~/.codex/skills/.system/skill-installer/scripts/install-skill-from-github
   --path skills/figma-pixel-implementation
 ```
 
-### 安装 `frontend-slides`
-
-```bash
-python ~/.codex/skills/.system/skill-installer/scripts/install-skill-from-github.py \
-  --repo liu-qingyuan/skills-sync-lqy \
-  --path skills/frontend-slides
-```
-
 ### 安装 `gitnexus`
 
 ```bash
@@ -157,13 +162,28 @@ python ~/.codex/skills/.system/skill-installer/scripts/install-skill-from-github
   --path skills/gitnexus-codex-wiki
 ```
 
-
 ### 安装 `karpathy-guidelines`
 
 ```bash
 python ~/.codex/skills/.system/skill-installer/scripts/install-skill-from-github.py \
   --repo liu-qingyuan/skills-sync-lqy \
   --path skills/karpathy-guidelines
+```
+
+### 安装 `handoff`
+
+```bash
+python ~/.codex/skills/.system/skill-installer/scripts/install-skill-from-github.py \
+  --repo liu-qingyuan/skills-sync-lqy \
+  --path skills/handoff
+```
+
+### 安装 `playwright-ci`
+
+```bash
+python ~/.codex/skills/.system/skill-installer/scripts/install-skill-from-github.py \
+  --repo liu-qingyuan/skills-sync-lqy \
+  --path skills/playwright-ci
 ```
 
 ### 安装 `playwright-cli`
@@ -174,6 +194,13 @@ python ~/.codex/skills/.system/skill-installer/scripts/install-skill-from-github
   --path skills/playwright-cli
 ```
 
+### 安装 `playwright-core`
+
+```bash
+python ~/.codex/skills/.system/skill-installer/scripts/install-skill-from-github.py \
+  --repo liu-qingyuan/skills-sync-lqy \
+  --path skills/playwright-core
+```
 
 ### 安装 `skill`
 
@@ -189,14 +216,6 @@ python ~/.codex/skills/.system/skill-installer/scripts/install-skill-from-github
 python ~/.codex/skills/.system/skill-installer/scripts/install-skill-from-github.py \
   --repo liu-qingyuan/skills-sync-lqy \
   --path skills/ralph-omx-plan
-```
-
-### 安装 `visual-explainer`
-
-```bash
-python ~/.codex/skills/.system/skill-installer/scripts/install-skill-from-github.py \
-  --repo liu-qingyuan/skills-sync-lqy \
-  --path skills/visual-explainer
 ```
 
 安装完成后请重启 Codex：
@@ -221,14 +240,15 @@ rm -rf ~/.codex/skills/excalidraw-diagram
 rm -rf ~/.codex/skills/obsidian-canvas-creator
 rm -rf ~/.codex/skills/feature-release-verifier
 rm -rf ~/.codex/skills/figma-pixel-implementation
-rm -rf ~/.codex/skills/frontend-slides
 rm -rf ~/.codex/skills/gitnexus
 rm -rf ~/.codex/skills/gitnexus-codex-wiki
 rm -rf ~/.codex/skills/karpathy-guidelines
+rm -rf ~/.codex/skills/handoff
+rm -rf ~/.codex/skills/playwright-ci
 rm -rf ~/.codex/skills/playwright-cli
+rm -rf ~/.codex/skills/playwright-core
 rm -rf ~/.codex/skills/skill
 rm -rf ~/.codex/skills/ralph-omx-plan
-rm -rf ~/.codex/skills/visual-explainer
 ```
 
 然后重新运行安装命令并重启 Codex。
@@ -248,14 +268,15 @@ ln -s ~/skills-sync-lqy/skills/excalidraw-diagram ~/.codex/skills/excalidraw-dia
 ln -s ~/skills-sync-lqy/skills/obsidian-canvas-creator ~/.codex/skills/obsidian-canvas-creator
 ln -s ~/skills-sync-lqy/skills/feature-release-verifier ~/.codex/skills/feature-release-verifier
 ln -s ~/skills-sync-lqy/skills/figma-pixel-implementation ~/.codex/skills/figma-pixel-implementation
-ln -s ~/skills-sync-lqy/skills/frontend-slides ~/.codex/skills/frontend-slides
 ln -s ~/skills-sync-lqy/skills/gitnexus ~/.codex/skills/gitnexus
 ln -s ~/skills-sync-lqy/skills/gitnexus-codex-wiki ~/.codex/skills/gitnexus-codex-wiki
 ln -s ~/skills-sync-lqy/skills/karpathy-guidelines ~/.codex/skills/karpathy-guidelines
+ln -s ~/skills-sync-lqy/skills/handoff ~/.codex/skills/handoff
+ln -s ~/skills-sync-lqy/skills/playwright-ci ~/.codex/skills/playwright-ci
 ln -s ~/skills-sync-lqy/skills/playwright-cli ~/.codex/skills/playwright-cli
+ln -s ~/skills-sync-lqy/skills/playwright-core ~/.codex/skills/playwright-core
 ln -s ~/skills-sync-lqy/skills/skill ~/.codex/skills/skill
 ln -s ~/skills-sync-lqy/skills/ralph-omx-plan ~/.codex/skills/ralph-omx-plan
-ln -s ~/skills-sync-lqy/skills/visual-explainer ~/.codex/skills/visual-explainer
 ```
 
 之后只需要：
@@ -267,30 +288,35 @@ git pull
 
 ---
 
+## 已选择镜像的外部 skill
 
-## 外部链接同步说明
+- `handoff` 原样复制自本机通过 `npx skills@latest add mattpocock/skills` 安装后的 `/Users/amis/.agents/skills/handoff/SKILL.md`。
+- Upstream: https://github.com/mattpocock/skills/blob/main/skills/productivity/handoff/SKILL.md
+- 本仓库安装路径: `skills/handoff`
 
-`frontend-slides` 是从外部仓库/插件格式同步进来的 skill：
+---
 
-- Upstream: https://github.com/zarazhangrui/frontend-slides
-- Upstream plugin path: `plugins/frontend-slides`
-- 本仓库安装路径: `skills/frontend-slides`
-- 维护说明: `skills/frontend-slides/plugins/frontend-slides/skills/frontend-slides/` 内的文件必须保留为实体文件副本，不要改回 symlink 或只含相对路径的占位文本；否则 Codex 会把嵌套 `SKILL.md` 判定为缺少 YAML frontmatter。
+## 已移除的外部镜像
 
-`visual-explainer` 是从外部仓库链接同步进来的 skill：
+以下外部 skill 镜像已从本仓库删除，不再作为 `liu-qingyuan/skills-sync-lqy` 的可安装 skill 提供：
 
-- Upstream: https://github.com/nicobailon/visual-explainer.git
-- Upstream skill path: `plugins/visual-explainer`
-- 本仓库安装路径: `skills/visual-explainer`
-- 同步记录: `skills/visual-explainer/UPSTREAM.md`
+- `frontend-slides`
+  - Upstream: https://github.com/zarazhangrui/frontend-slides
+  - Upstream plugin path: `plugins/frontend-slides`
+  - 原本仓库安装路径: `skills/frontend-slides`
+- `visual-explainer`
+  - Upstream: https://github.com/nicobailon/visual-explainer.git
+  - Upstream skill path: `plugins/visual-explainer`
+  - 原本仓库安装路径: `skills/visual-explainer`
 
-这里保留一份可安装镜像，而不是 git submodule：Codex `skill-installer` 默认通过 GitHub archive 安装，archive 里不会自动展开 submodule，纯 submodule 会导致安装时找不到 `SKILL.md`。
+如果需要这些 skill，请直接阅读对应 upstream 仓库并按 upstream 的方式安装；不要在本仓库恢复为 symlink、submodule 或只含相对路径的占位文本。
 
 ---
 
 ## 维护约定
 
-- 新增 skill 时统一放到 `skills/` 下
+- 新增本仓库可安装 skill 时统一放到 `skills/` 下
 - skill 目录名使用 ASCII 和 kebab-case
 - 说明写在 `SKILL.md`
+- 外部参考链接统一放到 `docs/external-skill-links/`，不要放到 `skills/`
 - 如果某条规则需要让 AI 遵循，请明确写进 `SKILL.md` 或本 README
