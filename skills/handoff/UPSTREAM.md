@@ -1,11 +1,15 @@
 # Upstream link
 
-This skill is mirrored from Matt Pocock's skills repo.
+This skill started from Matt Pocock's `handoff` skill and is now a local customized variant for `skills-sync-lqy`.
 
-- Repository: https://github.com/mattpocock/skills
-- Upstream skill path: `skills/productivity/handoff`
-- Upstream file: https://github.com/mattpocock/skills/blob/main/skills/productivity/handoff/SKILL.md
-- Local source copied from: `/Users/amis/.agents/skills/handoff/SKILL.md`
-- Synced on: 2026-06-03
+- Original repository: https://github.com/mattpocock/skills
+- Original upstream skill path: `skills/productivity/handoff`
+- Original upstream file: https://github.com/mattpocock/skills/blob/main/skills/productivity/handoff/SKILL.md
+- Local customized install path: `skills/handoff`
+- Customized on: 2026-06-04
 
-This repository intentionally stores only the selected `handoff` skill as an installable mirror. Other Matt Pocock skills remain documented as external links in `docs/external-skill-links/mattpocock-skills.md` and should not be mirrored unless explicitly selected.
+## Local behavior change
+
+The original skill wrote a handoff document to the OS temporary directory. This customized version does **not** write files. It outputs a copy-paste prompt directly in chat so the user can send it to another AI or fresh session.
+
+Other Matt Pocock skills remain documented as external links in `docs/external-skill-links/mattpocock-skills.md` and should not be mirrored unless explicitly selected.

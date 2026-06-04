@@ -1,15 +1,37 @@
 ---
 name: handoff
-description: Compact the current conversation into a handoff document for another agent to pick up.
-argument-hint: "What will the next session be used for?"
+description: Generate a copy-paste prompt for another AI or fresh session to continue work with enough context. Use when the user invokes $handoff or asks to hand off, delegate, transfer context, or prepare a prompt for another agent. Do not write files.
+argument-hint: "What should the next AI do?"
 ---
 
-Write a handoff document summarising the current conversation so a fresh agent can continue the work. Save to the temporary directory of the user's OS - not the current workspace.
+Generate a handoff prompt that the user can copy and paste into another AI or fresh session. Output the prompt directly in chat. Do not save a file, do not write to `/tmp`, and do not modify the workspace.
 
-Include a "suggested skills" section in the document, which suggests skills that the agent should invoke.
+If the user passed arguments, treat them as the target task for the next AI. Example: `$handoff 修一下这个bug` means produce a prompt asking another AI to fix that bug, with enough current context to start safely.
 
-Do not duplicate content already captured in other artifacts (PRDs, plans, ADRs, issues, commits, diffs). Reference them by path or URL instead.
+## Output format
 
-Redact any sensitive information, such as API keys, passwords, or personally identifiable information.
+Return exactly two sections:
 
-If the user passed arguments, treat them as a description of what the next session will focus on and tailor the doc accordingly.
+1. `可复制 prompt`
+   - Put the handoff prompt in a fenced Markdown code block.
+   - The prompt should speak directly to the next AI.
+2. `这个 handoff 写了什么`
+   - Briefly explain what context and instructions you included.
+
+## Handoff prompt requirements
+
+The generated prompt should include, when available:
+
+- The next AI's objective, based on the user's arguments or the current task.
+- Relevant project/repo paths, branch/commit status, changed files, and artifact paths/URLs.
+- Current conversation facts needed to continue without rereading everything.
+- Constraints, non-goals, and user preferences.
+- Suggested skills or tools to invoke, if useful.
+- Concrete next steps and verification expectations.
+- A clear stop condition for the next AI.
+
+Do not duplicate long content already captured in artifacts such as PRDs, plans, ADRs, issues, commits, diffs, or generated docs. Reference those by path, URL, or commit instead.
+
+Redact sensitive information such as API keys, passwords, tokens, private personal data, and credentials. If sensitive details are necessary, describe what kind of secret is needed without exposing the value.
+
+Keep the prompt dense and practical. Prefer actionable context over narrative recap.

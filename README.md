@@ -14,7 +14,7 @@
 - `gitnexus`：为 OMX/Codex 工作流提供 GitNexus 代码图谱 grounding；需要本机已安装/配置 GitNexus CLI/MCP，并且目标仓库已有 GitNexus index。
 - `gitnexus-codex-wiki`：基于 GitNexus graph/index evidence 生成源码证据驱动的 markdown wiki 或 project-explainer-web 风格架构介绍网页。
 - `karpathy-guidelines`：写代码、评审或重构时的行为准则，强调先明确假设、保持简单、外科手术式修改和可验证成功标准。
-- `handoff`：原样镜像自 Matt Pocock skills，用于把当前对话压缩成交接文档，方便下一个 agent/session 接手继续工作。
+- `handoff`：基于 Matt Pocock handoff 改版，用于直接输出可复制给另一个 AI 的上下文 prompt；不写临时文件、不修改 workspace。
 - `playwright-ci`：生产级 Playwright CI/CD 配置参考，覆盖 GitHub Actions、GitLab CI、Docker、并行分片、报告和全局 setup/teardown。
 - `playwright-cli`：用于通过 playwright-cli 做终端优先的浏览器自动化、截图/视频/trace、测试代码生成，并记录 Electron `_electron.launch()` 应用的录屏注意事项。
 - `playwright-core`：Playwright E2E/API/component/visual/accessibility/security 测试模式参考，覆盖 locator、assertions、fixtures、mock、auth、trace 调试与框架配方。
@@ -82,7 +82,7 @@ docs/external-skill-links/
 
 ## 外部 skill 链接（只读参考，不自动安装）
 
-- [Matt Pocock / Skills For Real Engineers](docs/external-skill-links/mattpocock-skills.md)：除本仓库已明确放入 `skills/` 的 `handoff` 外，其余 Matt Pocock skills 只保存 upstream README 和各 skill 的链接，方便自行阅读后跳转安装；不镜像到 `skills/`，也不通过本仓库的安装命令安装。
+- [Matt Pocock / Skills For Real Engineers](docs/external-skill-links/mattpocock-skills.md)：除本仓库已明确放入 `skills/` 的本地改版 `handoff` 外，其余 Matt Pocock skills 只保存 upstream README 和各 skill 的链接，方便自行阅读后跳转安装；不镜像到 `skills/`，也不通过本仓库的安装命令安装。
 
 ---
 
@@ -290,9 +290,10 @@ git pull
 
 ## 已选择镜像的外部 skill
 
-- `handoff` 原样复制自本机通过 `npx skills@latest add mattpocock/skills` 安装后的 `/Users/amis/.agents/skills/handoff/SKILL.md`。
-- Upstream: https://github.com/mattpocock/skills/blob/main/skills/productivity/handoff/SKILL.md
+- `handoff` 基于本机通过 `npx skills@latest add mattpocock/skills` 安装后的 `/Users/amis/.agents/skills/handoff/SKILL.md` 改版。
+- Original upstream: https://github.com/mattpocock/skills/blob/main/skills/productivity/handoff/SKILL.md
 - 本仓库安装路径: `skills/handoff`
+- 本地改版行为：只在聊天里输出可复制 prompt，不写 `/tmp` 文档，也不修改 workspace。
 
 ---
 
