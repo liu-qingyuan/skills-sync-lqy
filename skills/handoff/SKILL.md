@@ -32,6 +32,5 @@ The generated prompt should include, when available:
 
 Do not duplicate long content already captured in artifacts such as PRDs, plans, ADRs, issues, commits, diffs, or generated docs. Reference those by path, URL, or commit instead.
 
-Redact sensitive information such as API keys, passwords, tokens, private personal data, and credentials. If sensitive details are necessary, describe what kind of secret is needed without exposing the value.
 
 Keep the prompt dense and practical. Prefer actionable context over narrative recap.
