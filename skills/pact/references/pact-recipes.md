@@ -200,7 +200,6 @@ This avoids:
 
 Libraries like [`msw-pact`](https://github.com/you54f/msw-pact) can convert your `cy.route()` / `cy.intercept()` calls into pact files — giving you a pact contract without rewriting your Cypress tests.
 
-PactFlow also has [dedicated Cypress + Pact examples](https://docs.pactflow.io/docs/examples/cypress/readme) showing how to safely combine the two.
 
 ---
 

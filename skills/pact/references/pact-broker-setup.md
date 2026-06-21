@@ -10,7 +10,6 @@
 
 **Anyone:**
 
-- Set up a [Pact Broker](https://github.com/pact-foundation/pact_broker) instance, or create a [PactFlow](https://pactflow.io/pricing/) account
 
 **Consumer team:**
 
@@ -74,8 +73,7 @@ gem install pact_broker-client
 Set one of these (or pass as flags):
 
 ```bash
-# Bearer token (PactFlow)
-export PACT_BROKER_BASE_URL="https://yourorg.pactflow.io"
+export PACT_BROKER_BASE_URL="https://yourorg.example-broker.local"
 export PACT_BROKER_TOKEN="your-api-token"
 
 # Basic auth (open-source Pact Broker)
@@ -289,10 +287,8 @@ pact-broker describe-version --pacticipant MyService --latest production
 
 ---
 
-### PactFlow-only: Publishing Provider Contracts (BDCT)
 
 ```bash
-pactflow publish-provider-contract openapi.yaml \
   --provider MyProvider \
   --provider-app-version $GIT_COMMIT \
   --branch $GIT_BRANCH \
@@ -303,7 +299,6 @@ pactflow publish-provider-contract openapi.yaml \
   --verifier-version 13.0.0
 ```
 
-See `references/bdct.md` for full BDCT workflow.
 
 ---
 
@@ -322,7 +317,6 @@ Set `PACT_BROKER_LOG_LEVEL=DEBUG` and `PACT_BROKER_SQL_LOG_LEVEL=none` to see mo
 
 ### Testing a webhook manually
 
-**PactFlow**: Settings → Webhooks → select webhook → Edit → scroll down → TEST button
 
 **Open-source Pact Broker**:
 
@@ -343,7 +337,6 @@ Set `PACT_BROKER_LOG_LEVEL=DEBUG` and `PACT_BROKER_SQL_LOG_LEVEL=none` to see mo
 
 1. Get the API call working first with `curl` or Postman
 2. Use the curl command to create the webhook with `pact-broker create-webhook`
-3. For credentials: store in PactFlow Secrets (Settings → Secrets) and reference via `${pactbroker.secretName}`
 
 ---
 

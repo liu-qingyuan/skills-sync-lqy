@@ -10,7 +10,6 @@ All pages below are available at `https://docs.pact.io/{path}` and as clean mark
 
 - [5 minute guide](/5-minute-getting-started-guide.md): From zero to running Pact tests in 5 mins
 - [Conceptual Overview](/getting_started/conceptual_overview.md): Using Pact successfully requires you to understand how Pact works and the concepts and terminology behind Pact.
-- [Terminology](/getting_started/terminology.md): Service Consumer, Service Provider, Mock Service Provider, Interaction, Pact file, Pact verification, Provider state, Pact specification, Pact Broker, PactFlow, The Matrix, Can-I-Deploy, Pacticipant.
 - [How Pact works](/getting_started/how_pact_works.md): Consumer testing, provider verification, putting it all together. Also covers Message Pact for async systems.
 - [Matching](/getting_started/matching.md): Regular expressions, type matching, flexible length arrays, query params.
 - [Gotchas](/getting_started/matching/gotchas.md): Pact follows Postel's law — be liberal in what you accept.
@@ -166,7 +165,6 @@ The progressive steps to full contract testing in CI/CD:
 
 ## Pact University — Workshops
 
-- [Introduction to Pact workshop (JS)](/university/introduction.md): 13 steps from zero to full CI/CD setup with PactFlow.
 - [Message Pact (async) workshop](/university/message-pact-async/00_1_Intro.md): Async messaging with Kafka.
 
 ---
@@ -176,7 +174,6 @@ The progressive steps to full contract testing in CI/CD:
 - [FAQ](/faq.md): Technical and complex questions answered.
 - [Convince me](/faq/convinceme.md): How to make the case for contract testing.
 - [Where to go for help](/help.md): Slack, documentation, GitHub issues.
-- [SmartBear / PactFlow](/help/smartbear.md): Commercial entity behind PactFlow.
 - [Community projects](/community_repos.md)
 - [Case studies](/users/case_studies.md): Atlassian, Gov.UK Pay, M1 Finance, Boost Insurance.
 - [Who is using Pact](/users.md)

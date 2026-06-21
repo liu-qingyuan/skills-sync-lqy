@@ -41,7 +41,7 @@ Plugins communicate with the Pact core via gRPC. When a test runs:
 
 | Plugin                                                                                 | Type            | Language | Support             |
 | -------------------------------------------------------------------------------------- | --------------- | -------- | ------------------- |
-| [`pact-protobuf-plugin`](https://github.com/pactflow/pact-protobuf-plugin)             | Protobuf + gRPC | Rust     | Official (PactFlow) |
+| [`pact-protobuf-plugin`](https://github.com/pact-foundation/pact-plugins/tree/main/plugins)             | Protobuf + gRPC | Rust     | Official |
 | [`pact-csv-plugin`](https://github.com/pact-foundation/pact-plugins/tree/main/plugins) | CSV content     | Rust     | Official            |
 | [`pact-avro-plugin`](https://github.com/austek/pact-avro-plugin)                       | Avro messages   | Scala    | Community           |
 
@@ -262,7 +262,6 @@ https://killercoda.com/safdotdev/course/safacoda/grpc_quick_start
 If no existing plugin covers your use case, you can build one:
 
 1. **Template**: Start with the [Go plugin template](https://github.com/pact-foundation/pact-plugin-template-golang) — includes all boilerplate
-2. **Workshop**: Step-by-step tutorial at https://killercoda.com/pactflow/scenario/create-a-plugin (runs in browser)
 3. **Docs**:
    - [Writing a plugin guide](https://docs.pact.io/implementation_guides/pact_plugins/docs/writing-plugin-guide)
    - [Protocol design](https://docs.pact.io/implementation_guides/pact_plugins/docs/protocol-plugin-design) — for new transports

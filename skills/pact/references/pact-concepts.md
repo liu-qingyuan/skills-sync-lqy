@@ -46,13 +46,9 @@ The [Pact Specification](https://github.com/pact-foundation/pact-specification) 
 
 A permanently running, externally hosted service with an API and UI that allows contract testing to be integrated into a CI/CD pipeline. Open source project.
 
-### PactFlow
-
-A commercial offering of the Pact Broker which adds features required to use Pact at scale. Managed by SmartBear.
-
 ### The Matrix
 
-A table showing the compatibility status of each consumer version and provider version, as determined by contract verification results. Feature of Pact Broker and PactFlow.
+A table showing the compatibility status of each consumer version and provider version, as determined by contract verification results. Feature of Pact Broker.
 
 ### Can-I-Deploy
 
@@ -60,7 +56,7 @@ A command line tool (also exposed as an MCP tool via `contract-testing_can_i_dep
 
 ### Pacticipant
 
-The term used in the Pact Broker/PactFlow API for "an application that participates in a pact". Both consumers and providers are pacticipants.
+The term used in the Pact Broker API for "an application that participates in a pact". Both consumers and providers are pacticipants.
 
 ---
 

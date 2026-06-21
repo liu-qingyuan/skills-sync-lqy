@@ -29,7 +29,7 @@ Contract tests are only valuable if the provider verifies them. Before writing t
 
 - **Consumer team**: Explain what you want to test and why. Share the pact with the provider team before they implement it.
 - **Provider team**: Commit to running pact verification in CI. Agree on provider state naming conventions.
-- **Both teams**: Agree on a shared Pact Broker/PactFlow instance. Discuss the deployment workflow — branches, environments, webhooks.
+- **Both teams**: Agree on a shared Pact Broker instance. Discuss the deployment workflow — branches, environments, webhooks.
 
 Contract tests require **coordination** — a consumer test with no provider verification is useless.
 

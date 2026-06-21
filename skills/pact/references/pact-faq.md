@@ -180,11 +180,9 @@ Pact (consumer-driven) goes further:
 | Language        | Multi-language (JS, Java, Go, Ruby, .NET, Python, PHP…) | JVM-centric                        |
 | Contract origin | Consumer-driven                                         | Can be consumer or provider-driven |
 | Spec storage    | Pact Broker                                             | Git                                |
-| Ecosystem       | Open source, PactFlow                                   | Spring ecosystem                   |
 
 ### Pact vs Postman/Newman
 
-Postman tests hit a real running service. Pact tests don't need the provider running during consumer tests. Pact tests are also bi-directional — both consumer and provider run tests, and results are tracked.
 
 ---
 
@@ -198,7 +196,6 @@ E2E tests verify that a particular combination of versions work together. They d
 
 **"The provider team won't commit to running pact verification."**
 
-Without provider verification, consumer tests are just documentation of assumptions. The value of Pact is in the provider verification step. If you can't get provider buy-in, start with BDCT (Bi-Directional Contract Testing) — the provider publishes an OpenAPI spec, and PactFlow verifies automatically without requiring provider team engagement. See `references/bdct.md`.
 
 **"We use a public/third-party API so we can't control the provider."**
 

@@ -30,7 +30,7 @@ There are two reasons to run pact verification:
 // JavaScript example
 const verificationOptions = {
   provider: "example-provider",
-  pactBrokerUrl: "http://test.pactflow.io",
+  pactBrokerUrl: "http://test.example-broker.local",
   consumerVersionSelectors: [
     { mainBranch: true }, // latest from consumer's main branch
     { matchingBranch: true }, // latest from branch matching current provider branch
@@ -56,7 +56,7 @@ Pact.service_provider "example-provider" do
   publish_verification_results ENV['CI'] == 'true'
 
   honours_pacts_from_pact_broker do
-    pact_broker_base_url 'http://test.pactflow.io'
+    pact_broker_base_url 'http://test.example-broker.local'
     consumer_version_selectors [
       { main_branch: true },
       { matching_branch: true },
