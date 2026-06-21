@@ -4,7 +4,7 @@
 
 - 优先低耦合、高内聚、清晰 seam、深模块。
 - Module 是隐藏复杂性的单元；Interface 要小，Implementation 可以深。
-- 修改架构相关代码前，先识别：Module、Interface、Implementation、Depth、Seam、Adapter、Leverage、Locality、test surface；需要总体规划时先查 `docs/architecture/`，用 C4 图和类图对齐后再改代码。
+- 修改架构相关代码前，先识别：Module、Interface、Implementation、Depth、Seam、Adapter、Leverage、Locality、test surface；需要总体规划时先查 `docs/architecture/`；用 C4 图、Mermaid 架构图、类图、时序图对齐后再改代码。
 - 业务/应用逻辑不要依赖 infrastructure、framework、transport、storage、provider、tool、event 的实现细节。
 - UI/API/CLI 是入口层，不放核心业务规则。
 - Adapter 只用于真实外部系统、协议、存储、工具、provider、模型或框架；不要为假想未来变化提前创建。
