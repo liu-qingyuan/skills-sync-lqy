@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+repo_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+target_dir="${1:-.}"
+mkdir -p "$target_dir"
+
+src="$repo_dir/AGENTS.md"
+dest="$target_dir/AGENTS.md"
+
+if [ ! -f "$src" ]; then
+  echo "missing template: $src" >&2
+  exit 1
+fi
+
+if [ -f "$dest" ] && ! cmp -s "$src" "$dest"; then
+  backup="$dest.bak.$(date +%Y%m%d%H%M%S)"
+  cp "$dest" "$backup"
+  echo "backup: $backup"
+fi
+
+cp "$src" "$dest"
+echo "wrote: $dest"
