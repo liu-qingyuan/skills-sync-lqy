@@ -1,6 +1,6 @@
 ---
 name: c4-architecture
-description: Generate architecture documentation using C4 model Mermaid diagrams. Use when asked to create architecture diagrams, document system architecture, visualize software structure, create C4 diagrams, or generate context/container/component/deployment diagrams. Triggers include "architecture diagram", "C4 diagram", "system context", "container diagram", "component diagram", "deployment diagram", "document architecture", "visualize architecture".
+description: Generate architecture documentation using C4 model Mermaid diagrams. Use when asked to create architecture diagrams, document system architecture, visualize software structure, create C4 diagrams, or generate context/container/component/code/deployment diagrams. Triggers include "architecture diagram", "C4 diagram", "system context", "container diagram", "component diagram", "deployment diagram", "document architecture", "visualize architecture".
 ---
 
 # C4 Architecture Documentation
@@ -23,10 +23,11 @@ Select the appropriate level based on the documentation need:
 | 1 | **C4Context** | Everyone | System + external actors | Always (required) |
 | 2 | **C4Container** | Technical | Apps, databases, services | Always (required) |
 | 3 | **C4Component** | Developers | Internal components | Only if adds value |
-| 4 | **C4Deployment** | DevOps | Infrastructure nodes | For production systems |
-| - | **C4Dynamic** | Technical | Request flows (numbered) | For complex workflows |
+| 4 | **Code/Class** | Developers | Classes, interfaces, types | Only if it clarifies implementation |
+| - | **C4Deployment** | DevOps | Infrastructure nodes | Supporting diagram for production systems |
+| - | **C4Dynamic** | Technical | Request flows (numbered) | Supporting diagram for complex workflows |
 
-**Key Insight:** "Context + Container diagrams are sufficient for most software development teams." Only create Component/Code diagrams when they genuinely add value.
+**Key Insight:** C4 moves from Context → Container → Component → Code. Context + Container are sufficient for many teams; create Component/Code, Deployment, or Dynamic diagrams only when they genuinely add value.
 
 ## Quick Start Examples
 
@@ -275,7 +276,8 @@ Write architecture documentation to `docs/architecture/` with naming convention:
 - `c4-context.md` - System context diagram
 - `c4-containers.md` - Container diagram
 - `c4-components-{feature}.md` - Component diagrams per feature
-- `c4-deployment.md` - Deployment diagram
+- `c4-code-{module}.md` or `class-{module}.md` - Code/class diagram when implementation detail is needed
+- `c4-deployment.md` - Supporting deployment diagram
 - `c4-dynamic-{flow}.md` - Dynamic diagrams for specific flows
 
 ## Audience-Appropriate Detail
@@ -285,7 +287,7 @@ Write architecture documentation to `docs/architecture/` with naming convention:
 | Executives | System Context only |
 | Product Managers | Context + Container |
 | Architects | Context + Container + key Components |
-| Developers | All levels as needed |
+| Developers | Context + Container + Component + Code/Class as needed |
 | DevOps | Container + Deployment |
 
 ## References
