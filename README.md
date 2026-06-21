@@ -5,30 +5,24 @@
 当前包含的可安装 skills：
 
 - `amis-variables`：记录 Amis V1.0 设计系统语义变量，用于选择 surface/background、border/divider、text、icon token，并保留 light/dark mode 值、使用规则和 pairing rules。
+- `c4-architecture`：用 C4 model 和 Mermaid 生成软件架构文档，支持 context/container/component/deployment diagram。
 - `project-explainer-web`：生成项目或任务的说明型静态网页，默认输出中文，适合快速帮助人类或 AI 理解仓库、架构和任务背景。
 - `mermaid-visualizer`：把文本内容转换为 Mermaid 图表，适合流程图、系统架构图、对比图、mindmap、sequence diagram 等文档/演示场景。
-- `excalidraw-diagram`：从文本生成 Excalidraw 图，支持 Obsidian Markdown、标准 `.excalidraw` 和动画顺序 `.excalidraw` 输出。
-- `obsidian-canvas-creator`：把文本、提纲或文章转换为 Obsidian Canvas，支持 mind map 和 freeform 空间组织布局。
-- `feature-release-verifier`：用于验证功能是否具备发布条件，聚合 mock-ui、real-runtime、packaged-smoke 等验证证据并输出发布结论。
 - `figma-pixel-implementation`：用于从 Figma 节点进行像素级 UI 还原，强调先提取颜色/尺寸/图标/状态资产事实，再用 DOM/style/geometry 合约和截图验证。
 - `gitnexus`：为 OMX/Codex 工作流提供 GitNexus 代码图谱 grounding；需要本机已安装/配置 GitNexus CLI/MCP，并且目标仓库已有 GitNexus index。
-- `gitnexus-codex-wiki`：基于 GitNexus graph/index evidence 生成源码证据驱动的 markdown wiki 或 project-explainer-web 风格架构介绍网页。
 - `karpathy-guidelines`：写代码、评审或重构时的行为准则，强调先明确假设、保持简单、外科手术式修改和可验证成功标准。
 - `handoff`：基于 Matt Pocock handoff 改版，用于直接输出可复制给另一个 AI 的上下文 prompt；不写临时文件、不修改 workspace。
 - `playwright-ci`：生产级 Playwright CI/CD 配置参考，覆盖 GitHub Actions、GitLab CI、Docker、并行分片、报告和全局 setup/teardown。
 - `playwright-cli`：用于通过 playwright-cli 做终端优先的浏览器自动化、截图/视频/trace、测试代码生成，并记录 Electron `_electron.launch()` 应用的录屏注意事项。
 - `playwright-core`：Playwright E2E/API/component/visual/accessibility/security 测试模式参考，覆盖 locator、assertions、fixtures、mock、auth、trace 调试与框架配方。
-- `skill`：用于管理本地 Codex/OMX skills，包含 list/add/remove/edit/search/info/sync/setup/scan 等 CLI 式工作流说明。
 - `ralph-omx-plan`：把待办任务整理成 Open Ralph via OMX 的 prompt packet 和可复制的 `ralph-omx` 运行命令。
 
 ## GitNexus 依赖说明
 
-`gitnexus` 和 `gitnexus-codex-wiki` 不是纯离线通用项目说明 skill。它们都依赖 GitNexus 支持：
+`gitnexus` 不是纯离线通用项目说明 skill，它依赖 GitNexus 支持：
 
 - 本机需要能执行 `gitnexus --version`。
 - 目标仓库需要已有 GitNexus index，或有权限先运行 `gitnexus analyze <repo-path>` / 项目约定的索引命令。
-- `gitnexus-codex-wiki` 使用 GitNexus graph/index evidence 写 wiki/架构网页；如果没有 GitNexus evidence，应改用 `project-explainer-web` 这类非图谱 skill。
-- 安装 `gitnexus-codex-wiki` 时建议同时安装 `gitnexus`，这样可以先用 `$gitnexus` 做 preflight/context/impact grounding，再生成文档。
 
 ---
 
@@ -37,20 +31,16 @@
 ```text
 skills/
   amis-variables/
+  c4-architecture/
   project-explainer-web/
   mermaid-visualizer/
-  excalidraw-diagram/
-  obsidian-canvas-creator/
-  feature-release-verifier/
   figma-pixel-implementation/
   gitnexus/
-  gitnexus-codex-wiki/
   karpathy-guidelines/
   handoff/
   playwright-ci/
   playwright-cli/
   playwright-core/
-  skill/
   ralph-omx-plan/
 
 docs/external-skill-links/
@@ -98,6 +88,14 @@ python ~/.codex/skills/.system/skill-installer/scripts/install-skill-from-github
   --path skills/amis-variables
 ```
 
+### 安装 `c4-architecture`
+
+```bash
+python ~/.codex/skills/.system/skill-installer/scripts/install-skill-from-github.py \
+  --repo liu-qingyuan/skills-sync-lqy \
+  --path skills/c4-architecture
+```
+
 ### 安装 `project-explainer-web`
 
 ```bash
@@ -114,30 +112,6 @@ python ~/.codex/skills/.system/skill-installer/scripts/install-skill-from-github
   --path skills/mermaid-visualizer
 ```
 
-### 安装 `excalidraw-diagram`
-
-```bash
-python ~/.codex/skills/.system/skill-installer/scripts/install-skill-from-github.py \
-  --repo liu-qingyuan/skills-sync-lqy \
-  --path skills/excalidraw-diagram
-```
-
-### 安装 `obsidian-canvas-creator`
-
-```bash
-python ~/.codex/skills/.system/skill-installer/scripts/install-skill-from-github.py \
-  --repo liu-qingyuan/skills-sync-lqy \
-  --path skills/obsidian-canvas-creator
-```
-
-### 安装 `feature-release-verifier`
-
-```bash
-python ~/.codex/skills/.system/skill-installer/scripts/install-skill-from-github.py \
-  --repo liu-qingyuan/skills-sync-lqy \
-  --path skills/feature-release-verifier
-```
-
 ### 安装 `figma-pixel-implementation`
 
 ```bash
@@ -152,14 +126,6 @@ python ~/.codex/skills/.system/skill-installer/scripts/install-skill-from-github
 python ~/.codex/skills/.system/skill-installer/scripts/install-skill-from-github.py \
   --repo liu-qingyuan/skills-sync-lqy \
   --path skills/gitnexus
-```
-
-### 安装 `gitnexus-codex-wiki`
-
-```bash
-python ~/.codex/skills/.system/skill-installer/scripts/install-skill-from-github.py \
-  --repo liu-qingyuan/skills-sync-lqy \
-  --path skills/gitnexus-codex-wiki
 ```
 
 ### 安装 `karpathy-guidelines`
@@ -202,14 +168,6 @@ python ~/.codex/skills/.system/skill-installer/scripts/install-skill-from-github
   --path skills/playwright-core
 ```
 
-### 安装 `skill`
-
-```bash
-python ~/.codex/skills/.system/skill-installer/scripts/install-skill-from-github.py \
-  --repo liu-qingyuan/skills-sync-lqy \
-  --path skills/skill
-```
-
 ### 安装 `ralph-omx-plan`
 
 ```bash
@@ -234,20 +192,16 @@ Restart Codex to pick up new skills.
 
 ```bash
 rm -rf ~/.codex/skills/amis-variables
+rm -rf ~/.codex/skills/c4-architecture
 rm -rf ~/.codex/skills/project-explainer-web
 rm -rf ~/.codex/skills/mermaid-visualizer
-rm -rf ~/.codex/skills/excalidraw-diagram
-rm -rf ~/.codex/skills/obsidian-canvas-creator
-rm -rf ~/.codex/skills/feature-release-verifier
 rm -rf ~/.codex/skills/figma-pixel-implementation
 rm -rf ~/.codex/skills/gitnexus
-rm -rf ~/.codex/skills/gitnexus-codex-wiki
 rm -rf ~/.codex/skills/karpathy-guidelines
 rm -rf ~/.codex/skills/handoff
 rm -rf ~/.codex/skills/playwright-ci
 rm -rf ~/.codex/skills/playwright-cli
 rm -rf ~/.codex/skills/playwright-core
-rm -rf ~/.codex/skills/skill
 rm -rf ~/.codex/skills/ralph-omx-plan
 ```
 
@@ -262,20 +216,16 @@ rm -rf ~/.codex/skills/ralph-omx-plan
 ```bash
 git clone https://github.com/liu-qingyuan/skills-sync-lqy.git ~/skills-sync-lqy
 ln -s ~/skills-sync-lqy/skills/amis-variables ~/.codex/skills/amis-variables
+ln -s ~/skills-sync-lqy/skills/c4-architecture ~/.codex/skills/c4-architecture
 ln -s ~/skills-sync-lqy/skills/project-explainer-web ~/.codex/skills/project-explainer-web
 ln -s ~/skills-sync-lqy/skills/mermaid-visualizer ~/.codex/skills/mermaid-visualizer
-ln -s ~/skills-sync-lqy/skills/excalidraw-diagram ~/.codex/skills/excalidraw-diagram
-ln -s ~/skills-sync-lqy/skills/obsidian-canvas-creator ~/.codex/skills/obsidian-canvas-creator
-ln -s ~/skills-sync-lqy/skills/feature-release-verifier ~/.codex/skills/feature-release-verifier
 ln -s ~/skills-sync-lqy/skills/figma-pixel-implementation ~/.codex/skills/figma-pixel-implementation
 ln -s ~/skills-sync-lqy/skills/gitnexus ~/.codex/skills/gitnexus
-ln -s ~/skills-sync-lqy/skills/gitnexus-codex-wiki ~/.codex/skills/gitnexus-codex-wiki
 ln -s ~/skills-sync-lqy/skills/karpathy-guidelines ~/.codex/skills/karpathy-guidelines
 ln -s ~/skills-sync-lqy/skills/handoff ~/.codex/skills/handoff
 ln -s ~/skills-sync-lqy/skills/playwright-ci ~/.codex/skills/playwright-ci
 ln -s ~/skills-sync-lqy/skills/playwright-cli ~/.codex/skills/playwright-cli
 ln -s ~/skills-sync-lqy/skills/playwright-core ~/.codex/skills/playwright-core
-ln -s ~/skills-sync-lqy/skills/skill ~/.codex/skills/skill
 ln -s ~/skills-sync-lqy/skills/ralph-omx-plan ~/.codex/skills/ralph-omx-plan
 ```
 
@@ -309,6 +259,16 @@ git pull
   - Upstream: https://github.com/nicobailon/visual-explainer.git
   - Upstream skill path: `plugins/visual-explainer`
   - 原本仓库安装路径: `skills/visual-explainer`
+- `excalidraw-diagram`
+  - 原本仓库安装路径: `skills/excalidraw-diagram`
+- `feature-release-verifier`
+  - 原本仓库安装路径: `skills/feature-release-verifier`
+- `gitnexus-codex-wiki`
+  - 原本仓库安装路径: `skills/gitnexus-codex-wiki`
+- `obsidian-canvas-creator`
+  - 原本仓库安装路径: `skills/obsidian-canvas-creator`
+- `skill`
+  - 原本仓库安装路径: `skills/skill`
 
 如果需要这些 skill，请直接阅读对应 upstream 仓库并按 upstream 的方式安装；不要在本仓库恢复为 symlink、submodule 或只含相对路径的占位文本。
 

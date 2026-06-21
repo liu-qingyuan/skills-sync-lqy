@@ -1,1 +1,0 @@
-{"private":true,"type":"module","scripts":{"build":"esbuild src/architecture-flow.tsx --bundle --format=iife --global-name=ArchitectureFlowBundle --platform=browser --target=es2020 --outfile=dist/architecture-flow.js --jsx=automatic"},"dependencies":{"@dagrejs/dagre":"3.0.0","@xyflow/react":"12.10.2","esbuild":"0.28.0","react":"19.2.5","react-dom":"19.2.5"},"devDependencies":{}}
