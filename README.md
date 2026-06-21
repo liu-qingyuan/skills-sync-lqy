@@ -267,10 +267,14 @@ git pull
   - 原本仓库安装路径: `skills/gitnexus-codex-wiki`
 - `obsidian-canvas-creator`
   - 原本仓库安装路径: `skills/obsidian-canvas-creator`
-- `skill`
-  - 原本仓库安装路径: `skills/skill`
 
 如果需要这些 skill，请直接阅读对应 upstream 仓库并按 upstream 的方式安装；不要在本仓库恢复为 symlink、submodule 或只含相对路径的占位文本。
+
+### 本机 OMX 内置 skill 说明
+
+- `skill` 已从本仓库的远程镜像目录 `skills/skill` 删除，不再由 `liu-qingyuan/skills-sync-lqy` 分发。
+- 这不代表应该删除本机 `~/.codex/skills/skill`。`skill` 是 OMX catalog 里的 active utility skill；本机应由 OMX 安装包或 `omx setup` 维护。
+- 如本机误删，可从 OMX 安装包恢复，例如 `/opt/homebrew/lib/node_modules/oh-my-codex/skills/skill/`。
 
 ---
 
