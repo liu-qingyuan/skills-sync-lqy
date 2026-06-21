@@ -6,7 +6,6 @@
 
 - `amis-variables`：记录 Amis V1.0 设计系统语义变量，用于选择 surface/background、border/divider、text、icon token，并保留 light/dark mode 值、使用规则和 pairing rules。
 - `c4-architecture`：用 C4 model 和 Mermaid 生成软件架构文档，支持 context/container/component/deployment diagram。
-- `project-explainer-web`：生成项目或任务的说明型静态网页，默认输出中文，适合快速帮助人类或 AI 理解仓库、架构和任务背景。
 - `mermaid-visualizer`：把文本内容转换为 Mermaid 图表，适合流程图、系统架构图、对比图、mindmap、sequence diagram 等文档/演示场景。
 - `figma-pixel-implementation`：用于从 Figma 节点进行像素级 UI 还原，强调先提取颜色/尺寸/图标/状态资产事实，再用 DOM/style/geometry 合约和截图验证。
 - `gitnexus`：为 OMX/Codex 工作流提供 GitNexus 代码图谱 grounding；需要本机已安装/配置 GitNexus CLI/MCP，并且目标仓库已有 GitNexus index。
@@ -32,7 +31,6 @@
 skills/
   amis-variables/
   c4-architecture/
-  project-explainer-web/
   mermaid-visualizer/
   figma-pixel-implementation/
   gitnexus/
@@ -94,14 +92,6 @@ python ~/.codex/skills/.system/skill-installer/scripts/install-skill-from-github
 python ~/.codex/skills/.system/skill-installer/scripts/install-skill-from-github.py \
   --repo liu-qingyuan/skills-sync-lqy \
   --path skills/c4-architecture
-```
-
-### 安装 `project-explainer-web`
-
-```bash
-python ~/.codex/skills/.system/skill-installer/scripts/install-skill-from-github.py \
-  --repo liu-qingyuan/skills-sync-lqy \
-  --path skills/project-explainer-web
 ```
 
 ### 安装 `mermaid-visualizer`
@@ -193,7 +183,6 @@ Restart Codex to pick up new skills.
 ```bash
 rm -rf ~/.codex/skills/amis-variables
 rm -rf ~/.codex/skills/c4-architecture
-rm -rf ~/.codex/skills/project-explainer-web
 rm -rf ~/.codex/skills/mermaid-visualizer
 rm -rf ~/.codex/skills/figma-pixel-implementation
 rm -rf ~/.codex/skills/gitnexus
@@ -217,7 +206,6 @@ rm -rf ~/.codex/skills/ralph-omx-plan
 git clone https://github.com/liu-qingyuan/skills-sync-lqy.git ~/skills-sync-lqy
 ln -s ~/skills-sync-lqy/skills/amis-variables ~/.codex/skills/amis-variables
 ln -s ~/skills-sync-lqy/skills/c4-architecture ~/.codex/skills/c4-architecture
-ln -s ~/skills-sync-lqy/skills/project-explainer-web ~/.codex/skills/project-explainer-web
 ln -s ~/skills-sync-lqy/skills/mermaid-visualizer ~/.codex/skills/mermaid-visualizer
 ln -s ~/skills-sync-lqy/skills/figma-pixel-implementation ~/.codex/skills/figma-pixel-implementation
 ln -s ~/skills-sync-lqy/skills/gitnexus ~/.codex/skills/gitnexus
@@ -267,6 +255,8 @@ git pull
   - 原本仓库安装路径: `skills/gitnexus-codex-wiki`
 - `obsidian-canvas-creator`
   - 原本仓库安装路径: `skills/obsidian-canvas-creator`
+- `project-explainer-web`
+  - 原本仓库安装路径: `skills/project-explainer-web`
 
 如果需要这些 skill，请直接阅读对应 upstream 仓库并按 upstream 的方式安装；不要在本仓库恢复为 symlink、submodule 或只含相对路径的占位文本。
 
