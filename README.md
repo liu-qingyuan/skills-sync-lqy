@@ -10,7 +10,7 @@
 - `figma-pixel-implementation`：用于从 Figma 节点进行像素级 UI 还原，强调先提取颜色/尺寸/图标/状态资产事实，再用 DOM/style/geometry 合约和截图验证。
 - `gitnexus`：为 OMX/Codex 工作流提供 GitNexus 代码图谱 grounding；需要本机已安装/配置 GitNexus CLI/MCP，并且目标仓库已有 GitNexus index。
 - `karpathy-guidelines`：写代码、评审或重构时的行为准则，强调先明确假设、保持简单、外科手术式修改和可验证成功标准。
-- `pactflow`：官方 PactFlow Agent Skill 镜像，用于 Pact/PactFlow contract testing、provider verification、Pact Broker 和 can-i-deploy。
+- `pactflow`：官方 PactFlow Agent Skill 镜像，用于 Pact contract testing、provider verification、自建 Pact Broker、can-i-deploy；PactFlow 商业/SaaS 能力按需使用。
 - `pea`：Project Engineering Architect，用于项目工程架构、模块设计、接口设计、重构、事件/服务契约、依赖边界、策略治理和 CI/CD 质量门禁。
 - `tea`：Testing Engineering Architect，用于测试工程架构、测试分层、contract test、E2E 边界、architecture check、回归保护和 CI 质量门禁。
 - `handoff`：基于 Matt Pocock handoff 改版，用于直接输出可复制给另一个 AI 的上下文 prompt；不写临时文件、不修改 workspace。
