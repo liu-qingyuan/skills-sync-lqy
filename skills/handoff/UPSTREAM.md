@@ -12,4 +12,6 @@ This skill started from Matt Pocock's `handoff` skill and is now a local customi
 
 The original skill wrote a handoff document to the OS temporary directory. This customized version does **not** write files. It outputs a copy-paste prompt directly in chat so the user can send it to another AI or fresh session.
 
+The local prompt contract is also stricter: it favors task-type work contracts with objective, boundaries, acceptance criteria, validation evidence, and stop conditions instead of long narrative recaps or rigid implementation scripts.
+
 Other Matt Pocock skills remain documented as external links in `docs/external-skill-links/mattpocock-skills.md` and should not be mirrored unless explicitly selected.

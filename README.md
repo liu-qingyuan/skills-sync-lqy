@@ -13,7 +13,7 @@
 - `pact`：开源 Pact + 自建 Pact Broker 契约测试 skill，用于 consumer test、provider verification、can-i-deploy 和 CI gate。
 - `pea`：Project Engineering Architect，用于项目工程架构、模块设计、接口设计、重构、事件/服务契约、依赖边界、策略治理和 CI/CD 质量门禁。
 - `tea`：Testing Engineering Architect，用于测试工程架构、测试分层、contract test、E2E 边界、architecture check、回归保护和 CI 质量门禁。
-- `handoff`：基于 Matt Pocock handoff 改版，用于直接输出可复制给另一个 AI 的上下文 prompt；不写临时文件、不修改 workspace。
+- `handoff`：基于 Matt Pocock handoff 改版，用于直接输出可复制给另一个 AI 的结构化工作合同 prompt；按任务类型组织目标、边界、验收、验证和停止条件；不写临时文件、不修改 workspace。
 - `playwright-ci`：非官方整理的 Playwright CI/CD 配置参考；仅在项目已有 CI 或用户要求配置 CI/CD 时使用。
 - `playwright-cli`：基于官方 `playwright-cli install --skills` 的本地扩展版，用于终端优先浏览器自动化、截图/视频/trace、测试代码生成，并记录 Electron `_electron.launch()` 应用的录屏注意事项。
 - `playwright-core`：非官方整理的 Playwright E2E/API/component/visual/accessibility/security 测试模式参考，覆盖 locator、assertions、fixtures、mock、auth、trace 调试与框架配方。
