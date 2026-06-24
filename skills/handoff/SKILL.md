@@ -36,6 +36,8 @@ Prioritize:
 
 Only include absolute rules when they are truly non-negotiable. Give the next AI discretion over local naming, small file organization, and implementation approach unless the user or existing contracts make those decisions binding.
 
+Keep the receiving agent's agency intact. State outcomes, constraints, evidence expectations, likely starting points, and stop/ask boundaries; do not prescribe a step-by-step implementation script, exact command sequence, exact `git add` list, class/function names, or file operation order unless the user or an existing contract makes that exact action non-negotiable. Prefer validation categories and evidence requirements over long command recipes, and prefer "commit only the relevant changes" over enumerating every staging command.
+
 ## Choose a task-appropriate prompt shape
 
 Select the smallest structure that preserves the task's outcome, constraints, validation, and stop condition. Do not force every heading into tiny handoffs, but never omit the result, important boundaries, verification expectations, and stop rule when they are known.
@@ -180,3 +182,14 @@ Example shape:
 ```
 
 Keep the prompt dense and practical. Prefer actionable context over narrative recap.
+
+## Maintenance validation
+
+When modifying this skill, do not rely only on static inspection. Before claiming the change preserves behavior, run a real-call smoke test of the installed `$handoff` skill in a fresh agent/session and verify that it:
+
+- triggers from an actual `$handoff ...` prompt;
+- outputs the two-section copy-paste envelope directly in chat;
+- does not write files or execute the handed-off task;
+- includes objective, scope/non-goals, validation expectations, and a stop condition when the test prompt calls for them.
+
+If this real-call smoke test is skipped or cannot run, report that limitation explicitly. Static checks such as `git diff --check`, frontmatter inspection, and grep checks are not enough to prove the model will route to and follow the skill.

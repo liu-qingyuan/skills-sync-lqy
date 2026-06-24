@@ -14,6 +14,7 @@
 - `pea`：Project Engineering Architect，用于项目工程架构、模块设计、接口设计、重构、事件/服务契约、依赖边界、策略治理和 CI/CD 质量门禁。
 - `tea`：Testing Engineering Architect，用于测试工程架构、测试分层、contract test、E2E 边界、architecture check、回归保护和 CI 质量门禁。
 - `handoff`：基于 Matt Pocock handoff 改版，用于直接输出可复制给另一个 AI 的结构化工作合同 prompt；按任务类型组织目标、边界、验收、验证和停止条件；不写临时文件、不修改 workspace。
+- `deep-omx-handoff`：OMX 版交接澄清 skill；在生成 `$handoff` 风格可复制工作合同 prompt 前，用 OMX 结构化问题澄清接手 AI 的目标、边界、验证和停止条件；不执行被交接任务。
 - `playwright-ci`：非官方整理的 Playwright CI/CD 配置参考；仅在项目已有 CI 或用户要求配置 CI/CD 时使用。
 - `playwright-cli`：基于官方 `playwright-cli install --skills` 的本地扩展版，用于终端优先浏览器自动化、截图/视频/trace、测试代码生成，并记录 Electron `_electron.launch()` 应用的录屏注意事项。
 - `playwright-core`：非官方整理的 Playwright E2E/API/component/visual/accessibility/security 测试模式参考，覆盖 locator、assertions、fixtures、mock、auth、trace 调试与框架配方。
@@ -42,6 +43,7 @@ skills/
   pea/
   tea/
   handoff/
+  deep-omx-handoff/
   playwright-ci/
   playwright-cli/
   playwright-core/
@@ -164,6 +166,14 @@ python ~/.codex/skills/.system/skill-installer/scripts/install-skill-from-github
   --path skills/handoff
 ```
 
+### 安装 `deep-omx-handoff`
+
+```bash
+python ~/.codex/skills/.system/skill-installer/scripts/install-skill-from-github.py \
+  --repo liu-qingyuan/skills-sync-lqy \
+  --path skills/deep-omx-handoff
+```
+
 ### 安装 `playwright-ci`
 
 ```bash
@@ -221,6 +231,7 @@ rm -rf ~/.codex/skills/pact
 rm -rf ~/.codex/skills/pea
 rm -rf ~/.codex/skills/tea
 rm -rf ~/.codex/skills/handoff
+rm -rf ~/.codex/skills/deep-omx-handoff
 rm -rf ~/.codex/skills/playwright-ci
 rm -rf ~/.codex/skills/playwright-cli
 rm -rf ~/.codex/skills/playwright-core
@@ -247,6 +258,7 @@ ln -s ~/skills-sync-lqy/skills/pact ~/.codex/skills/pact
 ln -s ~/skills-sync-lqy/skills/pea ~/.codex/skills/pea
 ln -s ~/skills-sync-lqy/skills/tea ~/.codex/skills/tea
 ln -s ~/skills-sync-lqy/skills/handoff ~/.codex/skills/handoff
+ln -s ~/skills-sync-lqy/skills/deep-omx-handoff ~/.codex/skills/deep-omx-handoff
 ln -s ~/skills-sync-lqy/skills/playwright-ci ~/.codex/skills/playwright-ci
 ln -s ~/skills-sync-lqy/skills/playwright-cli ~/.codex/skills/playwright-cli
 ln -s ~/skills-sync-lqy/skills/playwright-core ~/.codex/skills/playwright-core
