@@ -23,7 +23,7 @@ When invoked, return only what is useful for the current task:
 Use the project’s installed command shape when known; otherwise show both common forms briefly.
 
 - Check tool/index: `gitnexus --version`, `gitnexus status`, `gitnexus list`, or `node .gitnexus/run.cjs status`.
-- Build/refresh index: `gitnexus analyze <repo>` or `node .gitnexus/run.cjs analyze`. Run this when the repo is unindexed, or after edits that change files, symbols, imports, calls, routes, schemas, contracts, or ownership boundaries.
+- Build/refresh index: `gitnexus analyze <repo>` or `node .gitnexus/run.cjs analyze`. Run this when the repo is unindexed or graph-affecting edits make the index stale; add `--skip-agents-md` / `--skip-skills` when available if you only want indexing and must preserve agent files/skills.
 - Explore context: `gitnexus context <symbol-or-file>`.
 - Impact/blast radius: `gitnexus impact <symbol-or-file>`.
 - Exact graph query: `gitnexus cypher '<query>'`.
