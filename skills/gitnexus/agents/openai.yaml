@@ -1,7 +1,7 @@
 interface:
   display_name: "GitNexus"
-  short_description: "Guide local GitNexus code-graph tools"
-  default_prompt: "Use $gitnexus to check local GitNexus status, index the repo first when unindexed, choose the right GitNexus-related skill, and ground graph claims with source or test evidence."
+  short_description: "Guide and refresh local GitNexus code graphs"
+  default_prompt: "Use $gitnexus to check local GitNexus status, refresh/index after graph-affecting edits, choose the right GitNexus-related skill, and ground graph claims with source or test evidence."
 dependencies:
   tools:
     - type: "mcp"
