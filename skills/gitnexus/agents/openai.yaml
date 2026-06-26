@@ -1,12 +1,12 @@
 interface:
   display_name: "GitNexus"
-  short_description: "GitNexus CLI/MCP grounding for OMX"
-  default_prompt: "Use $gitnexus to verify GitNexus CLI/MCP support and ground this task in the indexed code graph before planning or implementation."
+  short_description: "Guide local GitNexus code-graph tools"
+  default_prompt: "Use $gitnexus to check local GitNexus status, choose the right GitNexus-related skill, and ground graph claims with source or test evidence."
 dependencies:
   tools:
     - type: "mcp"
       value: "gitnexus"
-      description: "GitNexus MCP server for indexed repository graph context"
+      description: "Optional local GitNexus MCP server for indexed repository graph context"
       transport: "stdio"
 policy:
   allow_implicit_invocation: true

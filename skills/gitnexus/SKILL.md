@@ -1,133 +1,59 @@
 ---
 name: gitnexus
-description: "GitNexus code-graph grounding for OMX workflows. Requires a local GitNexus CLI/MCP setup and an indexed repository; use `$gitnexus` alone or as a modifier with interview, planning, execution, QA, review, security, visual, or trace workflows."
+description: Guide and router for local GitNexus code-graph tools. Use when the user asks how to use GitNexus, check or build an index, query code relationships, inspect callers/callees, assess impact, debug with graph context, refactor safely, review PRs, or choose a GitNexus-related skill. Requires a local GitNexus CLI/MCP setup and an indexed repository for graph-backed claims.
 ---
 
 # GitNexus
 
-GitNexus is a code-graph grounding layer for OMX/Codex workflows. Use it to collect repository facts before asking the user about code internals, planning changes, or editing source.
+`$gitnexus` is a lightweight guide for the local GitNexus toolset. It explains how to use the installed CLI/MCP, checks whether graph evidence is available, and routes to the most specific GitNexus skill.
 
-## Requirements
+GitNexus here is local/non-official project tooling. Treat graph output as a map: useful for candidates, relationships, and impact, but confirm important claims with source reads and tests.
 
-- Require GitNexus support on the machine running Codex: the `gitnexus` CLI must be installed and available on `PATH` (`gitnexus --version`).
-- Require a GitNexus-indexed target repository before grounding can be trusted. If `gitnexus status` reports a missing or stale index, recommend `gitnexus analyze <repo-path>` or the local project's documented indexing command before using graph evidence.
-- Prefer a configured GitNexus MCP server for in-session automation, but keep CLI preflight as the baseline dependency because the bundled workflow calls `gitnexus status`, `gitnexus list`, `gitnexus context`, `gitnexus impact`, and `gitnexus cypher`.
-- Do not present this skill as a generic code-explainer without GitNexus. If GitNexus is unavailable and the user only wants a non-graph project overview, route to a non-GitNexus skill such as `$project-explainer-web`.
+## Default answer
 
-## Composition Rule
+When invoked, return only what is useful for the current task:
 
-When `$gitnexus` appears with another workflow keyword, treat the other workflow as primary and GitNexus as a modifier/context provider.
+1. **Status** — whether GitNexus CLI/MCP/index evidence is known, or the smallest check to run.
+2. **Best route** — the GitNexus skill or command to use next.
+3. **Minimal examples** — only commands/queries relevant to the task.
+4. **Verification boundary** — what still needs direct source or test evidence.
 
-Examples:
+## Quick commands
 
-```text
-$deep-interview $gitnexus "我想添加一个新的对话功能"
-$plan $gitnexus "调查图片生成后 UI 不显示"
-$ralplan $gitnexus "重构 OpenClaw media recovery 链路"
-$team $gitnexus "compare CLI and MCP for this bug"
-$ralph $gitnexus "finish the OpenClaw media recovery fix"
-$autopilot $gitnexus "ship a new conversation feature"
-$ultraqa $gitnexus "verify the chat/media flow"
-$code-review $gitnexus "review this diff for graph-aware regressions"
-$security-review $gitnexus "review auth/session changes"
-$visual-ralph $gitnexus "match this reference UI in the existing app"
-$visual-verdict $gitnexus "score this screenshot against the app implementation"
-$trace $gitnexus "explain the agent flow and code context for this run"
-$ralph-omx-plan $gitnexus "prepare an Open Ralph via OMX command for this task"
-$ralplan $gitnexus $ralph-omx-plan "plan this change and give me execution commands"
-```
+Use the project’s installed command shape when known; otherwise show both common forms briefly.
 
-Behavior:
-1. Keep the primary workflow in charge of its lifecycle and output contract.
-2. Run GitNexus grounding before the primary workflow asks codebase questions or writes a plan.
-3. Save the grounding report under `.omx/context/gitnexus-{slug}-{timestamp}.md`.
-4. Feed that context into the primary workflow as brownfield evidence.
-5. Do not duplicate or replace the primary workflow logic. GitNexus only supplies repository graph context, health checks, and impact/navigation evidence.
+- Check tool/index: `gitnexus --version`, `gitnexus status`, `gitnexus list`, or `node .gitnexus/run.cjs status`.
+- Build/refresh index: `gitnexus analyze <repo>` or `node .gitnexus/run.cjs analyze`.
+- Explore context: `gitnexus context <symbol-or-file>`.
+- Impact/blast radius: `gitnexus impact <symbol-or-file>`.
+- Exact graph query: `gitnexus cypher '<query>'`.
+- Web UI: `gitnexus serve` then open the shown URL. A plain `Cannot GET /` at root is not by itself a GitNexus failure.
 
-If `$gitnexus` is invoked alone, run the grounding workflow and return the context path plus recommended next command.
+Do not auto-run expensive indexing, force cleanup, or broad graph operations unless the user asked or the task is blocked and the need is explicit.
 
-## Grounding Workflow
+## Related skills
 
-1. **Preflight**
-   - Run `scripts/gitnexus-preflight.sh --task "<task>"` from the target repo root when available.
-   - Confirm `gitnexus` exists, current git root, `gitnexus status`, `gitnexus list`, and `codex mcp list`.
-   - If the index is stale/missing, report it and recommend `gitnexus analyze` or `gitnexus index`; do not auto-reindex unless the user asked for indexing or execution authority is already clear.
+Prefer the most specific skill for actual work:
 
-2. **Choose CLI vs MCP**
-   - Prefer CLI for health, setup, repair, reproducible transcripts, `serve`, and WAL/database errors.
-   - Prefer MCP for in-session agent automation after repo/symbol names are known.
-   - Use both when a result will guide a plan or code change.
-   - See `references/cli-vs-mcp.md` for the evidence-backed split.
+- `$gitnexus-cli` — install, index, status, clean, serve, generate wiki.
+- `$gitnexus-guide` — available MCP tools, resources, schema, query reference.
+- `$gitnexus-exploring` — understand architecture, flows, callers/callees.
+- `$gitnexus-debugging` — trace bugs, errors, failing paths.
+- `$gitnexus-impact-analysis` — assess what changes could break.
+- `$gitnexus-refactoring` — rename, move, extract, split, restructure safely.
+- `$gitnexus-pr-review` — review PRs/diffs with graph context.
+- `$gitnexus-codex-wiki` — write graph-grounded docs/wiki pages.
 
-3. **Collect graph context**
-   - Read repo context first: `gitnexus list`, `gitnexus status`, or MCP `list_repos` / repo context resource if exposed.
-   - Use `gitnexus context <symbol-or-file>` for known symbols.
-   - Use `gitnexus impact <symbol-or-file>` before planning edits.
-   - Use `gitnexus cypher '<query>'` for exact graph relationships.
-   - Use `gitnexus query '<concept>'` only as a broad hint; validate because local experiments showed query can return empty results in read-only DB/FTS-warning scenarios.
-   - Always confirm critical claims with direct source reads (`rg`, `sed`, IDE, or code-intel) and tests.
+## Use rules
 
-4. **Write handoff context**
-   Include:
-   - Task statement and target repo.
-   - Index/MCP health.
-   - Commands or MCP calls used.
-   - File/line evidence from direct source confirmation.
-   - Graph findings: candidate files, symbols, callers/callees, impact risks.
-   - Unknowns, assumptions, and recommended next workflow.
+- `$gitnexus` alone is for orientation, preflight, and routing; do not turn it into a full workflow.
+- If GitNexus is unavailable, stale, or unindexed, say that plainly and fall back to normal repository inspection.
+- Use graph evidence for leads, not as the only proof for correctness.
+- Keep outputs concise; add details only when the user asks or the task requires them.
 
-5. **Primary workflow integration**
-   - For `$deep-interview`: use GitNexus facts to avoid asking the user where code lives; ask intent, outcome, non-goals, decision boundaries, and acceptance criteria.
-   - For `$plan` / `$ralplan`: cite the GitNexus context snapshot and direct source lines in the plan; keep implementation steps sized to real scope.
-   - For `$ralph` / `$team`: run pre-context and impact grounding before execution/delegation; pass the context path into worker assignments; tests and source remain the verification source of truth.
-   - For `$autopilot`: run GitNexus preflight before autonomous planning/execution so the pipeline starts with indexed repo context and known impact risks.
-   - For `$ultraqa`: use GitNexus to find likely test surfaces, affected flows, and regression targets before cycling QA.
-   - For `$ultrawork`: use GitNexus to split independent work lanes by files/symbols/processes and avoid overlapping edits.
-   - For `$code-review`: use GitNexus impact/context to identify changed-symbol blast radius, hidden callers, and missing regression tests.
-   - For `$security-review`: use GitNexus to trace auth/session/data-flow entry points and consumers, then apply security reasoning directly to source.
-   - For `$visual-ralph`: use GitNexus to locate UI implementation files before visual iterations; still run `$visual-verdict` every visual edit loop.
-   - For `$visual-verdict`: use GitNexus only when a screenshot verdict must be tied back to code locations; pure image comparison can skip graph context.
-   - For `$trace`: use GitNexus context as a codebase layer in the execution trace, not as a replacement for OMX trace logs.
-   - For `$ralph-omx-plan`: treat ralph-omx-plan as the primary planning surface. Run GitNexus grounding first, save the context path, and feed it into the generated Open Ralph prompt/command. Do not launch `ralph-omx`; the ralph-omx-plan skill only prepares copy-paste commands unless the user separately asks to execute.
+## Optional references
 
-## Command Patterns
+Load only if needed:
 
-For simple preflight:
-
-```bash
-~/.codex/skills/gitnexus/scripts/gitnexus-preflight.sh --task "describe the task"
-```
-
-For known symbols:
-
-```bash
-gitnexus context SymbolName
-gitnexus impact SymbolName
-gitnexus cypher 'MATCH (a)-[r]->(b) WHERE r.type = "CALLS" RETURN a.name, b.name LIMIT 25'
-```
-
-For web UI:
-
-```bash
-gitnexus serve
-# open https://gitnexus.vercel.app?server=http://localhost:4747
-```
-
-`http://localhost:4747/` returning `Cannot GET /` is expected for the API server root; use `/api/...` endpoints or the hosted/local web UI.
-
-## Safety and Verification
-
-- Do not use GitNexus output as the final truth for code edits; it is a map, not the terrain.
-- Do not run real product side effects (for example vMLX image generation) just to build graph context.
-- Do not auto-run expensive `gitnexus analyze --force` unless the user asked to index/reindex or stale index blocks the task.
-- If GitNexus emits WAL/corruption/segfault errors, stop graph-dependent conclusions and repair index state first.
-- Preserve upstream OMX skills; prefer this composable skill over editing `$deep-interview`, `$plan`, or `$ralplan`.
-
-## References
-
-Load only what is needed:
-- `references/composition.md` — how `$gitnexus` composes with OMX workflows.
-- `references/workflow-matrix.md` — per-workflow GitNexus integration rules, including `$ralph-omx-plan`.
-- `references/cli-vs-mcp.md` — CLI/MCP decision table and local experiment findings.
-- `references/query-patterns.md` — practical query/context/impact/cypher patterns.
-- `references/official-sources.md` — official source notes used to design this skill.
+- `references/cli-vs-mcp.md` — choosing CLI vs MCP.
+- `references/query-patterns.md` — context, impact, and Cypher examples.
