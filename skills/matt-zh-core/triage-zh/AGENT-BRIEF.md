@@ -1,24 +1,24 @@
-# 撰写代理简介
+# 撰写agent brief
 
-代理简介是在 GitHub 问题或 PR 转到“准备代理”时发布的结构化评论。这是 AFK 代理工作所依据的权威规范。原始正文和讨论是上下文——代理简介是合同。
+agent brief是在 GitHub issue 或 PR 转到“ready-for-agent”时发布的结构化评论。这是 AFK agent 工作所依据的权威规范。原始正文和讨论是上下文——agent brief是合同。
 
-简报指出了**代理应该做什么**，这延伸到两个层面：对于一个问题，这是从无到有的改变；对于 PR 来说，剩下要做的就是*现有的差异*——完成它，缩小差距，解决审查点。无论哪种方式，原则都是相同的；下面的 PR 示例显示了差异。
+简报指出了**agent 应该做什么**，这延伸到两个层面：对于一个问题，这是从无到有的改变；对于 PR 来说，剩下要做的就是*现有的差异*——完成它，缩小差距，解决审查点。无论哪种方式，原则都是相同的；下面的 PR 示例显示了差异。
 
 ## 原则
 
 ### 耐用性高于精度
 
-该问题可能会处于“等待代理”状态数天或数周。与此同时，代码库也会发生变化。编写摘要，以便即使文件被重命名、移动或重构，它仍然有用。
+该问题可能会处于“ready-for-agent”状态数天或数周。与此同时，代码库也会发生变化。编写摘要，以便即使文件被重命名、移动或重构，它仍然有用。
 
 - **做**描述接口、类型和行为契约
-- **Do** 命名代理应查找或修改的特定类型、函数签名或配置形状
+- **Do** 命名agent 应查找或修改的特定类型、函数签名或配置形状
 - **不要**引用文件路径 - 它们会过时
 - **不要**参考行号
 - **不要**假设当前的实现结构将保持不变
 
 ### 行为上的，而不是程序上的
 
-描述系统应该做什么，而不是如何实现它。代理将重新探索代码库并做出自己的实施决策。
+描述系统应该做什么，而不是如何实现它。agent 将重新探索代码库并做出自己的实施决策。
 
 - **好：**“‘SkillConfig’类型应该接受‘CronExpression’类型的可选‘schedule’字段”
 - **不好：** “打开 src/types/skill.ts 并在第 42 行添加计划字段”
@@ -27,14 +27,14 @@
 
 ### 完整的验收标准
 
-代理需要知道什么时候完成。每个代理简介都必须有具体的、可测试的验收标准。每个标准都应该是可独立验证的。
+agent 需要知道什么时候完成。每个agent brief都必须有具体的、可测试的验收标准。每个标准都应该是可独立验证的。
 
-- **好：** “运行 `gh issues list --label need-triage` 返回已通过初始分类的问题”
-- **不好：**“分类应该正常工作”
+- **好：** “运行 `gh issues list --label need-triage` 返回已通过初始 triage 的 issue”
+- **不好：**“triage 应该正常工作”
 
 ### 显式范围边界
 
-说明哪些内容超出了范围。这可以防止代理镀金或对相邻特征做出假设。
+说明哪些内容超出了范围。这可以防止 agent 镀金或对相邻特征做出假设。
 
 ＃＃ 模板
 ```markdown
@@ -67,7 +67,7 @@ Be specific about edge cases and error conditions.
 ```
 ## 示例
 
-### 好代理简介（错误）
+### 好agent brief（错误）
 ```markdown
 ## Agent Brief
 
@@ -100,7 +100,7 @@ and append "..." to indicate truncation.
 - Changing the 1024 char limit itself
 - Multi-line description support
 ```
-### 好代理简介（增强）
+### 好agent brief（增强）
 ```markdown
 ## Agent Brief
 
@@ -139,9 +139,9 @@ checked for matches.
 - Reopening previously rejected features
 - Bug reports (only enhancement rejections go to `.out-of-scope/`)
 ```
-### 好经纪人简介（公关）
+### 好 agent brief（PR）
 
-对于 PR，“当前行为”描述了差异的状态，摘要要求代理完成或修复它，而不是从头开始构建。
+对于 PR，“当前行为”描述了差异的状态，摘要要求 agent 完成或修复它，而不是从头开始构建。
 ```markdown
 ## Agent Brief
 
@@ -174,7 +174,7 @@ is untouched when the flag is absent.
 - Adding `--json` to any other command
 - Changing the JSON shape of the success payload the PR already defined
 ```
-### 坏特工简介
+### 坏agent brief
 ```markdown
 ## Agent Brief
 
@@ -190,7 +190,7 @@ The function around line 150 has the issue.
 ```
 这很糟糕，因为：
 - 没有类别
-- 模糊的描述（“分类问题坏了”）
+- 模糊的描述（“triage 问题坏了”）
 - 引用文件路径和行号将过时
 - 无接受标准
 - 无范围界限

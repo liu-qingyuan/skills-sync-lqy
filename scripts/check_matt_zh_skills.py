@@ -26,6 +26,61 @@ POLLUTION_PATTERNS = [
     "upstream/mattpocock",
     "中文团队习惯",
 ]
+FORBIDDEN_ZH_TERMS = [
+    "烧烤",
+    "拷问",
+    "盘问",
+    "采访",
+    "特工",
+    "降价",
+    "回购",
+    "代币",
+    "深度模块",
+    "深化模块",
+    "设计树",
+    "工作流程",
+    "需求信息",
+    "准备代理",
+    "准备人员",
+    "国家角色",
+    "存储桶",
+    "更新的图片",
+    "/追问",
+    "/领域建模",
+    "/domain modeling",
+    "/griling",
+    "领领域",
+    "领domain",
+    "表面架构",
+    "简单的英语",
+    "人工智能导航",
+    "票证",
+    "门票",
+    "故障单",
+    "座席",
+    "令牌",
+    "经纪人",
+    "公关",
+]
+REQUIRED_CONTEXT_TERMS = [
+    "追问",
+    "追问会话",
+    "追问循环",
+    "Agent",
+    "Issue",
+    "Issue tracker",
+    "Ticket",
+    "Triage",
+    "Brief",
+    "工作流",
+    "深模块",
+    "模块加深",
+    "接缝",
+    "设计决策树",
+    "Markdown",
+    "仓库",
+    "Token",
+]
 ENGLISH_COMMANDS = [
     "/grilling",
     "/setup-matt-pocock-skills",
@@ -120,6 +175,17 @@ def check_localization_links(errors: list[str]) -> None:
             fail(errors, f"Matt zh skill dir must end with -zh: {rel(skill_dir)}")
 
 
+def check_context_glossary(errors: list[str]) -> None:
+    context = ROOT / "CONTEXT.md"
+    if not context.exists():
+        fail(errors, "missing root CONTEXT.md glossary for Matt zh terminology")
+        return
+    text = context.read_text()
+    for term in REQUIRED_CONTEXT_TERMS:
+        if f"**{term}**" not in text:
+            fail(errors, f"CONTEXT.md missing required glossary term: {term}")
+
+
 def check_zh_body_clean(errors: list[str]) -> None:
     for skill_md in sorted(SKILLS.glob("matt-zh-*/*-zh/SKILL.md")):
         text = skill_md.read_text()
@@ -131,6 +197,14 @@ def check_zh_body_clean(errors: list[str]) -> None:
         for command in ENGLISH_COMMANDS:
             if command in body and f"{command}-zh" not in body:
                 fail(errors, f"possible English command reference in {rel(skill_md)}: {command}")
+
+    for md in sorted(SKILLS.glob("matt-zh-*/*-zh/**/*.md")):
+        if md.name == "LOCALIZATION.md":
+            continue
+        text = md.read_text()
+        for term in FORBIDDEN_ZH_TERMS:
+            if term in text:
+                fail(errors, f"forbidden inconsistent term in {rel(md)}: {term}")
 
 
 def check_translation_shape(errors: list[str]) -> None:
@@ -166,6 +240,7 @@ def main() -> int:
     errors: list[str] = []
     check_installable_boundary(errors)
     check_marketplace(errors)
+    check_context_glossary(errors)
     check_localization_links(errors)
     check_zh_body_clean(errors)
     check_translation_shape(errors)
