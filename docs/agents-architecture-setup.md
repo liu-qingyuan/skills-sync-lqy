@@ -38,14 +38,10 @@ cp AGENTS.md /path/to/your/project/AGENTS.md
 安装命令：
 
 ```bash
-python ~/.codex/skills/.system/skill-installer/scripts/install-skill-from-github.py \
-  --repo liu-qingyuan/skills-sync-lqy \
-  --path skills/pea
-
-python ~/.codex/skills/.system/skill-installer/scripts/install-skill-from-github.py \
-  --repo liu-qingyuan/skills-sync-lqy \
-  --path skills/tea
+npx skills@latest add liu-qingyuan/skills-sync-lqy
 ```
+
+然后在安装器里选择 `pea` 和 `tea`。
 
 ## AGENTS.md 模板
 

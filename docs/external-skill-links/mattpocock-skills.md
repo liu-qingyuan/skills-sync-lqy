@@ -1,23 +1,17 @@
 # Matt Pocock skills 外部链接
 
-此文件只保存外部仓库链接，方便人类阅读后自行跳转安装。
+此文件只保存 Matt Pocock 上游链接，方便人类阅读和对照。本仓库已把 Matt Pocock skills 同步为可安装版本；同步记录见：
 
-## 重要约束
-
-- 除 README 明确列出的已选择镜像外，本仓库不镜像、不安装、不同步 `mattpocock/skills` 内的 skill 文件。当前已选择本地改版：`skills/handoff`。
-- 不要在本仓库 `skills/` 目录下创建其他 Matt Pocock skills 的副本、symlink、submodule 或占位目录。
-- Codex/AI Agent 读取本仓库时，必须把本页当作文档链接清单，而不是可安装 skill 清单。
-- 本页不提供未镜像 skills 的本仓库安装命令；若要使用其他 Matt Pocock skills，请先打开 upstream README，自行选择安装方式。
+```text
+docs/upstream-mirrors/mattpocock-skills.md
+```
 
 ## Upstream
 
 - Repository: https://github.com/mattpocock/skills
 - README: https://github.com/mattpocock/skills/blob/main/README.md
-- Source commit inspected: `aaf2453fbdfe7a15c07f11d861224f34ab4b53cb`
 - Skills directory: https://github.com/mattpocock/skills/tree/main/skills
 - skills.sh entry: https://skills.sh/mattpocock/skills
-
-除本地改版 `skills/handoff` 已作为本仓库可安装 skill 提供外，请从 upstream README 或 skills.sh 页面进入其他 skills 的安装流程；不要让本仓库代装其他 Matt Pocock skills。
 
 ## Skill 链接清单
 

@@ -36,8 +36,10 @@ Rules:
 - Do **not** include `--tasks` or `--task-promise`.
 - Do **not** create or require `.ralph/ralph-tasks.md`.
 - Prompt must say: `Do not use .ralph/ralph-tasks.md for this run.`
+- Keep mechanism explanation out of the generated prompt packet. Explain `--min-iterations`, `--max-iterations`, and repeated prompt-file execution in the user-facing plan/parameter guide, not inside the prompt sent to the execution agent.
+- Prompt Loop prompt packets must not ask the execution agent to know, count, summarize, or manage Ralph iteration numbers. Open Ralph owns repetition; each fresh agent only reads the current repo/files, improves the objective once, verifies, and reports the actual changes it made.
+- If the user asks for exactly N runs, set `--min-iterations N --max-iterations N` and state in the user-facing answer that this is a hard cap. Do not write "round 1 / round 2 / ..." themes or final-output requirements into the prompt packet.
 - Completion requires: minimum iterations reached, objective complete, no known unresolved errors, and fresh verification evidence.
-- If the user asks for exactly N runs, set `--min-iterations N --max-iterations N` and warn it is a hard cap.
 
 Default command shape:
 
@@ -154,12 +156,38 @@ Include only task-relevant detail:
 - Deliverables: code, docs, tests, artifacts.
 - Required verification commands/evidence.
 - State model:
-  - Prompt Loop: no task ledger; keep improving the same objective across rounds.
+  - Prompt Loop: no task ledger; each fresh process receives the same prompt file, rereads current repo/files, makes one useful improvement or verification pass, and reports actual changes. Do not make the prompt depend on knowing the iteration count.
   - Task Ledger: maintain `.ralph/ralph-tasks.md`; final promise only after all checkboxes and verification are complete.
   - Codex goal overlay: do not rely on old Codex thread state; write partial progress/failures to repo files.
 - Safety constraints: secrets, destructive operations, external production side effects.
 - Final promise: use a strict slug-specific marker like `<promise><SLUG_UPPER>_VERIFIED</promise>`, not generic `COMPLETE` except throwaway tests.
 - Post-run cleanup gate: after final verification, capture Ralph-owned changed files, run a bounded `$ai-slop-cleaner` pass only on that file list, then rerun verification. Do not run `$ai-slop-cleaner` inside this planning skill. Do not let cleanup modify unrelated dirty files.
+
+## Prompt Loop prompt hygiene
+
+Prompt Loop Mode uses the same prompt file for every fresh Open Ralph iteration. The prompt file is the execution-agent task contract, not a place to document how Open Ralph works.
+
+When generating Prompt Loop prompt packets:
+
+- Tell the agent what outcome to improve, what files are in scope, what constraints apply, and what verification to run.
+- Tell the agent to read current files/state first and make the next best local improvement.
+- Tell the agent not to use `.ralph/ralph-tasks.md`.
+- Do not tell the agent it is in round N, ask it to summarize N rounds, or give a numbered per-round plan.
+- Do not include user-facing explanations of `--min-iterations`, `--max-iterations`, prompt-file repetition, or Open Ralph outer-loop mechanics inside the prompt packet.
+- Put mechanism explanations in the generated answer's Mode, Primary command, and Parameter customization sections instead.
+
+Good Prompt Loop packet wording:
+
+```text
+Do not use .ralph/ralph-tasks.md for this run.
+Read the current docs/source state first. Identify the weakest unclear area within the objective, make one useful improvement, run the required verification, and report the files changed. Do not write execution logs or iteration counters into project docs.
+```
+
+Bad Prompt Loop packet wording:
+
+```text
+This is round 3 of 10. Summarize what happened in all 10 rounds. The outer Ralph loop will decide whether to stop after --min-iterations.
+```
 
 ## Task ledger guard
 
