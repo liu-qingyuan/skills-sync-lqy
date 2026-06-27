@@ -46,20 +46,21 @@ skills/
   misc/                 # Matt Pocock 上游：杂项
   in-progress/          # Matt Pocock 上游：实验中
   deprecated/           # Matt Pocock 上游：已废弃但保留同步
+  amis-ui/              # AMIS UI 相关：设计变量、Figma 还原等
   lqy-local/            # 我自己写/优化并长期使用的 skills
   lqy-curated/          # 我从外部素材整理/改造后维护的 skills
 ```
 
 `npx skills@latest` 的交互列表会按 `.claude-plugin/marketplace.json` 里的分组显示：
 
-- `Mattpocock Engineering`
-- `Mattpocock Productivity`
-- `Mattpocock Personal`
-- `Mattpocock Misc`
-- `Mattpocock In Progress`
-- `Mattpocock Deprecated`
-- `Lqy Local`
-- `Lqy Curated`
+- `Matt Pocock Core`：合并显示 Matt 上游的 Engineering + Productivity，方便日常安装选择。
+- `AMIS UI`：AMIS UI / Figma 相关。
+- `LQY Local`：我自己写/优化的本地 skills。
+- `LQY Curated`：我整理/改造后维护的通用 skills。
+- `Matt Pocock Personal`
+- `Matt Pocock Misc`
+- `Matt Pocock In Progress`
+- `Matt Pocock Deprecated`
 
 ## 重要区分
 
@@ -79,11 +80,14 @@ skills/
 - `ralph-omx-plan`：生成 Open Ralph via OMX 的 prompt packet、模式选择、命令和参数说明。
 - `handoff-out`：我的交接 prompt 输出版。
 
+### AMIS UI
+
+- `amis-variables`：AMIS V1.0 设计系统语义变量。
+- `figma-pixel-implementation`：结合 Figma 做像素级 UI 还原。
+
 ### Lqy Curated
 
-- `amis-variables`
 - `c4-architecture`
-- `figma-pixel-implementation`
 - `mermaid-visualizer`
 - `pact`
 - `playwright-ci`
@@ -102,7 +106,7 @@ docs/upstream-mirrors/mattpocock-skills.md
 
 同步原则：
 
-- Matt 上游原版放回 Matt 的两层目录，例如 `skills/engineering/tdd`、`skills/productivity/handoff`。
+- Matt 上游原版保留 Matt 的两层目录，例如 `skills/engineering/tdd`、`skills/productivity/handoff`。安装器里可以把 Engineering + Productivity 合并显示为 `Matt Pocock Core`，但不要改坏上游路径。
 - 保留上游行为；如因本地 Codex 校验需要删掉不兼容 frontmatter 字段，要记录在同步文档里。
 - 本地改版必须另起名字，放进 `lqy-local` 或 `lqy-curated`，不要污染上游同步路径。
 
@@ -137,10 +141,11 @@ docs/
 2. 不在 Quickstart 里新增复杂参数示例；让安装器交互选择。
 3. Matt Pocock 上游同步版保持两层路径，不要拍平成一层。
 4. 新增或移动 skill 后，必须同步更新 `.claude-plugin/marketplace.json`，否则交互列表分类会不对。
-5. 本地自写技能放 `skills/lqy-local/`。
-6. 外部整理/改造版放 `skills/lqy-curated/`。
-7. 只记录外部链接、不准备维护安装版的内容，放 `docs/external-skill-links/`，不要放进 `skills/`。
-8. 如果同步 Matt 上游，先 clone / fetch `https://github.com/mattpocock/skills.git`，对照它的 `skills/<category>/<name>` 结构更新。
+5. AMIS UI 相关技能放 `skills/amis-ui/`。
+6. 本地自写技能放 `skills/lqy-local/`。
+7. 外部整理/改造版放 `skills/lqy-curated/`。
+8. 只记录外部链接、不准备维护安装版的内容，放 `docs/external-skill-links/`，不要放进 `skills/`。
+9. 如果同步 Matt 上游，先 clone / fetch `https://github.com/mattpocock/skills.git`，对照它的 `skills/<category>/<name>` 结构更新；可以调整 `.claude-plugin/marketplace.json` 的显示分组，但不要随意改上游目录。
 
 AI 可以用下面命令做内部验证；这些不是用户日常安装命令：
 
