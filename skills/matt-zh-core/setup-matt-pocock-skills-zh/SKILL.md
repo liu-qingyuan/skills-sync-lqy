@@ -35,7 +35,7 @@ description: 为 Matt Pocock 工程 skills 配置当前仓库：issue tracker、
 
 **A 部分 — issue tracker。**
 
-> 解释器：“issue tracker”是此仓库的问题所在。诸如“to-issues”、“triage”、“to-prd”和“qa”之类的技能对其进行读取和写入 - 他们需要知道是否调用“gh issues create”、在“.scratch/”下写入一个 markdown 文件，或者遵循您描述的其他一些工作流。选择您实际跟踪此仓库工作的位置。
+> 说明：“issue tracker”是此仓库实际跟踪工作的地方。`to-issues`、`triage`、`to-prd` 和 `qa` 等 skill 会读取和写入它，所以它们需要知道应该调用 `gh issue create`、在 `.scratch/` 下写 Markdown 文件，还是遵循你描述的其他工作流。请选择你真实使用的工作跟踪位置。
 
 默认姿势：这些技能是为 GitHub 设计的。如果“git Remote”指向 GitHub，请提出该建议。如果 `git remote` 指向 GitLab（`gitlab.com` 或自托管主机），则建议使用 GitLab。否则（或者如果用户愿意），提供：
 
@@ -46,11 +46,13 @@ description: 为 Matt Pocock 工程 skills 配置当前仓库：issue tracker、
 
 如果且仅当用户选择 **GitHub** 或 **GitLab** 时，询问一个后续问题：
 
-> 解释者：开源仓库通常会收到作为拉取请求的功能请求，而不仅仅是问题 - PR 是带有附加代码的问题。如果您打开此功能，“/triage-zh”会将*外部* PR 拉入同一队列，并通过与问题相同的标签和状态来运行它们（协作者的正在进行的 PR 会被保留）。如果 PR 不是您的请求界面，请将其关闭。
+> 说明：开源仓库收到的功能请求不一定只来自 issue，也可能来自 PR。可以把 PR 理解为“带着代码一起提交的请求”。如果开启这个选项，`/triage-zh` 会把*外部* PR 拉入同一个队列，并用与 issue 相同的标签和状态处理它们（协作者正在推进的 PR 会保留原状）。如果你不把 PR 当作请求入口，请关闭它。
 
 - **PR 作为请求表面** — 是/否（默认值：否）。将答案记录在“docs/agents/issue-tracker.md”中。对于本地 Markdown 和其他跟踪器，请跳过这个问题 - 没有 PR。
 
-**B 部分 — triage 标签词汇。**> 解释器：当`/triage-zh` skill 处理传入问题时，它会通过状态机将其移动 - 需要评估、等待报告者、已准备好让 AFK agent 接手、准备好等待人工处理，否则无法修复。为此，它需要应用与*您实际配置*的字符串匹配的标签（或 issue tracker 中的等效标签）。如果您的仓库已使用不同的标签名称（例如“bug:triage”而不是“needs-triage”），请将它们映射到此处，以便技能应用正确的标签名称而不是创建重复项。
+**B 部分 — triage 标签词汇。**
+
+> 说明：当 `/triage-zh` skill 处理新进入的 issue 时，它会把 issue 推进到不同状态：需要评估、等待报告者补充信息、已准备好让 AFK agent 接手、需要人类处理，或者不会处理。为此，它需要应用与你*实际配置*一致的标签（或 issue tracker 中的等价状态）。如果你的仓库已经使用不同标签名（例如 `bug:triage` 而不是 `needs-triage`），请在这里建立映射，避免 skill 创建重复标签。
 
 五个典型 role：
 
@@ -64,7 +66,7 @@ description: 为 Matt Pocock 工程 skills 配置当前仓库：issue tracker、
 
 **C 部分 — 领域文档。**
 
-> 解释器：一些技能（“improve-codebase-architecture”、“diagnosing-bugs”、“tdd”）读取“CONTEXT.md”文件来学习项目的领域语言，以及“docs/adr/”来了解过去的架构决策。他们需要知道仓库是否具有一个全局上下文或多个全局上下文（例如具有单独的前端/后端上下文的单一仓库），以便他们在正确的位置查找。
+> 说明：一些 skill（`improve-codebase-architecture`、`diagnosing-bugs`、`tdd`）会读取 `CONTEXT.md` 来学习项目的领域语言，并读取 `docs/adr/` 来了解过去的架构决策。它们需要知道仓库是单一领域上下文，还是包含多个领域上下文（例如前端/后端各有上下文的 monorepo），这样才能去正确的位置查找。
 
 确认布局：
 
