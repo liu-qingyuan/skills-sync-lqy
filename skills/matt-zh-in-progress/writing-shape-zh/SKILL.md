@@ -3,16 +3,6 @@ name: writing-shape-zh
 description: 写作 exploit：把原始材料逐段塑造成一篇文章。
 ---
 
-# writing-shape-zh
-
-> 这是 Matt Pocock `writing-shape` skill 的中文本地化版本。官方英文上游保留在 `upstream/mattpocock/skills/in-progress/writing-shape`；本目录可按中文团队习惯继续调整。
-
-## 本地化说明
-
-- 优先用中文与用户沟通。
-- 保留上游流程、检查点和文件约定。
-- 如果本文件与上游英文版本冲突，以本中文版本为准；同步上游时先比较差异，再合并。
-
 <做什么>
 
 用户已传递（或将传递）原材料的 markdown 文件。将其视为输入堆——从整齐的片段列表到非结构化散文墙再到文字记录的任何内容。格式并不重要。在做任何其他事情之前，请从头到尾地阅读它。

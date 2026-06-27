@@ -4,16 +4,6 @@ description: 为模块生成多个差异很大的接口设计，并使用并行 
   it twice 时。
 ---
 
-# design-an-interface-zh
-
-> 这是 Matt Pocock `design-an-interface` skill 的中文本地化版本。官方英文上游保留在 `upstream/mattpocock/skills/deprecated/design-an-interface`；本目录可按中文团队习惯继续调整。
-
-## 本地化说明
-
-- 优先用中文与用户沟通。
-- 保留上游流程、检查点和文件约定。
-- 如果本文件与上游英文版本冲突，以本中文版本为准；同步上游时先比较差异，再合并。
-
 # 设计一个界面
 
 基于《软件设计哲学》中的“两次设计”：你的第一个想法不太可能是最好的。生成多个完全不同的设计，然后进行比较。

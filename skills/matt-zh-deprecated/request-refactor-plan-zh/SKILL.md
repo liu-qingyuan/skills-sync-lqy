@@ -3,16 +3,6 @@ name: request-refactor-plan-zh
 description: 通过用户访谈创建包含小提交步骤的详细重构计划，然后作为 GitHub issue 提交。用于用户想规划重构、创建重构 RFC 或拆分安全增量步骤时。
 ---
 
-# request-refactor-plan-zh
-
-> 这是 Matt Pocock `request-refactor-plan` skill 的中文本地化版本。官方英文上游保留在 `upstream/mattpocock/skills/deprecated/request-refactor-plan`；本目录可按中文团队习惯继续调整。
-
-## 本地化说明
-
-- 优先用中文与用户沟通。
-- 保留上游流程、检查点和文件约定。
-- 如果本文件与上游英文版本冲突，以本中文版本为准；同步上游时先比较差异，再合并。
-
 当用户想要创建重构请求时，将调用此技能。您应该执行以下步骤。如果您认为没有必要，可以跳过这些步骤。
 
 1. 向用户询问他们想要解决的问题的详细描述以及任何潜在的解决方案。

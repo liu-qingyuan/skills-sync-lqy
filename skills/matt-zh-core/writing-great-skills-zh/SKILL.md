@@ -3,16 +3,6 @@ name: writing-great-skills-zh
 description: 编写和编辑高质量 skills 的参考：让 skill 可预测的词汇和原则。
 ---
 
-# writing-great-skills-zh
-
-> 这是 Matt Pocock `writing-great-skills` skill 的中文本地化版本。官方英文上游保留在 `upstream/mattpocock/skills/productivity/writing-great-skills`；本目录可按中文团队习惯继续调整。
-
-## 本地化说明
-
-- 优先用中文与用户沟通。
-- 保留上游流程、检查点和文件约定。
-- 如果本文件与上游英文版本冲突，以本中文版本为准；同步上游时先比较差异，再合并。
-
 存在一种将决定论从随机系统中剔除出来的技能。 **可预测性** — 代理每次运行都采用相同的进程，而不产生相同的输出 — 是根本美德；下面的每个杠杆都为它服务。
 
 **粗体术语**在 [`GLOSSARY.md`](GLOSSARY.md) 中定义；在那里查找它们的完整含义。

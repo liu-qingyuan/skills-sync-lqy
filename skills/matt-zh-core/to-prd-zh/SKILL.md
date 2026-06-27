@@ -3,16 +3,6 @@ name: to-prd-zh
 description: 把当前对话上下文整理成 PRD 并发布到项目 issue tracker；不重新访谈，只综合已有上下文。
 ---
 
-# to-prd-zh
-
-> 这是 Matt Pocock `to-prd` skill 的中文本地化版本。官方英文上游保留在 `upstream/mattpocock/skills/engineering/to-prd`；本目录可按中文团队习惯继续调整。
-
-## 本地化说明
-
-- 优先用中文与用户沟通。
-- 保留上游流程、检查点和文件约定。
-- 如果本文件与上游英文版本冲突，以本中文版本为准；同步上游时先比较差异，再合并。
-
 该技能需要对当前对话上下文和代码库的理解并生成 PRD。不要采访用户——只是综合你已经知道的信息。
 
 问题跟踪器和分类标签词汇表应该已提供给您 - 如果没有，请运行“/setup-matt-pocock-skills-zh”。

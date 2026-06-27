@@ -3,16 +3,6 @@ name: improve-codebase-architecture-zh
 description: 扫描代码库中的 deepening 机会，生成可视化 HTML 报告，然后围绕用户选择的机会继续追问和推进。
 ---
 
-# improve-codebase-architecture-zh
-
-> 这是 Matt Pocock `improve-codebase-architecture` skill 的中文本地化版本。官方英文上游保留在 `upstream/mattpocock/skills/engineering/improve-codebase-architecture`；本目录可按中文团队习惯继续调整。
-
-## 本地化说明
-
-- 优先用中文与用户沟通。
-- 保留上游流程、检查点和文件约定。
-- 如果本文件与上游英文版本冲突，以本中文版本为准；同步上游时先比较差异，再合并。
-
 # 改进代码库架构
 
 表面架构摩擦并提出**深化机会** - 将浅层模块转变为深层模块的重构。目标是可测试性和人工智能导航性。

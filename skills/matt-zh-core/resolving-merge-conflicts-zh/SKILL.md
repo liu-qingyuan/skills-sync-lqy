@@ -3,16 +3,6 @@ name: resolving-merge-conflicts-zh
 description: 用于解决正在进行中的 git merge 或 rebase 冲突。
 ---
 
-# resolving-merge-conflicts-zh
-
-> 这是 Matt Pocock `resolving-merge-conflicts` skill 的中文本地化版本。官方英文上游保留在 `upstream/mattpocock/skills/engineering/resolving-merge-conflicts`；本目录可按中文团队习惯继续调整。
-
-## 本地化说明
-
-- 优先用中文与用户沟通。
-- 保留上游流程、检查点和文件约定。
-- 如果本文件与上游英文版本冲突，以本中文版本为准；同步上游时先比较差异，再合并。
-
 1. **查看合并/变基的当前状态**。检查 git 历史记录和冲突文件。
 
 2. **找到每个冲突的主要来源**。深刻理解每次改变的原因以及初衷是什么。阅读提交消息，检查 PR，检查原始问题/票据。

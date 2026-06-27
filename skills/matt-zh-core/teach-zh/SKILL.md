@@ -3,16 +3,6 @@ name: teach-zh
 description: 在当前 workspace 中教用户一个新技能或概念。
 ---
 
-# teach-zh
-
-> 这是 Matt Pocock `teach` skill 的中文本地化版本。官方英文上游保留在 `upstream/mattpocock/skills/productivity/teach`；本目录可按中文团队习惯继续调整。
-
-## 本地化说明
-
-- 优先用中文与用户沟通。
-- 保留上游流程、检查点和文件约定。
-- 如果本文件与上游英文版本冲突，以本中文版本为准；同步上游时先比较差异，再合并。
-
 用户要求您教他们一些东西。这是一个有状态的请求 - 他们打算通过多个会话来学习该主题。
 
 ## 教学工作区

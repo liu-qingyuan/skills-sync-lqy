@@ -3,16 +3,6 @@ name: writing-fragments-zh
 description: 写作 explore：挖掘原始 fragments，暂不强加结构。
 ---
 
-# writing-fragments-zh
-
-> 这是 Matt Pocock `writing-fragments` skill 的中文本地化版本。官方英文上游保留在 `upstream/mattpocock/skills/in-progress/writing-fragments`；本目录可按中文团队习惯继续调整。
-
-## 本地化说明
-
-- 优先用中文与用户沟通。
-- 保留上游流程、检查点和文件约定。
-- 如果本文件与上游英文版本冲突，以本中文版本为准；同步上游时先比较差异，再合并。
-
 <做什么>
 
 这是纯粹的**探索**：拓宽可写内容的空间，而无需提交结构——提交是_exploit_，是一项单独的技能工作。进行一个产生片段的拷问会议，不断地采访用户关于他们想写的任何内容。强加阶段、大纲或文章结构超出了此处的范围。

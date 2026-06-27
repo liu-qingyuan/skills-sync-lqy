@@ -4,16 +4,6 @@ description: 设置 Claude Code hooks，阻止危险 git 命令（push、reset -
   git 操作、添加 git 安全 hook 或阻止 git push/reset 时。
 ---
 
-# git-guardrails-claude-code-zh
-
-> 这是 Matt Pocock `git-guardrails-claude-code` skill 的中文本地化版本。官方英文上游保留在 `upstream/mattpocock/skills/misc/git-guardrails-claude-code`；本目录可按中文团队习惯继续调整。
-
-## 本地化说明
-
-- 优先用中文与用户沟通。
-- 保留上游流程、检查点和文件约定。
-- 如果本文件与上游英文版本冲突，以本中文版本为准；同步上游时先比较差异，再合并。
-
 # 设置 Git Guardrails
 
 设置一个 PreToolUse 挂钩，在 Claude 执行危险的 git 命令之前拦截并阻止它们。

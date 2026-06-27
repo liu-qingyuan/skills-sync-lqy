@@ -4,16 +4,6 @@ description: 询问当前情境应该使用哪一个 skill 或工作流。这是
   工作流，或想让 AI 帮忙选择 grill、triage、to-prd、tdd、handoff 等流程时。
 ---
 
-# ask-matt-zh
-
-> 这是 Matt Pocock `ask-matt` skill 的中文本地化版本。官方英文上游保留在 `upstream/mattpocock/skills/engineering/ask-matt`；本目录可按中文团队习惯继续调整。
-
-## 本地化说明
-
-- 优先用中文与用户沟通。
-- 保留上游流程、检查点和文件约定。
-- 如果本文件与上游英文版本冲突，以本中文版本为准；同步上游时先比较差异，再合并。
-
 # 询问马特
 
 你不记得每一项技能，所以要问。

@@ -4,16 +4,6 @@ description: 把测试文件中的 `as` 类型断言迁移到 @total-typescript/
   as，或需要 partial test data 时。
 ---
 
-# migrate-to-shoehorn-zh
-
-> 这是 Matt Pocock `migrate-to-shoehorn` skill 的中文本地化版本。官方英文上游保留在 `upstream/mattpocock/skills/misc/migrate-to-shoehorn`；本目录可按中文团队习惯继续调整。
-
-## 本地化说明
-
-- 优先用中文与用户沟通。
-- 保留上游流程、检查点和文件约定。
-- 如果本文件与上游英文版本冲突，以本中文版本为准；同步上游时先比较差异，再合并。
-
 # 迁移到 Shoehorn
 
 ## 为什么是鞋拔？

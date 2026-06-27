@@ -3,16 +3,6 @@ name: writing-beats-zh
 description: 写作 exploit：把原始材料组织成一段段 beat 的旅程，并在每个 beat 使用术语前先把术语落地。
 ---
 
-# writing-beats-zh
-
-> 这是 Matt Pocock `writing-beats` skill 的中文本地化版本。官方英文上游保留在 `upstream/mattpocock/skills/in-progress/writing-beats`；本目录可按中文团队习惯继续调整。
-
-## 本地化说明
-
-- 优先用中文与用户沟通。
-- 保留上游流程、检查点和文件约定。
-- 如果本文件与上游英文版本冲突，以本中文版本为准；同步上游时先比较差异，再合并。
-
 <做什么>
 
 用户已传递（或将传递）原材料的 markdown 文件。这就是**利用**：探索完成，堆被固定——承诺一条穿过它的路径，并挖掘堆来填充每个节拍。

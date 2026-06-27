@@ -3,16 +3,6 @@ name: decision-mapping-zh
 description: 把松散想法转成一组有顺序的调研 tickets，并逐个推进到结论。
 ---
 
-# decision-mapping-zh
-
-> 这是 Matt Pocock `decision-mapping` skill 的中文本地化版本。官方英文上游保留在 `upstream/mattpocock/skills/in-progress/decision-mapping`；本目录可按中文团队习惯继续调整。
-
-## 本地化说明
-
-- 优先用中文与用户沟通。
-- 保留上游流程、检查点和文件约定。
-- 如果本文件与上游英文版本冲突，以本中文版本为准；同步上游时先比较差异，再合并。
-
 当一个松散的想法需要多个座席会话才能转化为计划时，就会调用此技能。它在 Markdown 文件中创建一个有状态的决策图，并驱动用户通过一系列票证来解决开放问题 - 这可能需要原型设计、研究或讨论。
 
 ## 决策图

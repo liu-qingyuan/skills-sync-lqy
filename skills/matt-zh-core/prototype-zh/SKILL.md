@@ -3,16 +3,6 @@ name: prototype-zh
 description: 构建一次性原型来明确设计：可以是用于状态/业务逻辑问题的可运行终端 app，也可以是一组可切换的 UI 方案。
 ---
 
-# prototype-zh
-
-> 这是 Matt Pocock `prototype` skill 的中文本地化版本。官方英文上游保留在 `upstream/mattpocock/skills/engineering/prototype`；本目录可按中文团队习惯继续调整。
-
-## 本地化说明
-
-- 优先用中文与用户沟通。
-- 保留上游流程、检查点和文件约定。
-- 如果本文件与上游英文版本冲突，以本中文版本为准；同步上游时先比较差异，再合并。
-
 # 原型
 
 原型是**回答问题的一次性代码**。问题决定形状。

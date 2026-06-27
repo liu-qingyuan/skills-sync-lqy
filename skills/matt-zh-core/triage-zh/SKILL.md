@@ -3,16 +3,6 @@ name: triage-zh
 description: 通过 triage 角色状态机处理 issues 和外部 PR：分类、验证、必要时追问，并写出可交给 agent 的 brief。
 ---
 
-# triage-zh
-
-> 这是 Matt Pocock `triage` skill 的中文本地化版本。官方英文上游保留在 `upstream/mattpocock/skills/engineering/triage`；本目录可按中文团队习惯继续调整。
-
-## 本地化说明
-
-- 优先用中文与用户沟通。
-- 保留上游流程、检查点和文件约定。
-- 如果本文件与上游英文版本冲突，以本中文版本为准；同步上游时先比较差异，再合并。
-
 # 分类
 
 通过分类角色的小型状态机将问题转移到项目问题跟踪器上。
