@@ -5,7 +5,7 @@ description: 构建一次性原型来明确设计：可以是用于状态/业务
 
 # prototype-zh
 
-> 这是 Matt Pocock `prototype` skill 的中文本地化版本。官方英文上游保留在 `skills/engineering/prototype`；本目录可按中文团队习惯继续调整。
+> 这是 Matt Pocock `prototype` skill 的中文本地化版本。官方英文上游保留在 `upstream/mattpocock/skills/engineering/prototype`；本目录可按中文团队习惯继续调整。
 
 ## 本地化说明
 

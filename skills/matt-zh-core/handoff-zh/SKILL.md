@@ -5,7 +5,7 @@ description: 把当前对话压缩成交接文档，方便另一个 agent 继续
 
 # handoff-zh
 
-> 这是 Matt Pocock `handoff` skill 的中文本地化版本。官方英文上游保留在 `skills/productivity/handoff`；本目录可按中文团队习惯继续调整。
+> 这是 Matt Pocock `handoff` skill 的中文本地化版本。官方英文上游保留在 `upstream/mattpocock/skills/productivity/handoff`；本目录可按中文团队习惯继续调整。
 
 ## 本地化说明
 

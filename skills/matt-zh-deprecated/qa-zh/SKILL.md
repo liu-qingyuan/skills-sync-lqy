@@ -5,7 +5,7 @@ description: 交互式 QA 会话：用户用对话方式报告 bug 或问题，a
 
 # qa-zh
 
-> 这是 Matt Pocock `qa` skill 的中文本地化版本。官方英文上游保留在 `skills/deprecated/qa`；本目录可按中文团队习惯继续调整。
+> 这是 Matt Pocock `qa` skill 的中文本地化版本。官方英文上游保留在 `upstream/mattpocock/skills/deprecated/qa`；本目录可按中文团队习惯继续调整。
 
 ## 本地化说明
 

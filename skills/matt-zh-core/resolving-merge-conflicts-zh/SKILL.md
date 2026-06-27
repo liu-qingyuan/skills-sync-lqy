@@ -5,7 +5,7 @@ description: 用于解决正在进行中的 git merge 或 rebase 冲突。
 
 # resolving-merge-conflicts-zh
 
-> 这是 Matt Pocock `resolving-merge-conflicts` skill 的中文本地化版本。官方英文上游保留在 `skills/engineering/resolving-merge-conflicts`；本目录可按中文团队习惯继续调整。
+> 这是 Matt Pocock `resolving-merge-conflicts` skill 的中文本地化版本。官方英文上游保留在 `upstream/mattpocock/skills/engineering/resolving-merge-conflicts`；本目录可按中文团队习惯继续调整。
 
 ## 本地化说明
 

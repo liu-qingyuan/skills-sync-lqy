@@ -6,7 +6,7 @@ description: 把测试文件中的 `as` 类型断言迁移到 @total-typescript/
 
 # migrate-to-shoehorn-zh
 
-> 这是 Matt Pocock `migrate-to-shoehorn` skill 的中文本地化版本。官方英文上游保留在 `skills/misc/migrate-to-shoehorn`；本目录可按中文团队习惯继续调整。
+> 这是 Matt Pocock `migrate-to-shoehorn` skill 的中文本地化版本。官方英文上游保留在 `upstream/mattpocock/skills/misc/migrate-to-shoehorn`；本目录可按中文团队习惯继续调整。
 
 ## 本地化说明
 

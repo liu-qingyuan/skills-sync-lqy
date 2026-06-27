@@ -6,7 +6,7 @@ description: 为 Matt Pocock 工程 skills 配置当前仓库：issue tracker、
 
 # setup-matt-pocock-skills-zh
 
-> 这是 Matt Pocock `setup-matt-pocock-skills` skill 的中文本地化版本。官方英文上游保留在 `skills/engineering/setup-matt-pocock-skills`；本目录可按中文团队习惯继续调整。
+> 这是 Matt Pocock `setup-matt-pocock-skills` skill 的中文本地化版本。官方英文上游保留在 `upstream/mattpocock/skills/engineering/setup-matt-pocock-skills`；本目录可按中文团队习惯继续调整。
 
 ## 本地化说明
 

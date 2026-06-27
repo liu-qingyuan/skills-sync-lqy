@@ -5,7 +5,7 @@ description: 根据 PRD 或一组 issues 实现一项工作。
 
 # implement-zh
 
-> 这是 Matt Pocock `implement` skill 的中文本地化版本。官方英文上游保留在 `skills/engineering/implement`；本目录可按中文团队习惯继续调整。
+> 这是 Matt Pocock `implement` skill 的中文本地化版本。官方英文上游保留在 `upstream/mattpocock/skills/engineering/implement`；本目录可按中文团队习惯继续调整。
 
 ## 本地化说明
 

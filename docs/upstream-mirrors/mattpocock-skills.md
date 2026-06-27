@@ -3,62 +3,62 @@
 - Repository: https://github.com/mattpocock/skills
 - Source commit synced: `5d78bd0903420f97c791f834201e550c765699f8`
 - Mirrored skills: 35
-- Directory policy: keep Matt Pocock's two-level layout under `skills/<category>/<skill-name>`.
+- Directory policy: keep Matt Pocock's two-level layout under `upstream/mattpocock/skills/<category>/<skill-name>` so the English mirror is not displayed by `npx skills@latest add liu-qingyuan/skills-sync-lqy`.
 
 ## Mirrored skills
 
 ### Engineering
 
-- `ask-matt` ← `skills/engineering/ask-matt`
-- `codebase-design` ← `skills/engineering/codebase-design`
-- `diagnosing-bugs` ← `skills/engineering/diagnosing-bugs`
-- `domain-modeling` ← `skills/engineering/domain-modeling`
-- `grill-with-docs` ← `skills/engineering/grill-with-docs`
-- `implement` ← `skills/engineering/implement`
-- `improve-codebase-architecture` ← `skills/engineering/improve-codebase-architecture`
-- `prototype` ← `skills/engineering/prototype`
-- `resolving-merge-conflicts` ← `skills/engineering/resolving-merge-conflicts`
-- `setup-matt-pocock-skills` ← `skills/engineering/setup-matt-pocock-skills`
-- `tdd` ← `skills/engineering/tdd`
-- `to-issues` ← `skills/engineering/to-issues`
-- `to-prd` ← `skills/engineering/to-prd`
-- `triage` ← `skills/engineering/triage`
+- `ask-matt` ← `upstream/mattpocock/skills/engineering/ask-matt`
+- `codebase-design` ← `upstream/mattpocock/skills/engineering/codebase-design`
+- `diagnosing-bugs` ← `upstream/mattpocock/skills/engineering/diagnosing-bugs`
+- `domain-modeling` ← `upstream/mattpocock/skills/engineering/domain-modeling`
+- `grill-with-docs` ← `upstream/mattpocock/skills/engineering/grill-with-docs`
+- `implement` ← `upstream/mattpocock/skills/engineering/implement`
+- `improve-codebase-architecture` ← `upstream/mattpocock/skills/engineering/improve-codebase-architecture`
+- `prototype` ← `upstream/mattpocock/skills/engineering/prototype`
+- `resolving-merge-conflicts` ← `upstream/mattpocock/skills/engineering/resolving-merge-conflicts`
+- `setup-matt-pocock-skills` ← `upstream/mattpocock/skills/engineering/setup-matt-pocock-skills`
+- `tdd` ← `upstream/mattpocock/skills/engineering/tdd`
+- `to-issues` ← `upstream/mattpocock/skills/engineering/to-issues`
+- `to-prd` ← `upstream/mattpocock/skills/engineering/to-prd`
+- `triage` ← `upstream/mattpocock/skills/engineering/triage`
 
 ### Productivity
 
-- `grill-me` ← `skills/productivity/grill-me`
-- `grilling` ← `skills/productivity/grilling`
-- `handoff` ← `skills/productivity/handoff`
-- `teach` ← `skills/productivity/teach`
-- `writing-great-skills` ← `skills/productivity/writing-great-skills`
+- `grill-me` ← `upstream/mattpocock/skills/productivity/grill-me`
+- `grilling` ← `upstream/mattpocock/skills/productivity/grilling`
+- `handoff` ← `upstream/mattpocock/skills/productivity/handoff`
+- `teach` ← `upstream/mattpocock/skills/productivity/teach`
+- `writing-great-skills` ← `upstream/mattpocock/skills/productivity/writing-great-skills`
 
 ### Personal
 
-- `edit-article` ← `skills/personal/edit-article`
-- `obsidian-vault` ← `skills/personal/obsidian-vault`
+- `edit-article` ← `upstream/mattpocock/skills/personal/edit-article`
+- `obsidian-vault` ← `upstream/mattpocock/skills/personal/obsidian-vault`
 
 ### Misc
 
-- `git-guardrails-claude-code` ← `skills/misc/git-guardrails-claude-code`
-- `migrate-to-shoehorn` ← `skills/misc/migrate-to-shoehorn`
-- `scaffold-exercises` ← `skills/misc/scaffold-exercises`
-- `setup-pre-commit` ← `skills/misc/setup-pre-commit`
+- `git-guardrails-claude-code` ← `upstream/mattpocock/skills/misc/git-guardrails-claude-code`
+- `migrate-to-shoehorn` ← `upstream/mattpocock/skills/misc/migrate-to-shoehorn`
+- `scaffold-exercises` ← `upstream/mattpocock/skills/misc/scaffold-exercises`
+- `setup-pre-commit` ← `upstream/mattpocock/skills/misc/setup-pre-commit`
 
 ### In progress
 
-- `decision-mapping` ← `skills/in-progress/decision-mapping`
-- `loop-me` ← `skills/in-progress/loop-me`
-- `review` ← `skills/in-progress/review`
-- `writing-beats` ← `skills/in-progress/writing-beats`
-- `writing-fragments` ← `skills/in-progress/writing-fragments`
-- `writing-shape` ← `skills/in-progress/writing-shape`
+- `decision-mapping` ← `upstream/mattpocock/skills/in-progress/decision-mapping`
+- `loop-me` ← `upstream/mattpocock/skills/in-progress/loop-me`
+- `review` ← `upstream/mattpocock/skills/in-progress/review`
+- `writing-beats` ← `upstream/mattpocock/skills/in-progress/writing-beats`
+- `writing-fragments` ← `upstream/mattpocock/skills/in-progress/writing-fragments`
+- `writing-shape` ← `upstream/mattpocock/skills/in-progress/writing-shape`
 
 ### Deprecated
 
-- `design-an-interface` ← `skills/deprecated/design-an-interface`
-- `qa` ← `skills/deprecated/qa`
-- `request-refactor-plan` ← `skills/deprecated/request-refactor-plan`
-- `ubiquitous-language` ← `skills/deprecated/ubiquitous-language`
+- `design-an-interface` ← `upstream/mattpocock/skills/deprecated/design-an-interface`
+- `qa` ← `upstream/mattpocock/skills/deprecated/qa`
+- `request-refactor-plan` ← `upstream/mattpocock/skills/deprecated/request-refactor-plan`
+- `ubiquitous-language` ← `upstream/mattpocock/skills/deprecated/ubiquitous-language`
 
 ## Frontmatter compatibility
 
@@ -87,4 +87,4 @@ Some upstream frontmatter keys are omitted from local `SKILL.md` files because t
 
 ## Installer grouping
 
-`npx skills@latest` reads `.claude-plugin/marketplace.json` for display groups. Keep that file in sync whenever skills are added, moved, or removed.
+The English mirror is intentionally outside top-level `skills/`. `npx skills@latest` recursively discovers installable skills from `skills/`, so moving English upstream copies back under `skills/` will make them visible to users. Keep `.claude-plugin/marketplace.json` in sync for installable Chinese/local groups only.

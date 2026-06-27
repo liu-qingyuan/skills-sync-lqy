@@ -6,7 +6,7 @@ description: 询问当前情境应该使用哪一个 skill 或工作流。这是
 
 # ask-matt-zh
 
-> 这是 Matt Pocock `ask-matt` skill 的中文本地化版本。官方英文上游保留在 `skills/engineering/ask-matt`；本目录可按中文团队习惯继续调整。
+> 这是 Matt Pocock `ask-matt` skill 的中文本地化版本。官方英文上游保留在 `upstream/mattpocock/skills/engineering/ask-matt`；本目录可按中文团队习惯继续调整。
 
 ## 本地化说明
 

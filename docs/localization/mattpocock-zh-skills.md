@@ -2,7 +2,7 @@
 
 本仓库同时维护两套 Matt Pocock skills：
 
-1. **Official mirror**：英文官方上游镜像，保留 Matt Pocock 原仓库的目录结构，用于持续同步上游。
+1. **Official mirror**：英文官方上游镜像，保留 Matt Pocock 原仓库的目录结构，放在 `upstream/mattpocock/skills/`，只用于持续同步上游，不参与安装展示。
 2. **中文本地化版**：以 `-zh` 结尾的本地化 fork，可按中文团队习惯继续修改。
 
 ## 命名与目录

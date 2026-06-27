@@ -5,7 +5,7 @@ description: 把当前对话上下文整理成 PRD 并发布到项目 issue trac
 
 # to-prd-zh
 
-> 这是 Matt Pocock `to-prd` skill 的中文本地化版本。官方英文上游保留在 `skills/engineering/to-prd`；本目录可按中文团队习惯继续调整。
+> 这是 Matt Pocock `to-prd` skill 的中文本地化版本。官方英文上游保留在 `upstream/mattpocock/skills/engineering/to-prd`；本目录可按中文团队习惯继续调整。
 
 ## 本地化说明
 

@@ -5,7 +5,7 @@ description: 通过 triage 角色状态机处理 issues 和外部 PR：分类、
 
 # triage-zh
 
-> 这是 Matt Pocock `triage` skill 的中文本地化版本。官方英文上游保留在 `skills/engineering/triage`；本目录可按中文团队习惯继续调整。
+> 这是 Matt Pocock `triage` skill 的中文本地化版本。官方英文上游保留在 `upstream/mattpocock/skills/engineering/triage`；本目录可按中文团队习惯继续调整。
 
 ## 本地化说明
 

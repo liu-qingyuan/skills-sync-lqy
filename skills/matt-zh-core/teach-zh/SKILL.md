@@ -5,7 +5,7 @@ description: 在当前 workspace 中教用户一个新技能或概念。
 
 # teach-zh
 
-> 这是 Matt Pocock `teach` skill 的中文本地化版本。官方英文上游保留在 `skills/productivity/teach`；本目录可按中文团队习惯继续调整。
+> 这是 Matt Pocock `teach` skill 的中文本地化版本。官方英文上游保留在 `upstream/mattpocock/skills/productivity/teach`；本目录可按中文团队习惯继续调整。
 
 ## 本地化说明
 

@@ -5,7 +5,7 @@ description: 在当前 workspace 中追问我想构建的工作流规格。
 
 # loop-me-zh
 
-> 这是 Matt Pocock `loop-me` skill 的中文本地化版本。官方英文上游保留在 `skills/in-progress/loop-me`；本目录可按中文团队习惯继续调整。
+> 这是 Matt Pocock `loop-me` skill 的中文本地化版本。官方英文上游保留在 `upstream/mattpocock/skills/in-progress/loop-me`；本目录可按中文团队习惯继续调整。
 
 ## 本地化说明
 

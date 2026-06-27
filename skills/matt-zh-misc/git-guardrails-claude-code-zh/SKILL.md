@@ -6,7 +6,7 @@ description: 设置 Claude Code hooks，阻止危险 git 命令（push、reset -
 
 # git-guardrails-claude-code-zh
 
-> 这是 Matt Pocock `git-guardrails-claude-code` skill 的中文本地化版本。官方英文上游保留在 `skills/misc/git-guardrails-claude-code`；本目录可按中文团队习惯继续调整。
+> 这是 Matt Pocock `git-guardrails-claude-code` skill 的中文本地化版本。官方英文上游保留在 `upstream/mattpocock/skills/misc/git-guardrails-claude-code`；本目录可按中文团队习惯继续调整。
 
 ## 本地化说明
 

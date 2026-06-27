@@ -6,7 +6,7 @@ description: 为模块生成多个差异很大的接口设计，并使用并行 
 
 # design-an-interface-zh
 
-> 这是 Matt Pocock `design-an-interface` skill 的中文本地化版本。官方英文上游保留在 `skills/deprecated/design-an-interface`；本目录可按中文团队习惯继续调整。
+> 这是 Matt Pocock `design-an-interface` skill 的中文本地化版本。官方英文上游保留在 `upstream/mattpocock/skills/deprecated/design-an-interface`；本目录可按中文团队习惯继续调整。
 
 ## 本地化说明
 

@@ -5,7 +5,7 @@ description: 把计划、规格或 PRD 拆成可独立领取的 issue，使用 t
 
 # to-issues-zh
 
-> 这是 Matt Pocock `to-issues` skill 的中文本地化版本。官方英文上游保留在 `skills/engineering/to-issues`；本目录可按中文团队习惯继续调整。
+> 这是 Matt Pocock `to-issues` skill 的中文本地化版本。官方英文上游保留在 `upstream/mattpocock/skills/engineering/to-issues`；本目录可按中文团队习惯继续调整。
 
 ## 本地化说明
 
