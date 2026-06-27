@@ -95,3 +95,23 @@ _Avoid_: 存储库、回购
 **Token**:
 保留英文 `token`。
 _Avoid_: 代币
+
+**Context map**:
+统一写作 `CONTEXT-MAP.md` 或 context map，表示多上下文仓库中列出各上下文位置和关系的索引文件。
+_Avoid_: 地图、每个人居住的地方
+
+**按需创建**:
+`create lazily / lazily create` 的统一译法，表示只有出现真实写入需求时才创建文件或目录。
+_Avoid_: 懒惰地创建
+
+**调用 skill**:
+`invoke / fire a skill` 的统一译法，表示触发并运行某个 skill。
+_Avoid_: 解雇、发射
+
+**合理性检查**:
+`sanity check` 的统一译法，表示快速确认某个判断没有明显问题。
+_Avoid_: 健全性检查
+
+**语义本地化**:
+先理解英文上游在具体 skill 场景中的意图，再用自然中文表达的翻译方式。
+_Avoid_: 逐词机翻、逐字硬翻

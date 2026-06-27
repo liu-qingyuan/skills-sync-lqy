@@ -1,15 +1,16 @@
 # CONTEXT.md 格式
 
 ## 结构
+
 ```md
 # {Context Name}
 
-{One or two sentence description of what this context is and why it exists.}
+{用一到两句话说明这个上下文是什么，以及它为什么存在。}
 
 ## Language
 
 **Order**:
-{A one or two sentence description of the term}
+{用一到两句话定义这个术语。}
 _Avoid_: Purchase, transaction
 
 **Invoice**:
@@ -20,18 +21,20 @@ _Avoid_: Bill, payment request
 A person or organization that places orders.
 _Avoid_: Client, buyer, account
 ```
+
 ## 规则
 
-- **固执己见。** 当同一概念存在多个单词时，选择最好的一个并将其他单词列在“_避免_”下。
-- **保持定义严格。** 最多一到两句话。定义它是什么，而不是它做什么。
-- **仅包含特定于该项目上下文的术语。** 即使项目广泛使用一般编程概念（超时、错误类型、实用程序模式），它们也不属于其中。在添加术语之前，先问一下：这是该上下文特有的概念，还是通用的编程概念？只有前者属于。
-- **当自然集群出现时，将术语分组在副标题**下。如果所有术语都属于一个单一的内聚区域，那么平面列表就可以了。
+- **明确取舍。** 如果同一概念有多个叫法，选定一个最合适的名称，并把其他叫法列到 `_Avoid_` 下。
+- **定义要紧凑。** 最多一到两句话。定义它“是什么”，不要描述它“做什么”。
+- **只记录这个项目上下文特有的术语。** 通用编程概念（timeout、error type、utility pattern 等）即使在项目里大量出现，也不应放进这里。添加术语前先判断：这是本上下文独有的领域概念，还是通用编程概念？只有前者应该进入 `CONTEXT.md`。
+- **自然成组时再分组。** 如果术语自然形成几个主题，可以用小标题分组；如果都属于同一个连贯领域，平铺列表即可。
 
 ## 单上下文仓库与多上下文仓库
 
-**单一上下文（大多数仓库）：** 仓库根目录下有一个 `CONTEXT.md`。
+**单上下文（大多数仓库）：** 仓库根目录有一个 `CONTEXT.md`。
 
-**多个上下文：** 仓库根目录中的 `CONTEXT-MAP.md` 列出了上下文、它们所在的位置以及它们彼此之间的关系：
+**多上下文：** 仓库根目录有一个 `CONTEXT-MAP.md`，列出各个上下文、它们的位置，以及它们之间的关系：
+
 ```md
 # Context Map
 
@@ -47,10 +50,11 @@ _Avoid_: Client, buyer, account
 - **Fulfillment → Billing**: Fulfillment emits `ShipmentDispatched` events; Billing consumes them to generate invoices
 - **Ordering ↔ Billing**: Shared types for `CustomerId` and `Money`
 ```
-该技能推断出应用哪种结构：
 
-- 如果 `CONTEXT-MAP.md` 存在，则读取它以查找上下文
-- 如果仅存在根`CONTEXT.md`，则单个上下文
-- 如果两者都不存在，则在第一个术语解析时懒惰地创建根“CONTEXT.md”
+skill 根据现有文件判断适用哪种结构：
 
-当存在多个上下文时，推断当前主题与哪一个相关。如果不清楚，请询问。
+- 如果存在 `CONTEXT-MAP.md`，读取它来找到各个上下文。
+- 如果只存在根目录 `CONTEXT.md`，按单上下文处理。
+- 如果两者都不存在，就在第一个术语被明确时按需创建根目录 `CONTEXT.md`。
+
+当存在多个上下文时，先推断当前主题属于哪一个上下文；如果无法判断，再询问用户。

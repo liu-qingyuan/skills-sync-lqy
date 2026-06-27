@@ -24,7 +24,7 @@ description: 为模块生成多个差异很大的接口设计，并使用并行 
 
 ### 2. 生成设计（并行sub-agent）
 
-使用任务工具同时生成 3 个以上sub-agent。每个人都必须产生一种**完全不同的**方法。
+使用任务工具并行生成 3 个以上 sub-agent。每个 sub-agent 都必须产出一种**完全不同的**方案。
 ```
 Prompt template for each sub-agent:
 

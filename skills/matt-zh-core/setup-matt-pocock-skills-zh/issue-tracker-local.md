@@ -7,7 +7,7 @@
 - 每个目录一个功能：`.scratch/<feature-slug>/`
 - PRD 是 `.scratch/<feature-slug>/PRD.md`
 - 实现问题是`.scratch/<feature-slug>/issues/<NN>-<slug>.md`，从`01`开始编号
-- triage 状态记录为每个问题文件顶部附近的“状态：”行（有关 role 字符串，请参阅 `triage-labels.md`）
+- triage 状态记录为每个 issue 文件顶部附近的“状态：”行（有关 role 字符串，请参阅 `triage-labels.md`）
 - 评论和对话历史记录附加到文件底部的“## Comments”标题下
 
 ## 当技能说“发布到 issue tracker”时

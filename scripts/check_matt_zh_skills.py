@@ -61,6 +61,21 @@ FORBIDDEN_ZH_TERMS = [
     "令牌",
     "经纪人",
     "公关",
+    "每个人居住",
+    "深层模块",
+    "受过训练",
+    "代理简介",
+    "问题文件",
+    "美人鱼",
+    "代理人",
+    "客服人员",
+    "健全性检查",
+    "固执己见",
+    "发射它",
+    "解雇",
+    "懒惰地",
+    "有人居住",
+    "每个人",
 ]
 REQUIRED_CONTEXT_TERMS = [
     "追问",
@@ -80,6 +95,8 @@ REQUIRED_CONTEXT_TERMS = [
     "Markdown",
     "仓库",
     "Token",
+    "Context map",
+    "按需创建",
 ]
 ENGLISH_COMMANDS = [
     "/grilling",

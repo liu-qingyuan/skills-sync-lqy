@@ -8,7 +8,7 @@
 - **`CONTEXT-MAP.md`** 位于仓库根目录（如果存在） — 它指向每个上下文一个 `CONTEXT.md`。阅读与主题相关的每一篇。
 - **`docs/adr/`** — 阅读涉及您将要工作的区域的 ADR。在多上下文仓库中，还请检查 `src/<context>/docs/adr/` 以了解上下文范围内的决策。
 
-如果这些文件中的任何一个不存在，**默默地继续**。不要标记他们的缺席；不建议预先创建它们。当条款或决策实际得到解决时，“/domain-modeling-zh”技能（通过“/grill-with-docs-zh”和“/improve-codebase-architecture-zh”实现）会懒惰地创建它们。
+如果这些文件不存在，**安静地继续**。不要把缺失当作问题；也不要建议预先创建它们。当术语或决策真正明确时，`/domain-modeling-zh` skill（通常通过 `/grill-with-docs-zh` 和 `/improve-codebase-architecture-zh` 触发）会按需创建这些文件。
 
 ## 文件结构
 

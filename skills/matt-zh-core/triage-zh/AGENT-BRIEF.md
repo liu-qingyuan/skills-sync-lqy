@@ -18,7 +18,7 @@ agent brief是在 GitHub issue 或 PR 转到“ready-for-agent”时发布的结
 
 ### 行为上的，而不是程序上的
 
-描述系统应该做什么，而不是如何实现它。agent 将重新探索代码库并做出自己的实施决策。
+描述系统应该做什么，而不是如何实现它。agent 将重新探索代码库并做出自己的实现决策。
 
 - **好：**“‘SkillConfig’类型应该接受‘CronExpression’类型的可选‘schedule’字段”
 - **不好：** “打开 src/types/skill.ts 并在第 42 行添加计划字段”

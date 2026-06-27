@@ -38,7 +38,7 @@ issue tracker应该已提供给您 - 如果缺少“docs/agents/issue-tracker.md
 
 ### 4. 并行生成两个sub-agent
 
-通过两次“代理”工具调用发送一条消息。两者都使用“通用”sub-agent。
+通过两次 Agent 工具调用发送同一条消息。两个调用都使用通用 sub-agent。
 
 **标准sub-agent提示** — 包括：
 
