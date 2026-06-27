@@ -32,8 +32,8 @@ cp AGENTS.md /path/to/your/project/AGENTS.md
 
 建议同时安装或同步：
 
-- `skills/pea/SKILL.md`：项目工程架构约束
-- `skills/tea/SKILL.md`：测试工程架构约束
+- `skills/lqy-local/pea/SKILL.md`：项目工程架构约束
+- `skills/lqy-local/tea/SKILL.md`：测试工程架构约束
 
 安装命令：
 

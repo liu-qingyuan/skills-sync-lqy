@@ -3,13 +3,12 @@
 - Repository: https://github.com/mattpocock/skills
 - Source commit synced: `5d78bd0903420f97c791f834201e550c765699f8`
 - Mirrored skills: 35
+- Directory policy: keep Matt Pocock's two-level layout under `skills/<category>/<skill-name>`.
 
 ## Mirrored skills
 
-- `design-an-interface` ← `skills/deprecated/design-an-interface`
-- `qa` ← `skills/deprecated/qa`
-- `request-refactor-plan` ← `skills/deprecated/request-refactor-plan`
-- `ubiquitous-language` ← `skills/deprecated/ubiquitous-language`
+### Engineering
+
 - `ask-matt` ← `skills/engineering/ask-matt`
 - `codebase-design` ← `skills/engineering/codebase-design`
 - `diagnosing-bugs` ← `skills/engineering/diagnosing-bugs`
@@ -24,23 +23,42 @@
 - `to-issues` ← `skills/engineering/to-issues`
 - `to-prd` ← `skills/engineering/to-prd`
 - `triage` ← `skills/engineering/triage`
+
+### Productivity
+
+- `grill-me` ← `skills/productivity/grill-me`
+- `grilling` ← `skills/productivity/grilling`
+- `handoff` ← `skills/productivity/handoff`
+- `teach` ← `skills/productivity/teach`
+- `writing-great-skills` ← `skills/productivity/writing-great-skills`
+
+### Personal
+
+- `edit-article` ← `skills/personal/edit-article`
+- `obsidian-vault` ← `skills/personal/obsidian-vault`
+
+### Misc
+
+- `git-guardrails-claude-code` ← `skills/misc/git-guardrails-claude-code`
+- `migrate-to-shoehorn` ← `skills/misc/migrate-to-shoehorn`
+- `scaffold-exercises` ← `skills/misc/scaffold-exercises`
+- `setup-pre-commit` ← `skills/misc/setup-pre-commit`
+
+### In progress
+
 - `decision-mapping` ← `skills/in-progress/decision-mapping`
 - `loop-me` ← `skills/in-progress/loop-me`
 - `review` ← `skills/in-progress/review`
 - `writing-beats` ← `skills/in-progress/writing-beats`
 - `writing-fragments` ← `skills/in-progress/writing-fragments`
 - `writing-shape` ← `skills/in-progress/writing-shape`
-- `git-guardrails-claude-code` ← `skills/misc/git-guardrails-claude-code`
-- `migrate-to-shoehorn` ← `skills/misc/migrate-to-shoehorn`
-- `scaffold-exercises` ← `skills/misc/scaffold-exercises`
-- `setup-pre-commit` ← `skills/misc/setup-pre-commit`
-- `edit-article` ← `skills/personal/edit-article`
-- `obsidian-vault` ← `skills/personal/obsidian-vault`
-- `grill-me` ← `skills/productivity/grill-me`
-- `grilling` ← `skills/productivity/grilling`
-- `handoff` ← `skills/productivity/handoff`
-- `teach` ← `skills/productivity/teach`
-- `writing-great-skills` ← `skills/productivity/writing-great-skills`
+
+### Deprecated
+
+- `design-an-interface` ← `skills/deprecated/design-an-interface`
+- `qa` ← `skills/deprecated/qa`
+- `request-refactor-plan` ← `skills/deprecated/request-refactor-plan`
+- `ubiquitous-language` ← `skills/deprecated/ubiquitous-language`
 
 ## Frontmatter compatibility
 
@@ -66,3 +84,7 @@ Some upstream frontmatter keys are omitted from local `SKILL.md` files because t
 - `writing-fragments`: omitted `disable-model-invocation`
 - `writing-great-skills`: omitted `disable-model-invocation`
 - `writing-shape`: omitted `disable-model-invocation`
+
+## Installer grouping
+
+`npx skills@latest` reads `.claude-plugin/marketplace.json` for display groups. Keep that file in sync whenever skills are added, moved, or removed.

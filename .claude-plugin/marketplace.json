@@ -1,0 +1,104 @@
+{
+  "metadata": {
+    "pluginRoot": "./"
+  },
+  "plugins": [
+    {
+      "name": "mattpocock-engineering",
+      "source": "./",
+      "skills": [
+        "./skills/engineering/ask-matt",
+        "./skills/engineering/codebase-design",
+        "./skills/engineering/diagnosing-bugs",
+        "./skills/engineering/domain-modeling",
+        "./skills/engineering/grill-with-docs",
+        "./skills/engineering/implement",
+        "./skills/engineering/improve-codebase-architecture",
+        "./skills/engineering/prototype",
+        "./skills/engineering/resolving-merge-conflicts",
+        "./skills/engineering/setup-matt-pocock-skills",
+        "./skills/engineering/tdd",
+        "./skills/engineering/to-issues",
+        "./skills/engineering/to-prd",
+        "./skills/engineering/triage"
+      ]
+    },
+    {
+      "name": "mattpocock-productivity",
+      "source": "./",
+      "skills": [
+        "./skills/productivity/grill-me",
+        "./skills/productivity/grilling",
+        "./skills/productivity/handoff",
+        "./skills/productivity/teach",
+        "./skills/productivity/writing-great-skills"
+      ]
+    },
+    {
+      "name": "mattpocock-personal",
+      "source": "./",
+      "skills": [
+        "./skills/personal/edit-article",
+        "./skills/personal/obsidian-vault"
+      ]
+    },
+    {
+      "name": "mattpocock-misc",
+      "source": "./",
+      "skills": [
+        "./skills/misc/git-guardrails-claude-code",
+        "./skills/misc/migrate-to-shoehorn",
+        "./skills/misc/scaffold-exercises",
+        "./skills/misc/setup-pre-commit"
+      ]
+    },
+    {
+      "name": "mattpocock-in-progress",
+      "source": "./",
+      "skills": [
+        "./skills/in-progress/decision-mapping",
+        "./skills/in-progress/loop-me",
+        "./skills/in-progress/review",
+        "./skills/in-progress/writing-beats",
+        "./skills/in-progress/writing-fragments",
+        "./skills/in-progress/writing-shape"
+      ]
+    },
+    {
+      "name": "mattpocock-deprecated",
+      "source": "./",
+      "skills": [
+        "./skills/deprecated/design-an-interface",
+        "./skills/deprecated/qa",
+        "./skills/deprecated/request-refactor-plan",
+        "./skills/deprecated/ubiquitous-language"
+      ]
+    },
+    {
+      "name": "lqy-local",
+      "source": "./",
+      "skills": [
+        "./skills/lqy-local/simple",
+        "./skills/lqy-local/pea",
+        "./skills/lqy-local/tea",
+        "./skills/lqy-local/gitnexus",
+        "./skills/lqy-local/ralph-omx-plan",
+        "./skills/lqy-local/handoff-out"
+      ]
+    },
+    {
+      "name": "lqy-curated",
+      "source": "./",
+      "skills": [
+        "./skills/lqy-curated/amis-variables",
+        "./skills/lqy-curated/c4-architecture",
+        "./skills/lqy-curated/figma-pixel-implementation",
+        "./skills/lqy-curated/mermaid-visualizer",
+        "./skills/lqy-curated/pact",
+        "./skills/lqy-curated/playwright-ci",
+        "./skills/lqy-curated/playwright-cli",
+        "./skills/lqy-curated/playwright-core"
+      ]
+    }
+  ]
+}
