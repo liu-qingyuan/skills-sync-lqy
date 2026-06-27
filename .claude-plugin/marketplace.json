@@ -4,7 +4,72 @@
   },
   "plugins": [
     {
-      "name": "Matt Pocock Core",
+      "name": "Matt Pocock 中文 Core",
+      "source": "./",
+      "skills": [
+        "./skills/matt-zh-core/ask-matt-zh",
+        "./skills/matt-zh-core/codebase-design-zh",
+        "./skills/matt-zh-core/diagnosing-bugs-zh",
+        "./skills/matt-zh-core/domain-modeling-zh",
+        "./skills/matt-zh-core/grill-me-zh",
+        "./skills/matt-zh-core/grill-with-docs-zh",
+        "./skills/matt-zh-core/grilling-zh",
+        "./skills/matt-zh-core/handoff-zh",
+        "./skills/matt-zh-core/implement-zh",
+        "./skills/matt-zh-core/improve-codebase-architecture-zh",
+        "./skills/matt-zh-core/prototype-zh",
+        "./skills/matt-zh-core/resolving-merge-conflicts-zh",
+        "./skills/matt-zh-core/setup-matt-pocock-skills-zh",
+        "./skills/matt-zh-core/tdd-zh",
+        "./skills/matt-zh-core/teach-zh",
+        "./skills/matt-zh-core/to-issues-zh",
+        "./skills/matt-zh-core/to-prd-zh",
+        "./skills/matt-zh-core/triage-zh",
+        "./skills/matt-zh-core/writing-great-skills-zh"
+      ]
+    },
+    {
+      "name": "Matt Pocock 中文 Personal",
+      "source": "./",
+      "skills": [
+        "./skills/matt-zh-personal/edit-article-zh",
+        "./skills/matt-zh-personal/obsidian-vault-zh"
+      ]
+    },
+    {
+      "name": "Matt Pocock 中文 Misc",
+      "source": "./",
+      "skills": [
+        "./skills/matt-zh-misc/git-guardrails-claude-code-zh",
+        "./skills/matt-zh-misc/migrate-to-shoehorn-zh",
+        "./skills/matt-zh-misc/scaffold-exercises-zh",
+        "./skills/matt-zh-misc/setup-pre-commit-zh"
+      ]
+    },
+    {
+      "name": "Matt Pocock 中文 In Progress",
+      "source": "./",
+      "skills": [
+        "./skills/matt-zh-in-progress/decision-mapping-zh",
+        "./skills/matt-zh-in-progress/loop-me-zh",
+        "./skills/matt-zh-in-progress/review-zh",
+        "./skills/matt-zh-in-progress/writing-beats-zh",
+        "./skills/matt-zh-in-progress/writing-fragments-zh",
+        "./skills/matt-zh-in-progress/writing-shape-zh"
+      ]
+    },
+    {
+      "name": "Matt Pocock 中文 Deprecated",
+      "source": "./",
+      "skills": [
+        "./skills/matt-zh-deprecated/design-an-interface-zh",
+        "./skills/matt-zh-deprecated/qa-zh",
+        "./skills/matt-zh-deprecated/request-refactor-plan-zh",
+        "./skills/matt-zh-deprecated/ubiquitous-language-zh"
+      ]
+    },
+    {
+      "name": "Matt Pocock Official Core",
       "source": "./",
       "skills": [
         "./skills/engineering/ask-matt",
@@ -61,7 +126,7 @@
       ]
     },
     {
-      "name": "Matt Pocock Personal",
+      "name": "Matt Pocock Official Personal",
       "source": "./",
       "skills": [
         "./skills/personal/edit-article",
@@ -69,7 +134,7 @@
       ]
     },
     {
-      "name": "Matt Pocock Misc",
+      "name": "Matt Pocock Official Misc",
       "source": "./",
       "skills": [
         "./skills/misc/git-guardrails-claude-code",
@@ -79,7 +144,7 @@
       ]
     },
     {
-      "name": "Matt Pocock In Progress",
+      "name": "Matt Pocock Official In Progress",
       "source": "./",
       "skills": [
         "./skills/in-progress/decision-mapping",
@@ -91,7 +156,7 @@
       ]
     },
     {
-      "name": "Matt Pocock Deprecated",
+      "name": "Matt Pocock Official Deprecated",
       "source": "./",
       "skills": [
         "./skills/deprecated/design-an-interface",

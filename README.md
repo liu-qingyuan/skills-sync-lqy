@@ -2,9 +2,10 @@
 
 我的 Codex Skills 仓库。目标是：
 
-1. 同步 Matt Pocock 上游原版 skills，目录结构尽量跟上游一致。
-2. 保留我自己的本地 skills，并用独立分类跟上游区分。
-3. 通过一个简洁命令交互安装：
+1. 同步 Matt Pocock 上游英文原版 skills，目录结构尽量跟上游一致。
+2. 维护一套 `-zh` 中文本地化版，作为可自由修改的本地 fork。
+3. 保留我自己的本地 skills，并用独立分类跟上游区分。
+4. 通过一个简洁命令交互安装：
 
 ```bash
 npx skills@latest add liu-qingyuan/skills-sync-lqy
@@ -22,13 +23,19 @@ npx skills@latest add liu-qingyuan/skills-sync-lqy
 
 然后在交互界面里选择你要的 skills。
 
-如果你选择 Matt Pocock 工作流相关 skills，建议同时选择并先运行：
+如果你选择 Matt Pocock 官方或中文工作流相关 skills，建议同时选择并先运行对应 setup skill。英文版是：
 
 ```text
 /setup-matt-pocock-skills
 ```
 
-它会让 AI 询问当前项目的 issue tracker、triage labels、文档保存位置等，让 Matt 那套 `to-issues`、`to-prd`、`triage`、`tdd`、`diagnosing-bugs` 等技能知道项目约定。
+中文版是：
+
+```text
+/setup-matt-pocock-skills-zh
+```
+
+它会让 AI 询问当前项目的 issue tracker、triage labels、文档保存位置等，让 Matt 那套 `to-issues` / `to-issues-zh`、`to-prd` / `to-prd-zh`、`triage` / `triage-zh`、`tdd` / `tdd-zh`、`diagnosing-bugs` / `diagnosing-bugs-zh` 等技能知道项目约定。
 
 如果只安装我的本地 skills，例如 `simple`、`pea`、`tea`、`gitnexus`、`handoff-out`，通常安装后即可使用。
 
@@ -40,12 +47,17 @@ npx skills@latest add liu-qingyuan/skills-sync-lqy
 
 ```text
 skills/
-  engineering/          # Matt Pocock 上游：工程类
-  productivity/         # Matt Pocock 上游：生产力类
-  personal/             # Matt Pocock 上游：个人工作流
-  misc/                 # Matt Pocock 上游：杂项
-  in-progress/          # Matt Pocock 上游：实验中
-  deprecated/           # Matt Pocock 上游：已废弃但保留同步
+  engineering/          # Matt Pocock 官方英文上游：工程类
+  productivity/         # Matt Pocock 官方英文上游：生产力类
+  personal/             # Matt Pocock 官方英文上游：个人工作流
+  misc/                 # Matt Pocock 官方英文上游：杂项
+  in-progress/          # Matt Pocock 官方英文上游：实验中
+  deprecated/           # Matt Pocock 官方英文上游：已废弃但保留同步
+  matt-zh-core/         # Matt Pocock 中文版：engineering + productivity
+  matt-zh-personal/     # Matt Pocock 中文版：personal
+  matt-zh-misc/         # Matt Pocock 中文版：misc
+  matt-zh-in-progress/  # Matt Pocock 中文版：in-progress
+  matt-zh-deprecated/   # Matt Pocock 中文版：deprecated
   amis-ui/              # AMIS UI 相关：设计变量、Figma 还原等
   lqy-local/            # 我自己写/优化并长期使用的 skills
   lqy-curated/          # 我从外部素材整理/改造后维护的 skills
@@ -53,14 +65,13 @@ skills/
 
 `npx skills@latest` 的交互列表会按 `.claude-plugin/marketplace.json` 里的分组显示：
 
-- `Matt Pocock Core`：合并显示 Matt 上游的 Engineering + Productivity，方便日常安装选择。
+- `Matt Pocock 中文 Core`：中文本地化主力版，合并 Engineering + Productivity。
+- `Matt Pocock Official Core`：英文官方上游镜像，合并 Engineering + Productivity。
 - `AMIS UI`：AMIS UI / Figma 相关。
 - `LQY Local`：我自己写/优化的本地 skills。
 - `LQY Curated`：我整理/改造后维护的通用 skills。
-- `Matt Pocock Personal`
-- `Matt Pocock Misc`
-- `Matt Pocock In Progress`
-- `Matt Pocock Deprecated`
+- `Matt Pocock 中文 Personal / Misc / In Progress / Deprecated`
+- `Matt Pocock Official Personal / Misc / In Progress / Deprecated`
 
 ## 重要区分
 
@@ -94,6 +105,23 @@ skills/
 - `playwright-cli`
 - `playwright-core`
 
+## Matt Pocock 中文版
+
+中文版是官方英文上游的本地化 fork，统一使用 `-zh` 后缀，例如：
+
+- `tdd` → `tdd-zh`
+- `triage` → `triage-zh`
+- `handoff` → `handoff-zh`
+- `setup-matt-pocock-skills` → `setup-matt-pocock-skills-zh`
+
+详细维护规则见：
+
+```text
+docs/localization/mattpocock-zh-skills.md
+```
+
+原则：官方英文版只负责同步上游；中文 `*-zh` 版本可以按我的习惯继续本地化和改造。
+
 ## Matt Pocock 上游同步
 
 上游仓库：<https://github.com/mattpocock/skills>
@@ -106,9 +134,10 @@ docs/upstream-mirrors/mattpocock-skills.md
 
 同步原则：
 
-- Matt 上游原版保留 Matt 的两层目录，例如 `skills/engineering/tdd`、`skills/productivity/handoff`。安装器里可以把 Engineering + Productivity 合并显示为 `Matt Pocock Core`，但不要改坏上游路径。
+- Matt 官方英文版保留 Matt 的两层目录，例如 `skills/engineering/tdd`、`skills/productivity/handoff`。安装器里可以把 Engineering + Productivity 合并显示为 `Matt Pocock Official Core`，但不要改坏上游路径。
 - 保留上游行为；如因本地 Codex 校验需要删掉不兼容 frontmatter 字段，要记录在同步文档里。
-- 本地改版必须另起名字，放进 `lqy-local` 或 `lqy-curated`，不要污染上游同步路径。
+- 中文本地化版统一放入 `skills/matt-zh-*/*-zh`。
+- 本地改版必须另起名字，放进 `matt-zh-*`、`lqy-local` 或 `lqy-curated`，不要污染官方英文上游同步路径。
 
 ## 仓库结构
 
@@ -141,11 +170,12 @@ docs/
 2. 不在 Quickstart 里新增复杂参数示例；让安装器交互选择。
 3. Matt Pocock 上游同步版保持两层路径，不要拍平成一层。
 4. 新增或移动 skill 后，必须同步更新 `.claude-plugin/marketplace.json`，否则交互列表分类会不对。
-5. AMIS UI 相关技能放 `skills/amis-ui/`。
-6. 本地自写技能放 `skills/lqy-local/`。
-7. 外部整理/改造版放 `skills/lqy-curated/`。
-8. 只记录外部链接、不准备维护安装版的内容，放 `docs/external-skill-links/`，不要放进 `skills/`。
-9. 如果同步 Matt 上游，先 clone / fetch `https://github.com/mattpocock/skills.git`，对照它的 `skills/<category>/<name>` 结构更新；可以调整 `.claude-plugin/marketplace.json` 的显示分组，但不要随意改上游目录。
+5. Matt Pocock 中文本地化版放 `skills/matt-zh-*/*-zh`，不要覆盖官方英文目录。
+6. AMIS UI 相关技能放 `skills/amis-ui/`。
+7. 本地自写技能放 `skills/lqy-local/`。
+8. 外部整理/改造版放 `skills/lqy-curated/`。
+9. 只记录外部链接、不准备维护安装版的内容，放 `docs/external-skill-links/`，不要放进 `skills/`。
+10. 如果同步 Matt 上游，先 clone / fetch `https://github.com/mattpocock/skills.git`，对照它的 `skills/<category>/<name>` 结构更新；可以调整 `.claude-plugin/marketplace.json` 的显示分组，但不要随意改上游目录。同步后再人工/AI 合并变化到对应 `*-zh` 中文版。
 
 AI 可以用下面命令做内部验证；这些不是用户日常安装命令：
 
