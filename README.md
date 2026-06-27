@@ -176,13 +176,27 @@ docs/
 10. 只记录外部链接、不准备维护安装版的内容，放 `docs/external-skill-links/`，不要放进 `skills/`。
 11. 如果同步 Matt 上游，先 clone / fetch `https://github.com/mattpocock/skills.git`，对照它的 `skills/<category>/<name>` 结构更新到本仓库 `upstream/mattpocock/skills/<category>/<name>`；可以调整 `.claude-plugin/marketplace.json` 的中文显示分组，但不要把英文上游加入安装分组。同步后再人工/AI 合并变化到对应 `*-zh` 中文版。
 
-AI 可以用下面命令做内部验证；这些不是用户日常安装命令：
+AI 可以用下面命令做内部验证；这些不是用户日常安装命令。优先运行仓库级检查：
+
+```bash
+python3 scripts/check_matt_zh_skills.py
+```
+
+这个脚本会检查：
+
+- `skills/` 只暴露可安装版本，Matt 英文官方镜像不能漏进安装列表。
+- 35 个 Matt 中文 `*-zh` skills 都有 `LOCALIZATION.md` 和有效上游路径。
+- 中文 `SKILL.md` 不能混入“官方英文上游”“本地化说明”等维护文案。
+- `.claude-plugin/marketplace.json` 必须和 `skills/` 下可安装目录一致。
+- 所有可安装 skill 必须通过 `quick_validate.py`。
+
+再检查安装器发现结果：
 
 ```bash
 npx skills@latest add . --list
 ```
 
-如果改了某个 skill，再验证对应目录：
+如果只改了某个 skill，也可以额外验证对应目录：
 
 ```bash
 python3 ~/.codex/skills/.system/skill-creator/scripts/quick_validate.py skills/<category>/<skill-name>
