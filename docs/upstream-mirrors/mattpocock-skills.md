@@ -87,4 +87,6 @@ Some upstream frontmatter keys are omitted from local `SKILL.md` files because t
 
 ## Installer grouping
 
-The English mirror is intentionally outside top-level `skills/`. `npx skills@latest` recursively discovers installable skills from `skills/`, so moving English upstream copies back under `skills/` will make them visible to users. Keep `.claude-plugin/marketplace.json` in sync for installable Chinese/local groups only.
+The English mirror is intentionally outside top-level `skills/`. `npx skills@latest` recursively discovers installable skills from `skills/`, so moving English upstream copies back under `skills/` will make them visible to users. Keep `.claude-plugin/marketplace.json` in sync for installable LQY/local groups only.
+
+When syncing a newer upstream commit, update this mirror first, merge relevant changes into `baselines/matt-zh/matt-zh-*/*-zh`, then adapt the installable `skills/matt-lqy-*/*-lqy` layer. Report upstream changes, baseline changes, and any LQY adaptation that still needs manual review.

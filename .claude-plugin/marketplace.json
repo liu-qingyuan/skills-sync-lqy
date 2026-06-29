@@ -4,68 +4,68 @@
   },
   "plugins": [
     {
-      "name": "Matt Pocock 中文 Core",
+      "name": "Matt Pocock LQY Core",
       "source": "./",
       "skills": [
-        "./skills/matt-zh-core/ask-matt-zh",
-        "./skills/matt-zh-core/codebase-design-zh",
-        "./skills/matt-zh-core/diagnosing-bugs-zh",
-        "./skills/matt-zh-core/domain-modeling-zh",
-        "./skills/matt-zh-core/grill-me-zh",
-        "./skills/matt-zh-core/grill-with-docs-zh",
-        "./skills/matt-zh-core/grilling-zh",
-        "./skills/matt-zh-core/handoff-zh",
-        "./skills/matt-zh-core/implement-zh",
-        "./skills/matt-zh-core/improve-codebase-architecture-zh",
-        "./skills/matt-zh-core/prototype-zh",
-        "./skills/matt-zh-core/resolving-merge-conflicts-zh",
-        "./skills/matt-zh-core/setup-matt-pocock-skills-zh",
-        "./skills/matt-zh-core/tdd-zh",
-        "./skills/matt-zh-core/teach-zh",
-        "./skills/matt-zh-core/to-issues-zh",
-        "./skills/matt-zh-core/to-prd-zh",
-        "./skills/matt-zh-core/triage-zh",
-        "./skills/matt-zh-core/writing-great-skills-zh"
+        "./skills/matt-lqy-core/ask-matt-lqy",
+        "./skills/matt-lqy-core/codebase-design-lqy",
+        "./skills/matt-lqy-core/diagnosing-bugs-lqy",
+        "./skills/matt-lqy-core/domain-modeling-lqy",
+        "./skills/matt-lqy-core/grill-me-lqy",
+        "./skills/matt-lqy-core/grill-with-docs-lqy",
+        "./skills/matt-lqy-core/grilling-lqy",
+        "./skills/matt-lqy-core/handoff-lqy",
+        "./skills/matt-lqy-core/implement-lqy",
+        "./skills/matt-lqy-core/improve-codebase-architecture-lqy",
+        "./skills/matt-lqy-core/prototype-lqy",
+        "./skills/matt-lqy-core/resolving-merge-conflicts-lqy",
+        "./skills/matt-lqy-core/setup-matt-pocock-skills-lqy",
+        "./skills/matt-lqy-core/tdd-lqy",
+        "./skills/matt-lqy-core/teach-lqy",
+        "./skills/matt-lqy-core/to-issues-lqy",
+        "./skills/matt-lqy-core/to-prd-lqy",
+        "./skills/matt-lqy-core/triage-lqy",
+        "./skills/matt-lqy-core/writing-great-skills-lqy"
       ]
     },
     {
-      "name": "Matt Pocock 中文 Personal",
+      "name": "Matt Pocock LQY Personal",
       "source": "./",
       "skills": [
-        "./skills/matt-zh-personal/edit-article-zh",
-        "./skills/matt-zh-personal/obsidian-vault-zh"
+        "./skills/matt-lqy-personal/edit-article-lqy",
+        "./skills/matt-lqy-personal/obsidian-vault-lqy"
       ]
     },
     {
-      "name": "Matt Pocock 中文 Misc",
+      "name": "Matt Pocock LQY Misc",
       "source": "./",
       "skills": [
-        "./skills/matt-zh-misc/git-guardrails-claude-code-zh",
-        "./skills/matt-zh-misc/migrate-to-shoehorn-zh",
-        "./skills/matt-zh-misc/scaffold-exercises-zh",
-        "./skills/matt-zh-misc/setup-pre-commit-zh"
+        "./skills/matt-lqy-misc/git-guardrails-claude-code-lqy",
+        "./skills/matt-lqy-misc/migrate-to-shoehorn-lqy",
+        "./skills/matt-lqy-misc/scaffold-exercises-lqy",
+        "./skills/matt-lqy-misc/setup-pre-commit-lqy"
       ]
     },
     {
-      "name": "Matt Pocock 中文 In Progress",
+      "name": "Matt Pocock LQY In Progress",
       "source": "./",
       "skills": [
-        "./skills/matt-zh-in-progress/decision-mapping-zh",
-        "./skills/matt-zh-in-progress/loop-me-zh",
-        "./skills/matt-zh-in-progress/review-zh",
-        "./skills/matt-zh-in-progress/writing-beats-zh",
-        "./skills/matt-zh-in-progress/writing-fragments-zh",
-        "./skills/matt-zh-in-progress/writing-shape-zh"
+        "./skills/matt-lqy-in-progress/decision-mapping-lqy",
+        "./skills/matt-lqy-in-progress/loop-me-lqy",
+        "./skills/matt-lqy-in-progress/review-lqy",
+        "./skills/matt-lqy-in-progress/writing-beats-lqy",
+        "./skills/matt-lqy-in-progress/writing-fragments-lqy",
+        "./skills/matt-lqy-in-progress/writing-shape-lqy"
       ]
     },
     {
-      "name": "Matt Pocock 中文 Deprecated",
+      "name": "Matt Pocock LQY Deprecated",
       "source": "./",
       "skills": [
-        "./skills/matt-zh-deprecated/design-an-interface-zh",
-        "./skills/matt-zh-deprecated/qa-zh",
-        "./skills/matt-zh-deprecated/request-refactor-plan-zh",
-        "./skills/matt-zh-deprecated/ubiquitous-language-zh"
+        "./skills/matt-lqy-deprecated/design-an-interface-lqy",
+        "./skills/matt-lqy-deprecated/qa-lqy",
+        "./skills/matt-lqy-deprecated/request-refactor-plan-lqy",
+        "./skills/matt-lqy-deprecated/ubiquitous-language-lqy"
       ]
     },
     {

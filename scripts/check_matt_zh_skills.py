@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Repository guardrail for Matt Pocock Chinese skill maintenance.
+"""Repository guardrail for Matt Pocock LQY skill maintenance.
 
-Checks that installable Matt skills are clean Chinese forks, while English
-upstream mirrors remain outside top-level skills/.
+Checks that installable Matt skills are the self-contained LQY layer, while
+Chinese baselines and English upstream mirrors remain outside top-level skills/.
 """
 from __future__ import annotations
 
@@ -14,9 +14,10 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 SKILLS = ROOT / "skills"
+ZH_BASELINE = ROOT / "baselines" / "matt-zh"
 UPSTREAM = ROOT / "upstream" / "mattpocock" / "skills"
 MARKETPLACE = ROOT / ".claude-plugin" / "marketplace.json"
-EXPECTED_MATT_ZH_COUNT = 35
+EXPECTED_MATT_COUNT = 35
 EXPECTED_INSTALLABLE_COUNT = 49
 POLLUTION_PATTERNS = [
     "这是 Matt Pocock",
@@ -137,21 +138,66 @@ def list_skill_dirs(base: Path) -> list[Path]:
 
 def check_installable_boundary(errors: list[str]) -> None:
     installable = list_skill_dirs(SKILLS)
-    matt_zh = sorted(SKILLS.glob("matt-zh-*/*-zh/SKILL.md"))
+    installable_lqy = sorted(SKILLS.glob("matt-lqy-*/*-lqy/SKILL.md"))
+    installable_zh = sorted(SKILLS.glob("matt-zh-*/*-zh/SKILL.md"))
+    zh_baselines = sorted(ZH_BASELINE.glob("matt-zh-*/*-zh/SKILL.md"))
     upstream = list_skill_dirs(UPSTREAM)
 
     if len(installable) != EXPECTED_INSTALLABLE_COUNT:
         fail(errors, f"expected {EXPECTED_INSTALLABLE_COUNT} installable skills, found {len(installable)}")
-    if len(matt_zh) != EXPECTED_MATT_ZH_COUNT:
-        fail(errors, f"expected {EXPECTED_MATT_ZH_COUNT} Matt zh skills, found {len(matt_zh)}")
-    if len(upstream) != EXPECTED_MATT_ZH_COUNT:
-        fail(errors, f"expected {EXPECTED_MATT_ZH_COUNT} upstream Matt mirrors, found {len(upstream)}")
+    if len(installable_lqy) != EXPECTED_MATT_COUNT:
+        fail(errors, f"expected {EXPECTED_MATT_COUNT} installable Matt lqy skills, found {len(installable_lqy)}")
+    if installable_zh:
+        fail(errors, "Matt zh baseline must not be installable under skills/: " + ", ".join(rel(p.parent) for p in installable_zh[:10]))
+    if len(zh_baselines) != EXPECTED_MATT_COUNT:
+        fail(errors, f"expected {EXPECTED_MATT_COUNT} non-installable Matt zh baselines, found {len(zh_baselines)}")
+    if len(upstream) != EXPECTED_MATT_COUNT:
+        fail(errors, f"expected {EXPECTED_MATT_COUNT} upstream Matt mirrors, found {len(upstream)}")
 
     forbidden_top_level = {"engineering", "productivity", "personal", "misc", "in-progress", "deprecated"}
     present = {p.name for p in SKILLS.iterdir() if p.is_dir()}
     leaked = sorted(forbidden_top_level & present)
     if leaked:
         fail(errors, "official Matt categories must not be under skills/: " + ", ".join(leaked))
+
+
+def check_readme_codex_setup_usage(errors: list[str]) -> None:
+    text = (ROOT / "README.md").read_text()
+    required = "$setup-matt-pocock-skills-lqy"
+    forbidden_preferred = "$setup-matt-pocock-skills-zh"
+    slash = "/setup-matt-pocock-skills-lqy"
+    if required not in text:
+        fail(errors, "README Quickstart must prefer Codex $setup-matt-pocock-skills-lqy usage")
+    if forbidden_preferred in text:
+        fail(errors, "README must not present $setup-matt-pocock-skills-zh as the installable setup skill")
+    if slash in text and text.find(slash) < text.find(required):
+        fail(errors, "README must mention $setup-matt-pocock-skills-lqy before slash-style setup usage")
+
+
+def check_lqy_layer_links(errors: list[str]) -> None:
+    for skill_md in sorted(SKILLS.glob("matt-lqy-*/*-lqy/SKILL.md")):
+        skill_dir = skill_md.parent
+        loc = skill_dir / "LOCALIZATION.md"
+        if not loc.exists():
+            fail(errors, f"missing LOCALIZATION.md for LQY skill {rel(skill_dir)}")
+            continue
+        provenance = loc.read_text()
+        zh_match = re.search(r"Chinese baseline path: `([^`]+)`", provenance)
+        upstream_match = re.search(r"Upstream path: `([^`]+)`", provenance)
+        if not zh_match:
+            fail(errors, f"LQY skill provenance must point to corresponding zh baseline: {rel(skill_dir)}")
+        elif not (ROOT / zh_match.group(1) / "SKILL.md").exists():
+            fail(errors, f"LQY zh baseline does not exist for {rel(skill_dir)}: {zh_match.group(1)}")
+        if not upstream_match:
+            fail(errors, f"LQY skill provenance must point to official upstream mirror: {rel(skill_dir)}")
+        elif not (ROOT / upstream_match.group(1) / "SKILL.md").exists():
+            fail(errors, f"LQY upstream SKILL.md does not exist for {rel(skill_dir)}: {upstream_match.group(1)}")
+
+        name = read_frontmatter_name(skill_md)
+        if name != skill_dir.name:
+            fail(errors, f"frontmatter name mismatch in {rel(skill_md)}: expected {skill_dir.name}, got {name}")
+        if not skill_dir.name.endswith("-lqy"):
+            fail(errors, f"Matt LQY skill dir must end with -lqy: {rel(skill_dir)}")
 
 
 def check_marketplace(errors: list[str]) -> None:
@@ -161,8 +207,10 @@ def check_marketplace(errors: list[str]) -> None:
         for skill in plugin.get("skills", []):
             normalized = skill.removeprefix("./")
             listed.append(normalized)
-            if normalized.startswith("upstream/"):
-                fail(errors, f"marketplace must not list upstream mirror: {skill}")
+            if normalized.startswith("upstream/") or normalized.startswith("baselines/"):
+                fail(errors, f"marketplace must not list non-installable mirror/baseline: {skill}")
+            if "/matt-zh-" in normalized or normalized.endswith("-zh"):
+                fail(errors, f"marketplace must list Matt LQY layer, not zh baseline: {skill}")
             if re.search(r"skills/(engineering|productivity|personal|misc|in-progress|deprecated)/", normalized):
                 fail(errors, f"marketplace must not list official English Matt skill: {skill}")
 
@@ -173,8 +221,8 @@ def check_marketplace(errors: list[str]) -> None:
         fail(errors, f"marketplace mismatch; missing={missing}; extra={extra}")
 
 
-def check_localization_links(errors: list[str]) -> None:
-    for skill_md in sorted(SKILLS.glob("matt-zh-*/*-zh/SKILL.md")):
+def check_zh_baseline_links(errors: list[str]) -> None:
+    for skill_md in sorted(ZH_BASELINE.glob("matt-zh-*/*-zh/SKILL.md")):
         skill_dir = skill_md.parent
         loc = skill_dir / "LOCALIZATION.md"
         if not loc.exists():
@@ -192,7 +240,7 @@ def check_localization_links(errors: list[str]) -> None:
         if name != skill_dir.name:
             fail(errors, f"frontmatter name mismatch in {rel(skill_md)}: expected {skill_dir.name}, got {name}")
         if not skill_dir.name.endswith("-zh"):
-            fail(errors, f"Matt zh skill dir must end with -zh: {rel(skill_dir)}")
+            fail(errors, f"Matt zh baseline dir must end with -zh: {rel(skill_dir)}")
 
 
 def check_context_glossary(errors: list[str]) -> None:
@@ -206,19 +254,20 @@ def check_context_glossary(errors: list[str]) -> None:
             fail(errors, f"CONTEXT.md missing required glossary term: {term}")
 
 
-def check_zh_body_clean(errors: list[str]) -> None:
-    for skill_md in sorted(SKILLS.glob("matt-zh-*/*-zh/SKILL.md")):
+def check_matt_body_clean(errors: list[str]) -> None:
+    for skill_md in sorted(SKILLS.glob("matt-lqy-*/*-lqy/SKILL.md")) + sorted(ZH_BASELINE.glob("matt-zh-*/*-zh/SKILL.md")):
         text = skill_md.read_text()
         body = text.split("---", 2)[-1]
         for pattern in POLLUTION_PATTERNS:
             if pattern in body:
                 fail(errors, f"localization maintenance text leaked into {rel(skill_md)}: {pattern}")
 
+        suffix = "-lqy" if "/matt-lqy-" in rel(skill_md) else "-zh"
         for command in ENGLISH_COMMANDS:
-            if command in body and f"{command}-zh" not in body:
+            if command in body and f"{command}{suffix}" not in body:
                 fail(errors, f"possible English command reference in {rel(skill_md)}: {command}")
 
-    for md in sorted(SKILLS.glob("matt-zh-*/*-zh/**/*.md")):
+    for md in sorted(SKILLS.glob("matt-lqy-*/*-lqy/**/*.md")) + sorted(ZH_BASELINE.glob("matt-zh-*/*-zh/**/*.md")):
         if md.name == "LOCALIZATION.md":
             continue
         text = md.read_text()
@@ -228,7 +277,7 @@ def check_zh_body_clean(errors: list[str]) -> None:
 
 
 def check_translation_shape(errors: list[str]) -> None:
-    for skill_md in sorted(SKILLS.glob("matt-zh-*/*-zh/SKILL.md")):
+    for skill_md in sorted(ZH_BASELINE.glob("matt-zh-*/*-zh/SKILL.md")):
         loc = skill_md.with_name("LOCALIZATION.md")
         if not loc.exists():
             continue
@@ -260,21 +309,24 @@ def main() -> int:
     errors: list[str] = []
     check_installable_boundary(errors)
     check_marketplace(errors)
+    check_readme_codex_setup_usage(errors)
+    check_lqy_layer_links(errors)
     check_context_glossary(errors)
-    check_localization_links(errors)
-    check_zh_body_clean(errors)
+    check_zh_baseline_links(errors)
+    check_matt_body_clean(errors)
     check_translation_shape(errors)
     run_quick_validate(errors)
 
     if errors:
-        print("Matt zh skill checks failed:", file=sys.stderr)
+        print("Matt LQY skill checks failed:", file=sys.stderr)
         for error in errors:
             print(f"- {error}", file=sys.stderr)
         return 1
 
-    print("Matt zh skill checks passed")
+    print("Matt LQY skill checks passed")
     print(f"installable skills: {len(list_skill_dirs(SKILLS))}")
-    print(f"Matt zh skills: {len(list(SKILLS.glob('matt-zh-*/*-zh/SKILL.md')))}")
+    print(f"installable Matt LQY skills: {len(list(SKILLS.glob('matt-lqy-*/*-lqy/SKILL.md')))}")
+    print(f"non-installable Matt zh baselines: {len(list(ZH_BASELINE.glob('matt-zh-*/*-zh/SKILL.md')))}")
     print(f"upstream Matt mirrors: {len(list_skill_dirs(UPSTREAM))}")
     return 0
 

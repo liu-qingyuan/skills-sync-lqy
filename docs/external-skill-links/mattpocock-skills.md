@@ -1,6 +1,6 @@
 # Matt Pocock skills external links
 
-This file keeps upstream links for manual comparison. Installable mirrored copies live under this repo's `skills/<category>/<skill-name>/` paths. Sync details are in `docs/upstream-mirrors/mattpocock-skills.md`.
+This file keeps upstream links for manual comparison. Installable LQY copies live under this repo's `skills/matt-lqy-*/*-lqy` paths; Chinese baselines live under `baselines/matt-zh/`. Sync details are in `docs/upstream-mirrors/mattpocock-skills.md`.
 
 - Repository: https://github.com/mattpocock/skills
 - README: https://github.com/mattpocock/skills/blob/main/README.md

@@ -1,37 +1,44 @@
-# Matt Pocock 中文 skills 本地化
+# Matt Pocock 中文 baseline 与 LQY skills 维护
 
-本仓库同时维护两套 Matt Pocock skills：
+本仓库维护三层 Matt Pocock skills：
 
 1. **Official mirror**：英文官方上游镜像，保留 Matt Pocock 原仓库的目录结构，放在 `upstream/mattpocock/skills/`，只用于持续同步上游，不参与安装展示。
-2. **中文本地化版**：以 `-zh` 结尾的本地化 fork，可按中文团队习惯继续修改。
+2. **中文 baseline**：以 `-zh` 结尾的本地化基线，放在 `baselines/matt-zh/`，用于翻译、对比和合并上游变化，不参与安装展示。
+3. **LQY 安装版**：以 `-lqy` 结尾的个人版，放在 `skills/matt-lqy-*/*-lqy`，是 `npx skills@latest add liu-qingyuan/skills-sync-lqy` 当前展示的 Matt 层。
 
 ## 命名与目录
 
-中文版本统一使用 `-zh` 后缀：
+命名链路：
 
-- `tdd` → `tdd-zh`
-- `triage` → `triage-zh`
-- `handoff` → `handoff-zh`
-- `setup-matt-pocock-skills` → `setup-matt-pocock-skills-zh`
+- `tdd` → `tdd-zh` → `tdd-lqy`
+- `triage` → `triage-zh` → `triage-lqy`
+- `handoff` → `handoff-zh` → `handoff-lqy`
+- `setup-matt-pocock-skills` → `setup-matt-pocock-skills-zh` → `setup-matt-pocock-skills-lqy`
 
 目录分组：
 
 ```text
-skills/matt-zh-core/          # engineering + productivity 的中文主力版
-skills/matt-zh-personal/      # personal 中文版
-skills/matt-zh-misc/          # misc 中文版
-skills/matt-zh-in-progress/   # in-progress 中文版
-skills/matt-zh-deprecated/    # deprecated 中文版
+baselines/matt-zh/matt-zh-core/          # engineering + productivity 的中文 baseline
+baselines/matt-zh/matt-zh-personal/      # personal 中文 baseline
+baselines/matt-zh/matt-zh-misc/          # misc 中文 baseline
+baselines/matt-zh/matt-zh-in-progress/   # in-progress 中文 baseline
+baselines/matt-zh/matt-zh-deprecated/    # deprecated 中文 baseline
+
+skills/matt-lqy-core/                    # engineering + productivity 的可安装 LQY 版
+skills/matt-lqy-personal/                # personal 可安装 LQY 版
+skills/matt-lqy-misc/                    # misc 可安装 LQY 版
+skills/matt-lqy-in-progress/             # in-progress 可安装 LQY 版
+skills/matt-lqy-deprecated/              # deprecated 可安装 LQY 版
 ```
 
 ## 本地化策略
 
-- 第一版采用机器辅助的严格中文翻译基线：尽量保留上游流程、结构、检查点和文件约定。
-- `SKILL.md` 的 `name` 改成 `<upstream-name>-zh`，避免与官方英文版冲突。
-- `description` 用中文描述触发场景，方便 Codex 自动选择中文版本。
+- 中文 baseline 采用机器辅助的严格中文翻译基线：尽量保留上游流程、结构、检查点和文件约定。
+- LQY 安装版从对应中文 baseline 起步，但必须完整自包含，安装后不能依赖 `baselines/`。
+- `SKILL.md` 的 `name` 必须等于目录名：baseline 用 `<upstream-name>-zh`，安装版用 `<upstream-name>-lqy`。
+- `description` 用中文描述触发场景，方便 Codex 自动选择 LQY 版本。
 - 支持文件中的 Markdown 尽量翻译；脚本文件保持原样。
-- 上游示例中的项目路径（例如 `./src/.../CONTEXT.md`）是说明性示例，不要求在本 skill 仓库内真实存在。
-- 每个中文 skill 包含 `LOCALIZATION.md`，记录对应上游路径和维护策略。
+- 每个 LQY skill 的 `LOCALIZATION.md` 必须同时记录官方 upstream path 和中文 baseline path。
 
 ## 维护规则
 
@@ -39,59 +46,61 @@ skills/matt-zh-deprecated/    # deprecated 中文版
 
 1. 先同步英文 official mirror。
 2. 记录新的上游 commit。
-3. 对比上游变化和当前中文 `*-zh` 版本。
-4. 把上游新增或修改的流程合并进中文版本。
-5. 如果中文版本已有本地优化，优先保留本地意图，再吸收上游变化。
-6. 不要用英文上游直接覆盖中文版本。
+3. 对比上游变化和当前中文 `*-zh` baseline。
+4. 把上游新增或修改的流程合并进中文 baseline。
+5. 再检查对应 `*-lqy` 安装版是否需要适配。
+6. 如果 LQY 版本已有本地优化，优先保留本地意图，再吸收 upstream / baseline 变化。
+7. 不要用英文上游直接覆盖中文 baseline 或 LQY 安装版。
+8. 输出同步报告：上游哪些地方变了、中文 baseline 如何处理、LQY 安装版是否已适配或需要人工审核。
 
-## 当前中文版本清单
+## 当前 LQY 安装版清单
 
 ### Core
 
-- `ask-matt-zh`
-- `codebase-design-zh`
-- `diagnosing-bugs-zh`
-- `domain-modeling-zh`
-- `grill-with-docs-zh`
-- `implement-zh`
-- `improve-codebase-architecture-zh`
-- `prototype-zh`
-- `resolving-merge-conflicts-zh`
-- `setup-matt-pocock-skills-zh`
-- `tdd-zh`
-- `to-issues-zh`
-- `to-prd-zh`
-- `triage-zh`
-- `grill-me-zh`
-- `grilling-zh`
-- `handoff-zh`
-- `teach-zh`
-- `writing-great-skills-zh`
+- `ask-matt-lqy`
+- `codebase-design-lqy`
+- `diagnosing-bugs-lqy`
+- `domain-modeling-lqy`
+- `grill-with-docs-lqy`
+- `implement-lqy`
+- `improve-codebase-architecture-lqy`
+- `prototype-lqy`
+- `resolving-merge-conflicts-lqy`
+- `setup-matt-pocock-skills-lqy`
+- `tdd-lqy`
+- `to-issues-lqy`
+- `to-prd-lqy`
+- `triage-lqy`
+- `grill-me-lqy`
+- `grilling-lqy`
+- `handoff-lqy`
+- `teach-lqy`
+- `writing-great-skills-lqy`
 
 ### Personal
 
-- `edit-article-zh`
-- `obsidian-vault-zh`
+- `edit-article-lqy`
+- `obsidian-vault-lqy`
 
 ### Misc
 
-- `git-guardrails-claude-code-zh`
-- `migrate-to-shoehorn-zh`
-- `scaffold-exercises-zh`
-- `setup-pre-commit-zh`
+- `git-guardrails-claude-code-lqy`
+- `migrate-to-shoehorn-lqy`
+- `scaffold-exercises-lqy`
+- `setup-pre-commit-lqy`
 
 ### In Progress
 
-- `decision-mapping-zh`
-- `loop-me-zh`
-- `review-zh`
-- `writing-beats-zh`
-- `writing-fragments-zh`
-- `writing-shape-zh`
+- `decision-mapping-lqy`
+- `loop-me-lqy`
+- `review-lqy`
+- `writing-beats-lqy`
+- `writing-fragments-lqy`
+- `writing-shape-lqy`
 
 ### Deprecated
 
-- `design-an-interface-zh`
-- `qa-zh`
-- `request-refactor-plan-zh`
-- `ubiquitous-language-zh`
+- `design-an-interface-lqy`
+- `qa-lqy`
+- `request-refactor-plan-lqy`
+- `ubiquitous-language-lqy`
