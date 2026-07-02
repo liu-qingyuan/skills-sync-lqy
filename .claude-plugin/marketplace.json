@@ -80,6 +80,7 @@
       "name": "LQY Local",
       "source": "./",
       "skills": [
+        "./skills/lqy-local/ai-slop-cleaner",
         "./skills/lqy-local/simple",
         "./skills/lqy-local/pea",
         "./skills/lqy-local/tea",

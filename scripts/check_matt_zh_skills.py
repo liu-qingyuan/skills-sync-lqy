@@ -18,7 +18,7 @@ ZH_BASELINE = ROOT / "baselines" / "matt-zh"
 UPSTREAM = ROOT / "upstream" / "mattpocock" / "skills"
 MARKETPLACE = ROOT / ".claude-plugin" / "marketplace.json"
 EXPECTED_MATT_COUNT = 35
-EXPECTED_INSTALLABLE_COUNT = 49
+EXPECTED_INSTALLABLE_COUNT = 50
 POLLUTION_PATTERNS = [
     "这是 Matt Pocock",
     "中文本地化版本",
