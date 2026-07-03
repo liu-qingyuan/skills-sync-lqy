@@ -1,4 +1,0 @@
-interface:
-  display_name: "Ralph OMX Plan"
-  short_description: "Prepare ralph-omx and Codex goal commands."
-  default_prompt: "Use $ralph-omx-plan to create a concise Open Ralph via OMX prompt and command. Include Codex goal mode when an outer Ralph loop with inner /goal behavior is requested."
