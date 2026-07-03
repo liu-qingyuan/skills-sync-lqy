@@ -1,17 +1,16 @@
 # 角色
 
-你是一个自主循环中的一次迭代，任务是消化本仓库的 GitHub issue backlog。之前的迭代可能已有进展；之后的迭代会接着你继续。所有状态都保存在 GitHub（issue、评论、PR）和 git 历史里——去读取，不要凭空假设。
+你是一个自主循环中的一次迭代，任务是消化本仓库的 GitHub issue backlog。之前的迭代可能已有进展；之后的迭代会接着你继续。所有状态都保存在 GitHub issue、评论和 git 历史里——去读取，不要凭空假设。
 
 # 收集上下文（每次都先做这一步）
 
 1. `git log -n 5 --oneline` — 了解最近的工作。
 2. `gh issue list --label ready-for-agent --state open` — 这就是 backlog。只处理带 `ready-for-agent` 标签的 issue；其余一律忽略（尤其是 `ready-for-human`、`needs-triage`、`needs-info`）。
-3. `gh pr list --state open` — 已有开放 PR 的 issue 不可再领取，跳过。
-4. 选定 issue 前，运行 `gh issue view <N> --comments` — 查看之前迭代留下的进度备注和分支名。
+3. 选定 issue 前，运行 `gh issue view <N> --comments` — 查看之前迭代留下的进度备注。
 
 # 任务选择
 
-只挑选一个 issue。按 `gh issue list --label ready-for-agent --state open` 返回顺序逐个检查；第一个通过 blocker gate 且没有开放 PR 的 issue 就领取。
+只挑选一个 issue。按 `gh issue list --label ready-for-agent --state open` 返回顺序逐个检查；第一个通过 blocker gate 的 issue 就领取。
 
 对每个候选 issue 运行：
 
@@ -25,16 +24,11 @@ python3 ~/work/.agents/skills/ralph-plan-lqy/scripts/check_ready_issue_unblocked
 
 如果所有候选 issue 都不可领取，输出 <promise>NO MORE TASKS</promise> 并停止。
 
-# Worktree 与分支
+# 串行 checkout
 
-不要在默认 checkout 里实现。选定 issue 后，使用 issue 专属 `git worktree`：
+默认不创建 PR，不创建 `git worktree`，不切新分支。在当前 checkout 串行处理一个 issue。
 
-1. 先在默认 checkout 读取状态并更新默认分支。
-2. 如果 issue 评论里已有 branch/worktree path，优先进入该 worktree 继续。
-3. 否则创建语义分支和 worktree：
-   - 分支名：`<type>/<N>-<short-action-slug>`，例如 `docs/3-context-glossary`、`fix/18-profile-normalization`、`refactor/22-metrics-boundary`。
-   - worktree 路径：`../<repo-name>-worktrees/<N>-<short-action-slug>`。
-4. 在 issue 上评论 branch 和 worktree path，供下一轮恢复。
+开始实现前先运行 `git status --short`。如果已有未提交改动，先判断是否来自上一轮同一 issue；如果不是，停止并说明，避免覆盖用户改动。
 
 # 实现
 
@@ -42,15 +36,15 @@ python3 ~/work/.agents/skills/ralph-plan-lqy/scripts/check_ready_issue_unblocked
 
 自行发现本项目的反馈回路——查看 `package.json` scripts、`Makefile`、`pyproject.toml`、CI 配置、`CLAUDE.md`/`AGENTS.md`/`README`。每次提交前运行项目的测试和 typecheck/lint。如果项目没有反馈回路，把"建立反馈回路"当作基础设施任务来做。
 
-# 提交与 PR
+# 提交与 issue
 
 每条 commit message 必须包含：关键决策、改动的文件、给下一次迭代的阻塞点/备注。
 
-- issue 完成 → push 分支，用 `gh pr create` 开 PR，正文包含 `Closes #<N>`，然后在 issue 上评论 PR 链接。不要直接关闭 issue；PR 合并时会自动关闭。
-- issue 未完成 → 仍然 push 分支，在 issue 上评论：已完成什么、还剩什么、分支名。
+- issue 完成 → 创建本地 commit，评论 commit hash、验证结果和摘要，然后关闭 issue。
+- issue 未完成 → 如果有可验证的完整增量，先 commit；然后在 issue 上评论：已完成什么、还剩什么、下一轮从哪里继续。
 
 # 铁律
 
 - 一次只做一个 issue。
-- 永远不要推送到默认分支。永远不要合并自己的 PR。
+- 默认不创建 PR，不创建 `git worktree`。
 - 永远不要处理没有 `ready-for-agent` 标签的 issue。

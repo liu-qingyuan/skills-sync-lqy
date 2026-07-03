@@ -1,6 +1,6 @@
 ---
 name: ralph-plan-lqy
-description: "规划 Open Ralph GitHub issue backlog 循环：Codex 默认、blocker gate、worktree、PR。Use for `$ralph-plan`, `$ralph`, AFK coding loops, or clearing GitHub issue backlogs."
+description: "规划 Open Ralph GitHub issue backlog 串行循环：Codex 默认、blocker gate、本地 commit。Use for `$ralph-plan`, `$ralph`, AFK coding loops, or clearing GitHub issue backlogs."
 ---
 
 # Ralph Plan
@@ -13,7 +13,7 @@ description: "规划 Open Ralph GitHub issue backlog 循环：Codex 默认、blo
 - 只处理 open 且带 `ready-for-agent` 的 issue。
 - 每轮只领取一个 issue，按 issue 列表顺序扫描，先通过 blocker gate 的先做。
 - 不使用 `.ralph/ralph-tasks.md`，不使用 `--tasks`。
-- 使用 `--no-commit`；agent 在 issue 专属 `git worktree` 里建语义分支、提交、开 PR。
+- 使用 `--no-commit`；agent 在当前 checkout 串行实现并自己提交 commit。
 - 没有可领取 issue 时输出 `<promise>NO MORE TASKS</promise>`。
 
 ## Blocker Gate
