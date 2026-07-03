@@ -25,9 +25,16 @@ python3 ~/work/.agents/skills/ralph-plan-lqy/scripts/check_ready_issue_unblocked
 
 如果所有候选 issue 都不可领取，输出 <promise>NO MORE TASKS</promise> 并停止。
 
-# 分支
+# Worktree 与分支
 
-从干净状态开始：切换到默认分支并 pull。然后二选一：如果 issue 评论里记录了之前的分支名，就检出那个分支继续；否则新建 `ralph/issue-<N>-<short-slug>`。
+不要在默认 checkout 里实现。选定 issue 后，使用 issue 专属 `git worktree`：
+
+1. 先在默认 checkout 读取状态并更新默认分支。
+2. 如果 issue 评论里已有 branch/worktree path，优先进入该 worktree 继续。
+3. 否则创建语义分支和 worktree：
+   - 分支名：`<type>/<N>-<short-action-slug>`，例如 `docs/3-context-glossary`、`fix/18-profile-normalization`、`refactor/22-metrics-boundary`。
+   - worktree 路径：`../<repo-name>-worktrees/<N>-<short-action-slug>`。
+4. 在 issue 上评论 branch 和 worktree path，供下一轮恢复。
 
 # 实现
 

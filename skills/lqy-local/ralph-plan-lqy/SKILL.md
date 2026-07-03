@@ -13,7 +13,7 @@ description: "为 Open Ralph 规划一次 GitHub issue backlog 循环。默认 C
 - 只处理 open 且带 `ready-for-agent` 的 issue。
 - 每轮只领取一个 issue，按 issue 列表顺序扫描，先通过 blocker gate 的先做。
 - 不使用 `.ralph/ralph-tasks.md`，不使用 `--tasks`。
-- 使用 `--no-commit`；分支、commit、PR 由 agent 按 prompt 自己管理。
+- 使用 `--no-commit`；agent 在 issue 专属 `git worktree` 里建语义分支、提交、开 PR。
 - 没有可领取 issue 时输出 `<promise>NO MORE TASKS</promise>`。
 
 ## 最小检查
