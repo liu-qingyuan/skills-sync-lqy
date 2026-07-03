@@ -1,6 +1,6 @@
 ---
 name: ralph-plan-lqy
-description: "为 Open Ralph 规划一次 GitHub issue backlog 循环。默认 Codex，默认只处理 `ready-for-agent` 且 blocker gate 通过的 issues，产出 prompt 路径、主命令和运行/监控说明。Use when the user invokes `$ralph-plan`, `$ralph`, asks for an AFK coding loop, clearing a GitHub issue backlog, or 让 agent 循环跑 / 挂机跑 / 清 backlog."
+description: "规划 Open Ralph GitHub issue backlog 循环：Codex 默认、blocker gate、worktree、PR。Use for `$ralph-plan`, `$ralph`, AFK coding loops, or clearing GitHub issue backlogs."
 ---
 
 # Ralph Plan
