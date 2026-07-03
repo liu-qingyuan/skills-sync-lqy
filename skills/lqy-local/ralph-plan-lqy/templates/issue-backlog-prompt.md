@@ -34,9 +34,7 @@ python3 ~/work/.agents/skills/ralph-plan-lqy/scripts/check_ready_issue_unblocked
 
 # 实现
 
-写代码前先探索仓库。可行时采用测试先行。
-
-自行发现本项目的反馈回路——查看 `package.json` scripts、`Makefile`、`pyproject.toml`、CI 配置、`CLAUDE.md`/`AGENTS.md`/`README`。每次提交前运行项目的测试和 typecheck/lint。如果项目没有反馈回路，把"建立反馈回路"当作基础设施任务来做。
+领取到可实现 issue 后，按 `$implement-lqy GitHub issue #N` 的职责执行。Ralph 只负责选择任务、检查 blocker、维护循环状态；实现、测试、review 和 commit 交给 `implement-lqy` 的规则。
 
 # 提交与 issue
 
