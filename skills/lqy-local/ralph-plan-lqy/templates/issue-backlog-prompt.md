@@ -12,6 +12,8 @@
 
 只挑选一个 issue。按 issue number 升序逐个检查；第一个通过 blocker gate 的 issue 就领取。不要使用 `gh issue list` 的默认显示顺序，它通常会把较新的 issue 排在前面。
 
+PRD 父 issue 不是实现任务。若候选 issue 是 PRD（例如标题以 `PRD:` 开头，或正文是 PRD 模板），不要直接实现它；如果它尚未拆分，评论说明需要先运行 `$to-issues-lqy GitHub issue #N`，然后停止本轮。
+
 对每个候选 issue 运行：
 
 ```bash

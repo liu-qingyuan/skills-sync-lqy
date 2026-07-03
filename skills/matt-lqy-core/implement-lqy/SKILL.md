@@ -3,7 +3,9 @@ name: implement-lqy
 description: 根据 PRD 或一组 issues 实现一项工作。
 ---
 
-实施PRD中用户描述的工作或问题。
+实施用户指定的 PRD 或 issue 中描述的工作。
+
+PRD 可以作为实现规格和验收上下文；如果用户只传入一个 PRD 父 issue，且它明显还需要拆成多个独立任务，不要直接把整个 PRD 当作一个实现任务。先使用 /to-issues-lqy 拆分，或要求用户指定要实现的子 issue。
 
 尽可能在预先商定的接缝处使用 /tdd-lqy。
 
