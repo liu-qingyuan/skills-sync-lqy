@@ -16,27 +16,6 @@ description: "规划 Open Ralph GitHub issue backlog 循环：Codex 默认、blo
 - 使用 `--no-commit`；agent 在 issue 专属 `git worktree` 里建语义分支、提交、开 PR。
 - 没有可领取 issue 时输出 `<promise>NO MORE TASKS</promise>`。
 
-## 最小检查
-
-给出命令前检查：
-
-```bash
-command -v ralph
-ralph --version
-command -v gh
-gh auth status
-gh issue list --label ready-for-agent --state open
-command -v codex
-```
-
-如果用户点名 Claude Code，把最后一行改为：
-
-```bash
-command -v claude
-```
-
-缺失工具时只提示用户安装或登录，不展开安装教程。
-
 ## Blocker Gate
 
 本 skill 自带只读 blocker gate：
@@ -91,15 +70,6 @@ ralph \
 - `--prompt-file`：backlog prompt 文件。
 - `--` 后参数：传给 Codex CLI，默认绕过沙箱和审批。
 
-## 运行与监控
-
-```bash
-ralph --status
-ralph --add-context "提示..."
-ralph --clear-context
-# 停止：终端 1 按 Ctrl+C；重跑同一命令继续。
-```
-
 ## 输出格式
 
 ````markdown
@@ -117,6 +87,4 @@ ralph --clear-context
 ## 参数定制
 - <只解释实际用到的 flag>
 
-## 如何运行与监控
-<最短可执行说明>
 ````
