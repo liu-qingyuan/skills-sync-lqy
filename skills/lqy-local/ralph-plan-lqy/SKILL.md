@@ -73,18 +73,13 @@ ralph \
   --max-iterations 3 \
   --last-activity-timeout 15m \
   --no-commit \
-  --prompt-file ~/work/.agents/skills/ralph-plan-lqy/templates/issue-backlog-prompt.md
-```
-
-用户点名 Claude Code 时，只把 `--agent codex` 改成 `--agent claude-code`。除非用户点名，否则省略 `--model`。HITL 先用 `--max-iterations 3`；跑顺后再提高到 `10` 或 `20`。
-
-如果用户显式要求 Codex 绕过沙箱，可把 Codex 参数放在 `--` 后：
-
-```bash
-ralph ... -- \
+  --prompt-file ~/work/.agents/skills/ralph-plan-lqy/templates/issue-backlog-prompt.md \
+  -- \
   --sandbox danger-full-access \
   --dangerously-bypass-approvals-and-sandbox
 ```
+
+用户点名 Claude Code 时，把 `--agent codex` 改成 `--agent claude-code`，并移除 `--` 后面的 Codex 专属参数。除非用户点名，否则省略 `--model`。
 
 ## 参数说明
 
@@ -94,6 +89,7 @@ ralph ... -- \
 - `--last-activity-timeout 15m`：静默超时后结束当前轮。
 - `--no-commit`：禁止 Ralph 自动提交。
 - `--prompt-file`：backlog prompt 文件。
+- `--` 后参数：传给 Codex CLI，默认绕过沙箱和审批。
 
 ## 运行与监控
 
