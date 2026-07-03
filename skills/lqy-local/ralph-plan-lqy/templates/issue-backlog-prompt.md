@@ -5,12 +5,12 @@
 # 收集上下文（每次都先做这一步）
 
 1. `git log -n 5 --oneline` — 了解最近的工作。
-2. `gh issue list --label ready-for-agent --state open` — 这就是 backlog。只处理带 `ready-for-agent` 标签的 issue；其余一律忽略（尤其是 `ready-for-human`、`needs-triage`、`needs-info`）。
+2. `gh issue list --label ready-for-agent --state open --json number,title --jq 'sort_by(.number)[] | "#\\(.number)\t\\(.title)"'` — 这就是 backlog。只处理带 `ready-for-agent` 标签的 issue；其余一律忽略（尤其是 `ready-for-human`、`needs-triage`、`needs-info`）。
 3. 选定 issue 前，运行 `gh issue view <N> --comments` — 查看之前迭代留下的进度备注。
 
 # 任务选择
 
-只挑选一个 issue。按 `gh issue list --label ready-for-agent --state open` 返回顺序逐个检查；第一个通过 blocker gate 的 issue 就领取。
+只挑选一个 issue。按 issue number 升序逐个检查；第一个通过 blocker gate 的 issue 就领取。不要使用 `gh issue list` 的默认显示顺序，它通常会把较新的 issue 排在前面。
 
 对每个候选 issue 运行：
 
