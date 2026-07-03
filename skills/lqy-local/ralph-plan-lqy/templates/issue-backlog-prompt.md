@@ -36,13 +36,6 @@ python3 ~/work/.agents/skills/ralph-plan-lqy/scripts/check_ready_issue_unblocked
 
 领取到可实现 issue 后，按 `$implement-lqy GitHub issue #N` 的职责执行。Ralph 只负责选择任务、检查 blocker、维护循环状态；实现、测试、review 和 commit 交给 `implement-lqy` 的规则。
 
-# 提交与 issue
-
-每条 commit message 必须包含：关键决策、改动的文件、给下一次迭代的阻塞点/备注。
-
-- issue 完成 → 创建本地 commit，评论 commit hash、验证结果和摘要，然后关闭 issue。
-- issue 未完成 → 如果有可验证的完整增量，先 commit；然后在 issue 上评论：已完成什么、还剩什么、下一轮从哪里继续。
-
 # 铁律
 
 - 一次只做一个 issue。
