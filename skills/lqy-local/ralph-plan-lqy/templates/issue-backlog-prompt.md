@@ -11,23 +11,19 @@
 
 # 任务选择
 
-只挑选一个符合条件的 issue。优先级顺序：
+只挑选一个 issue。按 `gh issue list --label ready-for-agent --state open` 返回顺序逐个检查；第一个通过 blocker gate 且没有开放 PR 的 issue 就领取。
 
-1. 关键 bugfix
-2. 开发基础设施（测试、类型、开发脚本——这些是其他一切工作的前置条件）
-3. Tracer bullet（新功能的端到端薄切片，贯穿所有层）
-4. Polish 和 quick win
-5. 重构
+对每个候选 issue 运行：
 
-如果没有任何符合条件的 `ready-for-agent` issue，输出 <promise>NO MORE TASKS</promise> 并停止。
-
-选定 issue 后必须做 blocker gate：
-
-运行 `python3 ~/work/.agents/skills/ralph-plan-lqy/scripts/check_ready_issue_unblocked.py <N>`。
+```bash
+python3 ~/work/.agents/skills/ralph-plan-lqy/scripts/check_ready_issue_unblocked.py <N>
+```
 
 - 退出码 `0`：可以开始。
 - 退出码 `2`：该 issue 当前不可领取，跳过并选择下一个 issue。
 - 退出码 `1`：环境或 GitHub API 阻塞，停止并说明原因。
+
+如果所有候选 issue 都不可领取，输出 <promise>NO MORE TASKS</promise> 并停止。
 
 # 分支
 
