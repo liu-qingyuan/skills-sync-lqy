@@ -43,7 +43,7 @@ python3 ~/work/.agents/skills/ralph-plan-lqy/scripts/check_ready_issue_unblocked
 
 ## 主命令
 
-默认用 Codex：
+默认用 Codex。Open Ralph 1.3.x 的 `--allow-all` 默认会给 Codex 自动加 `--full-auto`；当前 Codex CLI 下它不能和 `--dangerously-bypass-approvals-and-sandbox` 混用。需要无沙箱权限时，先用 `--no-allow-all` 关闭 Ralph 的自动 `--full-auto`，再把 Codex bypass flag 放在 `--` 后传给 Codex：
 
 ```bash
 cd <repo-root>
@@ -53,13 +53,15 @@ ralph \
   --max-iterations 3 \
   --last-activity-timeout 15m \
   --no-commit \
+  --no-allow-all \
   --prompt-file ~/work/.agents/skills/ralph-plan-lqy/templates/issue-backlog-prompt.md \
   -- \
-  --sandbox danger-full-access \
   --dangerously-bypass-approvals-and-sandbox
 ```
 
-用户点名 Claude Code 时，把 `--agent codex` 改成 `--agent claude-code`，并移除 `--` 后面的 Codex 专属参数。除非用户点名，否则省略 `--model`。
+如果只需要 `danger-full-access` 而不需要完全 bypass，也可以省略 `--no-allow-all` 和 `--dangerously-bypass-approvals-and-sandbox`，只在 `--` 后传 `--sandbox danger-full-access`。但当 Codex 需要通过本机代理访问 GitHub API、或此前出现 `127.0.0.1:<proxy-port>` 被 sandbox 拦截时，使用上面的默认命令。
+
+用户点名 Claude Code 时，把 `--agent codex` 改成 `--agent claude-code`，并移除 `--` 后面的 Codex 专属参数和 `--no-allow-all`。除非用户点名，否则省略 `--model`。
 
 ## 参数说明
 
@@ -68,8 +70,9 @@ ralph \
 - `--max-iterations`：安全上限，必须设置。
 - `--last-activity-timeout 15m`：静默超时后结束当前轮。
 - `--no-commit`：禁止 Ralph 自动提交。
+- `--no-allow-all`：关闭 Open Ralph 对 Codex 自动注入的 `--full-auto`，避免和 Codex bypass flag 冲突。
 - `--prompt-file`：backlog prompt 文件。
-- `--` 后参数：传给 Codex CLI，默认绕过沙箱和审批。
+- `--` 后参数：传给 Codex CLI；默认传 `--dangerously-bypass-approvals-and-sandbox`，让 Codex 子进程可使用本机代理访问 GitHub API。
 
 ## 输出格式
 
