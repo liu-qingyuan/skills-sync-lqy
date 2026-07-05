@@ -14,6 +14,7 @@ description: "规划 Open Ralph GitHub issue backlog 串行循环：Codex 默认
 - 每轮只领取一个 issue，按 issue number 升序扫描，先通过 blocker gate 的先做。
 - 领取到可实现 issue 后，交给 `$implement-lqy GitHub issue #N` 执行。
 - 不使用 `.ralph/ralph-tasks.md`，不使用 `--tasks`。
+- `.ralph/` 是 Ralph 运行状态目录，默认不提交，也不作为下一轮领取 issue 的阻塞。
 - 使用 `--no-commit`；agent 在当前 checkout 串行实现并自己提交 commit。
 - 没有可领取 issue 时输出 `<promise>NO MORE TASKS</promise>`。
 
