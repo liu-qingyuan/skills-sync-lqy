@@ -16,14 +16,11 @@ PRD 父 issue 不是实现任务。若候选 issue 是 PRD（例如标题以 `PR
 
 # 串行 checkout
 
-默认不创建 PR，不创建 `git worktree`，不切新分支。在当前 checkout 串行处理一个 issue。
-
 选择新 issue 前先运行 `git status --short`。
 
-- 如果只有 `.ralph/` 状态文件变化，不要因此停止；这些是 Ralph 循环状态。
-- 如果已有代码/文档改动，先判断是否来自上一轮同一 issue。
-- 如果能从 issue 评论、最近提交、Ralph 状态或 diff 明确判断上一轮 issue，继续这个 issue，不要领取新的 issue。
-- 如果无法判断这些改动属于哪个 issue，停止并说明，避免覆盖用户改动。
+- 只有 `.ralph/` 变化：忽略。
+- 有未提交代码/文档改动：能判断属于上一轮 issue 就继续上一轮；判断不了就停止说明。
+- 工作区可继续后，再按 backlog 领取新 issue。
 
 对每个候选 issue 运行：
 
@@ -44,5 +41,5 @@ python3 ~/work/.agents/skills/ralph-plan-lqy/scripts/check_ready_issue_unblocked
 # 铁律
 
 - 一次只做一个 issue。
-- 默认不创建 PR，不创建 `git worktree`。
+- 不创建 PR、`git worktree` 或新分支。
 - 永远不要处理没有 `ready-for-agent` 标签的 issue。

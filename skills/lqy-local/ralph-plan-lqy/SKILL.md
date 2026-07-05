@@ -9,13 +9,12 @@ description: "规划 Open Ralph GitHub issue backlog 串行循环：Codex 默认
 
 ## 工作流
 
-- GitHub Issues 是唯一 backlog 和状态机。
-- 只处理 open 且带 `ready-for-agent` 的 issue。
-- 每轮只领取一个 issue，按 issue number 升序扫描，先通过 blocker gate 的先做。
-- 领取到可实现 issue 后，交给 `$implement-lqy GitHub issue #N` 执行。
-- 不使用 `.ralph/ralph-tasks.md`，不使用 `--tasks`。
-- `.ralph/` 是 Ralph 运行状态目录，默认不提交，也不作为下一轮领取 issue 的阻塞。
-- 使用 `--no-commit`；agent 在当前 checkout 串行实现并自己提交 commit。
+- Backlog 只看 GitHub Issues：open + `ready-for-agent`。
+- 每轮按 issue number 升序找第一个通过 blocker gate 的 issue。
+- PRD 父 issue 跳过；可实现 issue 交给 `$implement-lqy GitHub issue #N`。
+- 不使用 `.ralph/ralph-tasks.md` 或 `--tasks`。
+- `.ralph/` 是本地运行状态：不提交，不阻塞下一轮。
+- 使用 `--no-commit`；agent 完成后自己提交。
 - 没有可领取 issue 时输出 `<promise>NO MORE TASKS</promise>`。
 
 ## Blocker Gate
@@ -42,9 +41,9 @@ python3 ~/work/.agents/skills/ralph-plan-lqy/scripts/check_ready_issue_unblocked
 
 只有仓库需要特殊标签或额外安全规则时，才复制到 `.ralph/prompts/issue-backlog.md` 再修改。
 
-## 主命令
+## Codex 主命令
 
-默认用 Codex。必须加 `--no-allow-all`，并在 `--` 后传 `--dangerously-bypass-approvals-and-sandbox`。
+默认用 Codex。必须同时保留 `--no-allow-all` 和 `--dangerously-bypass-approvals-and-sandbox`。
 
 ```bash
 cd <repo-root>
@@ -64,14 +63,9 @@ ralph \
 
 ## 参数说明
 
-- `--agent`：每轮调用哪个 CLI。
-- `--completion-promise "NO MORE TASKS"`：没有可领取 issue 时停止。
-- `--max-iterations`：安全上限，必须设置。
-- `--last-activity-timeout 15m`：静默超时后结束当前轮。
-- `--no-commit`：禁止 Ralph 自动提交。
-- `--no-allow-all`：避免 Ralph 自动给 Codex 加 `--full-auto`。
-- `--prompt-file`：backlog prompt 文件。
-- `--` 后参数：传给 Codex CLI。
+- `--no-allow-all`：防止 Ralph 给 Codex 注入 `--full-auto`。
+- `--dangerously-bypass-approvals-and-sandbox`：必须传给 Codex。
+- `--max-iterations`、`--last-activity-timeout` 可按本轮预算调整。
 
 ## 输出格式
 
