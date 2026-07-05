@@ -14,6 +14,17 @@
 
 PRD 父 issue 不是实现任务。若候选 issue 是 PRD（例如标题以 `PRD:` 开头，或正文是 PRD 模板），不要直接实现它。
 
+# 串行 checkout
+
+默认不创建 PR，不创建 `git worktree`，不切新分支。在当前 checkout 串行处理一个 issue。
+
+选择新 issue 前先运行 `git status --short`。
+
+- 如果只有 `.ralph/` 状态文件变化，不要因此停止；这些是 Ralph 循环状态。
+- 如果已有代码/文档改动，先判断是否来自上一轮同一 issue。
+- 如果能从 issue 评论、最近提交、Ralph 状态或 diff 明确判断上一轮 issue，继续这个 issue，不要领取新的 issue。
+- 如果无法判断这些改动属于哪个 issue，停止并说明，避免覆盖用户改动。
+
 对每个候选 issue 运行：
 
 ```bash
@@ -25,12 +36,6 @@ python3 ~/work/.agents/skills/ralph-plan-lqy/scripts/check_ready_issue_unblocked
 - 退出码 `1`：环境或 GitHub API 阻塞，停止并说明原因。
 
 如果所有候选 issue 都不可领取，输出 <promise>NO MORE TASKS</promise> 并停止。
-
-# 串行 checkout
-
-默认不创建 PR，不创建 `git worktree`，不切新分支。在当前 checkout 串行处理一个 issue。
-
-开始实现前先运行 `git status --short`。如果已有未提交改动，先判断是否来自上一轮同一 issue；如果不是，停止并说明，避免覆盖用户改动。
 
 # 实现
 
