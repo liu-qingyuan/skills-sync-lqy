@@ -219,6 +219,20 @@ python3 scripts/check_matt_zh_skills.py
 npx skills@latest add . --list
 ```
 
+## 更新已安装项目 skills
+
+如果某个项目已经安装过本仓库的 skills，可以用脚本把该项目 `.agents/skills/` 中**已存在的同名 installable skills**更新到最新版本。脚本只从 `skills/` 读取可安装版本，不会从 `baselines/` 或 `upstream/` 同步，也不会自动新增项目未安装的 skill。
+
+```bash
+python3 scripts/sync_installed_project_skills.py /path/to/project --repo-url https://github.com/liu-qingyuan/skills-sync-lqy.git
+```
+
+先预览：
+
+```bash
+python3 scripts/sync_installed_project_skills.py /path/to/project --dry-run
+```
+
 如果只改了某个 skill，也可以额外验证对应目录：
 
 ```bash
