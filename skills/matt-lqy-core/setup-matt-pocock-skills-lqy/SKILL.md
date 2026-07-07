@@ -37,14 +37,13 @@ description: 为 Matt Pocock 工程 skills 配置当前仓库：issue tracker、
 
 > 说明：“issue tracker”是此仓库实际跟踪工作的地方。`to-issues`、`triage`、`to-prd` 和 `qa` 等 skill 会读取和写入它，所以它们需要知道应该调用 `gh issue create`、在 `.scratch/` 下写 Markdown 文件，还是遵循你描述的其他工作流。请选择你真实使用的工作跟踪位置。
 
-默认姿势：这些技能是为 GitHub 设计的。如果“git Remote”指向 GitHub，请提出该建议。如果 `git remote` 指向 GitLab（`gitlab.com` 或自托管主机），则建议使用 GitLab。否则（或者如果用户愿意），提供：
+默认姿势：这些 LQY 技能优先支持 GitHub。如果 `git remote` 指向 GitHub，请提出该建议。否则（或者如果用户愿意），提供：
 
 - **GitHub** — 问题存在于仓库的 GitHub 问题中（使用 `gh` CLI）
-- **GitLab** — 问题存在于仓库的 GitLab 问题中（使用 [`glab`](https://gitlab.com/gitlab-org/cli) CLI）
 - **本地 Markdown** - 问题以文件形式存在于该仓库中的 `.scratch/<feature>/` 下（适用于单独项目或没有远程的仓库）
 - **其他**（Jira、Linear 等）— 要求用户在一个段落中描述工作流；该技能会将其记录为自由散文
 
-如果且仅当用户选择 **GitHub** 或 **GitLab** 时，询问一个后续问题：
+如果且仅当用户选择 **GitHub** 时，询问一个后续问题：
 
 > 说明：开源仓库收到的功能请求不一定只来自 issue，也可能来自 PR。可以把 PR 理解为“带着代码一起提交的请求”。如果开启这个选项，`/triage-lqy` 会把*外部* PR 拉入同一个队列，并用与 issue 相同的标签和状态处理它们（协作者正在推进的 PR 会保留原状）。如果你不把 PR 当作请求入口，请关闭它。
 
@@ -77,7 +76,7 @@ description: 为 Matt Pocock 工程 skills 配置当前仓库：issue tracker、
 
 向用户显示草稿：
 
-- 添加到正在编辑的`CLAUDE.md`/`AGENTS.md`中的`## Agent skills`块（有关选择规则，请参阅步骤 4）
+- 添加到正在编辑的 `AGENTS.md`/`CLAUDE.md` 中的 `## Agent skills` 块（有关选择规则，请参阅步骤 4）
 - `docs/agents/issue-tracker.md`、`docs/agents/triage-labels.md`、`docs/agents/domain.md` 的内容
 
 让他们在写作之前进行编辑。
@@ -86,11 +85,11 @@ description: 为 Matt Pocock 工程 skills 配置当前仓库：issue tracker、
 
 **选择要编辑的文件：**
 
-- 如果 `CLAUDE.md` 存在，编辑它。
-- 否则，如果 `AGENTS.md` 存在，则编辑它。
-- 如果两者都不存在，请询问用户要创建哪一个 — 不要替他们选择。
+- Codex 优先：如果 `AGENTS.md` 存在，编辑它。
+- 如果 `AGENTS.md` 不存在，即使 `CLAUDE.md` 存在，也默认创建 `AGENTS.md`；只有用户明确要求 Claude 优先时才编辑 `CLAUDE.md`。
+- 如果两者都不存在，默认创建 `AGENTS.md`。
 
-当`CLAUDE.md`已经存在时，切勿创建`AGENTS.md`（反之亦然）——始终编辑已经存在的那个。
+不要同时写入 `AGENTS.md` 和 `CLAUDE.md`。选择一个目标文件后，只在该文件中维护 `## Agent skills` 块。
 
 如果所选文件中已存在`## Agent skills`块，请就地更新其内容，而不是附加重复项。不要覆盖用户对周围部分的编辑。
 
@@ -113,7 +112,6 @@ description: 为 Matt Pocock 工程 skills 配置当前仓库：issue tracker、
 然后使用此技能文件夹中的种子模板作为起点编写三个文档文件：
 
 - [issue-tracker-github.md](./issue-tracker-github.md) — GitHub issue tracker
-- [issue-tracker-gitlab.md](./issue-tracker-gitlab.md) — GitLab issue tracker
 - [issue-tracker-local.md](./issue-tracker-local.md) — 本地 Markdown issue tracker
 - [triage-labels.md](./triage-labels.md) — 标签映射
 - [domain.md](./domain.md) — 域文档消费者规则+布局

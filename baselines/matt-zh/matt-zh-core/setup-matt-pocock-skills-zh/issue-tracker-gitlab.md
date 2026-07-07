@@ -4,13 +4,13 @@
 
 ## 惯例
 
-- **创建问题**：`glab issues create --title "..." --description "..."`。使用heredoc进行多行描述。通过 `--description -` 打开编辑器。
-- **阅读问题**：`glab 问题视图 <number> --comments`。使用“-F json”获得机器可读的输出。
-- **列出问题**：带有适当的“--label”过滤器的“glab 问题列表 -F json”。
-- **对问题发表评论**：`glab 问题注释 <number> --message "..."`。 GitLab 将注释称为“注释”。
-- **应用/删除标签**：`glab issues update <number> --label "..."` / `--unlabel "..."`。多个标签可以用逗号分隔或通过重复标志来分隔。
-- **关闭**：`glab 问题关闭 <number>`。 `glab issues close` 不接受结束评论，因此首先使用 `glab issues note <number> --message "..."` 发布解释，然后关闭。
-- **合并请求**：GitLab 将 PR 称为“合并请求”。使用`glab mr create`、`glab mr view`、`glab mr note`等——与`gh pr ...`形状相同，用`mr`代替`pr`，用`note`/`--message`代替`comment`/`--body`。
+- **创建问题**：`glab issue create --title "..." --description "..."`。使用 heredoc 进行多行描述。通过 `--description -` 打开编辑器。
+- **阅读问题**：`glab issue view <number> --comments`。使用 `-F json` 获得机器可读的输出。
+- **列出问题**：`glab issue list -F json`，带有适当的 `--label` 过滤器。
+- **对问题发表评论**：`glab issue note <number> --message "..."`。GitLab 将评论称为 notes。
+- **应用/删除标签**：`glab issue update <number> --label "..."` / `glab issue update <number> --unlabel "..."`。多个标签可以用逗号分隔或通过重复标志来分隔。
+- **关闭**：`glab issue close <number>`。`glab issue close` 不接受结束评论，因此首先使用 `glab issue note <number> --message "..."` 发布解释，然后关闭。
+- **合并请求**：GitLab 将 PR 称为“合并请求”。使用 `glab mr create`、`glab mr view`、`glab mr note` 等——与 `gh pr ...` 形状相同，用 `mr` 代替 `pr`，用 `note`/`--message` 代替 `comment`/`--body`。
 
 从 `git remote -v` 推断仓库 — `glab` 在克隆内运行时会自动执行此操作。
 
@@ -22,9 +22,9 @@
 
 - **阅读 MR**：`glab mr view <number> --comments` 和 `glab mr diff <number>` 进行比较。
 - **列出外部 MR 进行 triage**：`glab mr list -F json`，然后仅保留作者不是项目成员/所有者的 MR（贡献者的 MR，而不是维护者的正在进行的工作）。
-- **评论/标签/关闭**：`glab mr note`、`glab mr update --label`/`--unlabel`、`glab mr close`。
+- **评论/标签/关闭**：`glab mr note <number> --message "..."`、`glab mr update <number> --label "..."` / `glab mr update <number> --unlabel "..."`、`glab mr close <number>`。
 
-与 GitHub 不同，GitLab 分别对问题和 MR 进行编号，因此一旦您知道维护者指的是哪个表面，“#42”就明确无误。
+与 GitHub 不同，GitLab 分别对问题和 MR 进行编号，因此一旦您知道维护者指的是哪个表面，`#42` 就明确无误。
 
 ## 当技能说“发布到 issue tracker”时
 
@@ -32,4 +32,4 @@
 
 ## 当技能说“获取相关 ticket”时
 
-运行 `glab issues view <number> --comments`。
+运行 `glab issue view <number> --comments`。
