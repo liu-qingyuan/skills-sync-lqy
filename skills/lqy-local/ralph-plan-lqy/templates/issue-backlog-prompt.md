@@ -25,7 +25,7 @@ PRD 父 issue 不是实现任务。若候选 issue 是 PRD（例如标题以 `PR
 对每个候选 issue 运行：
 
 ```bash
-python3 ~/work/.agents/skills/ralph-plan-lqy/scripts/check_ready_issue_unblocked.py <N>
+python3 /Users/liuqingyuan/.agents/skills/ralph-plan-lqy/scripts/check_ready_issue_unblocked.py <N>
 ```
 
 - 退出码 `0`：可以开始。
