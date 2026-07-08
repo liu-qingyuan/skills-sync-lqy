@@ -50,7 +50,7 @@ cd <repo-root>
 ralph \
   --agent codex \
   --completion-promise "NO MORE TASKS" \
-  --max-iterations 3 \
+  --max-iterations 20 \
   --last-activity-timeout 15m \
   --no-commit \
   --no-allow-all \
