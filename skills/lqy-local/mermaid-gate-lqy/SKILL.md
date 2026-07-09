@@ -1,0 +1,38 @@
+---
+name: mermaid-gate-lqy
+description: 判断任务是否需要 Mermaid 设计图，并规定需要时必须产出的 4 张图：架构/调用关系图、时序图、状态图、类图。
+---
+
+# Mermaid 设计图 Gate
+
+用于把设计可视化要求统一到 LQY 工作流中。`to-tickets-lqy` 写 Ticket 时用它生成 acceptance criteria；`implement-lqy` 开始实现前用它检查当前 Ticket 是否已经满足。
+
+## Gate
+
+先判断当前 Ticket 是否需要 Mermaid 图。
+
+- **需要图**：会改变架构边界、公共接口、adapter contract、状态机、主要调用流程或跨模块依赖。
+- **不需要图**：纯文档、调研记录、文案或无接口变化的小修。
+
+这是一个 gate，不是每个任务都强制画图。需要图时，必须先产出 4 张图；不需要图时，必须在 Ticket、issue comment 或 PR 描述中说明原因。
+
+## 必须的 4 张图
+
+需要图时，先使用 `/mermaid-visualizer`，并把图放到 issue 正文、issue comment 或 PR 描述中，再开始实现。必须提供 4 张图，顺序如下：
+
+- **架构/调用关系图**：模块边界、接口、adapter、跨模块依赖和“谁调用谁”。
+- **时序图**：一次请求、一次工具调用或一次业务流程的时间顺序。
+- **状态图**：状态机、生命周期、任务状态或可回退流程。
+- **类图**：局部类/接口结构；范围只覆盖当前 Ticket 涉及的模块，避免画全项目类图。
+
+## 更新规则
+
+实现中如果接口、状态机、依赖方向或调用流程与图不一致，先更新图，再继续实现。完成前确认保留的图反映最终实现。
+
+## Ticket 验收标准写法
+
+把 gate 写进 Ticket acceptance criteria：
+
+```markdown
+- [ ] Mermaid gate 已处理：如涉及架构边界、公共接口、adapter contract、状态机、主要调用流程或跨模块依赖，先用 `/mermaid-visualizer` 补齐架构/调用关系图、时序图、状态图、类图；不需要图时说明原因。
+```
