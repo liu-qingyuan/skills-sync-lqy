@@ -26,7 +26,7 @@ description: 为 Matt Pocock 工程 skills 配置当前仓库：issue tracker、
 - `docs/adr/` 和任何 `src/*/docs/adr/` 目录
 - `docs/agents/` — 该技能之前的输出是否已经存在？
 - `.scratch/` — 表明本地 Markdown issue tracker 约定已在使用中
-- `.gitignore` — 是否已经忽略 Ralph 本地运行状态 `.ralph/`，以及 Claude 本地状态 `.claude/` / `CLAUDE.md`
+- `.gitignore` — 是否已经忽略 Ralph 本地运行状态 `.ralph/`，以及本地 agent 配置 `AGENTS.md` / `.claude/` / `CLAUDE.md`
 
 ### 2. 展示调查结果并提问
 
@@ -79,7 +79,7 @@ description: 为 Matt Pocock 工程 skills 配置当前仓库：issue tracker、
 
 - 添加到正在编辑的 `AGENTS.md`/`CLAUDE.md` 中的 `## Agent skills` 块（有关选择规则，请参阅步骤 4）
 - `docs/agents/issue-tracker.md`、`docs/agents/triage-labels.md`、`docs/agents/domain.md` 的内容
-- `.gitignore` 中将确保包含 `.ralph/`、`.claude/`、`CLAUDE.md`
+- `.gitignore` 中将确保包含 `.ralph/`、`AGENTS.md`、`.claude/`、`CLAUDE.md`
 
 让他们在写作之前进行编辑。
 
@@ -124,6 +124,7 @@ description: 为 Matt Pocock 工程 skills 配置当前仓库：issue tracker、
 
 ```gitignore
 .ralph/
+AGENTS.md
 .claude/
 CLAUDE.md
 ```

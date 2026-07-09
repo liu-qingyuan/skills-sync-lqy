@@ -1,5 +1,6 @@
 .agents/
 .ralph/
 .claude/
+AGENTS.md
 CLAUDE.md
 .ruff_cache/
