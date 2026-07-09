@@ -18,7 +18,6 @@ PRD 父 issue 不是实现任务。若候选 issue 是 PRD（例如标题以 `PR
 
 选择新 issue 前先运行 `git status --short`。
 
-- 只有 `.ralph/` 变化：忽略。
 - 有未提交代码/文档改动：能判断属于上一轮 issue 就继续上一轮；判断不了就停止说明。
 - 工作区可继续后，再按 backlog 领取新 issue。
 
