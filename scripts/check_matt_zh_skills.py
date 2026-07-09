@@ -17,7 +17,9 @@ SKILLS = ROOT / "skills"
 ZH_BASELINE = ROOT / "baselines" / "matt-zh"
 UPSTREAM = ROOT / "upstream" / "mattpocock" / "skills"
 MARKETPLACE = ROOT / ".claude-plugin" / "marketplace.json"
-EXPECTED_MATT_COUNT = 35
+EXPECTED_MATT_LQY_COUNT = 35
+EXPECTED_MATT_ZH_COUNT = 38
+EXPECTED_UPSTREAM_COUNT = 38
 EXPECTED_INSTALLABLE_COUNT = 50
 POLLUTION_PATTERNS = [
     "这是 Matt Pocock",
@@ -108,7 +110,7 @@ ENGLISH_COMMANDS = [
     "/tdd",
     "/triage",
     "/to-issues",
-    "/to-prd",
+    "/to-spec",
     "/handoff",
 ]
 
@@ -145,14 +147,14 @@ def check_installable_boundary(errors: list[str]) -> None:
 
     if len(installable) != EXPECTED_INSTALLABLE_COUNT:
         fail(errors, f"expected {EXPECTED_INSTALLABLE_COUNT} installable skills, found {len(installable)}")
-    if len(installable_lqy) != EXPECTED_MATT_COUNT:
-        fail(errors, f"expected {EXPECTED_MATT_COUNT} installable Matt lqy skills, found {len(installable_lqy)}")
+    if len(installable_lqy) != EXPECTED_MATT_LQY_COUNT:
+        fail(errors, f"expected {EXPECTED_MATT_LQY_COUNT} installable Matt lqy skills, found {len(installable_lqy)}")
     if installable_zh:
         fail(errors, "Matt zh baseline must not be installable under skills/: " + ", ".join(rel(p.parent) for p in installable_zh[:10]))
-    if len(zh_baselines) != EXPECTED_MATT_COUNT:
-        fail(errors, f"expected {EXPECTED_MATT_COUNT} non-installable Matt zh baselines, found {len(zh_baselines)}")
-    if len(upstream) != EXPECTED_MATT_COUNT:
-        fail(errors, f"expected {EXPECTED_MATT_COUNT} upstream Matt mirrors, found {len(upstream)}")
+    if len(zh_baselines) != EXPECTED_MATT_ZH_COUNT:
+        fail(errors, f"expected {EXPECTED_MATT_ZH_COUNT} non-installable Matt zh baselines, found {len(zh_baselines)}")
+    if len(upstream) != EXPECTED_UPSTREAM_COUNT:
+        fail(errors, f"expected {EXPECTED_UPSTREAM_COUNT} upstream Matt mirrors, found {len(upstream)}")
 
     forbidden_top_level = {"engineering", "productivity", "personal", "misc", "in-progress", "deprecated"}
     present = {p.name for p in SKILLS.iterdir() if p.is_dir()}

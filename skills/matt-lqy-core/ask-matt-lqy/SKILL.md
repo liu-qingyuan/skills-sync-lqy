@@ -1,7 +1,7 @@
 ---
 name: ask-matt-lqy
 description: 询问当前情境应该使用哪一个 skill 或工作流。这是本仓库用户主动调用 skills 的中文路由器。用于用户不确定该用哪个 Matt Pocock
-  工作流，或想让 AI 帮忙选择 grill、triage、to-prd、tdd、handoff 等流程时。
+  工作流，或想让 AI 帮忙选择 grill、triage、to-spec、tdd、handoff 等流程时。
 ---
 
 # 询问马特
@@ -20,12 +20,12 @@ description: 询问当前情境应该使用哪一个 skill 或工作流。这是
    - **`/prototype-lqy`** 用一次性代码回答问题，
    - **`/handoff-lqy`** 返回您所学到的内容，并从原始想法线程中引用它。
 3. **分支 — 这是多会话构建吗？**
-   - **是** → **`/to-prd-lqy`**（将线程变成 PRD）→ **`/to-issues-lqy`** （将 PRD 拆分为可独立抓取的问题）。因为这些问题是独立的，**每个 issue 都有清晰上下文**：每个问题开始一个新的会话，并通过向其传递 PRD 和要处理的单个问题来启动 **`/implement-lqy`**。
+   - **是** → **`/to-spec-lqy`**（将线程变成 spec）→ **`/to-issues-lqy`** （将 spec 拆分为可独立抓取的问题）。因为这些问题是独立的，**每个 issue 都有清晰上下文**：每个问题开始一个新的会话，并通过向其传递 spec 和要处理的单个问题来启动 **`/implement-lqy`**。
    - **否** → **`/implement-lqy`** 就在这里，在同一个上下文窗口中。
 
 ### 环境卫生
 
-将步骤 1-3 保留在**一个不间断的上下文窗口**中 - 在“/to-issues-lqy”之前不要压缩或清除 - 因此追问、PRD 和问题都建立在相同的思维之上。然后，每个“/implement-lqy”都会重新开始，从问题开始工作。
+将步骤 1-3 保留在**一个不间断的上下文窗口**中 - 在“/to-issues-lqy”之前不要压缩或清除 - 因此追问、spec 和问题都建立在相同的思维之上。然后，每个“/implement-lqy”都会重新开始，从问题开始工作。
 
 对此的限制是 **[智能区域](https://www.aihero.dev/ai-coding-dictionary/smart-zone)**：该窗口（最先进模型上的约 120k token）在该窗口内模型仍然可以进行敏锐的推理。如果会话在“/to-issues-lqy”之前接近它，请不要继续降级 - “/handoff-lqy”并在新线程中继续。
 

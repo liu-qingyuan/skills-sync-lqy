@@ -1,11 +1,11 @@
 ---
 name: prototype-zh
-description: 构建一次性原型来澄清设计问题：可以是用于状态/业务逻辑问题的可运行终端 app，也可以是一组可切换的 UI 方案。
+description: 构建一次性 prototype 来回答设计问题。用于用户想 sanity-check 状态模型或逻辑是否合理，或探索 UI 应该是什么样子时。
 ---
 
 # 原型
 
-原型是**用一次性代码回答一个问题**。问题决定原型的形态。
+prototype 是**用一次性代码回答一个问题**。问题决定 prototype 的形态。
 
 ## 选择一个分支
 

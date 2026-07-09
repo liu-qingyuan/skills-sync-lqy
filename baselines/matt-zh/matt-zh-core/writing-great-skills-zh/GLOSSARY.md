@@ -150,6 +150,12 @@ _避免_：地平线、战争迷雾、前瞻
 
 _避免_：过早关闭、匆忙、仓促、走捷径
 
+### Negation
+
+_失败模式。_ 用禁止来 steering：告诉 agent 不要做什么。它会把被禁止的行为拖进上下文，让它_更_可用，而不是更少。_Don't think of an elephant_，结果 elephant 占满画面；_never write verbose comments_，verbosity 这个 pattern 刚被 agent 读到。否定词是弱 modifier，被强激活的概念压过，所以禁令会半读成“做这件事”。它的**引导词**就是那个 _elephant_：任何 prohibition 命名进框架的东西。修法：prompt the **positive**，描述目标行为（例如 “write one-line comments”），让被禁止的东西不被说出口。只有无法正向表达的硬 guardrail 才值得保留 prohibition；即便如此，也要配上正向目标，让注意力落在要做什么上。
+
+_避免_：ironic rebound、don't-prompting、the pink elephant
+
 ## 修剪
 
 保持技能精益——每一种补救措施都与它所解决的失败相匹配。

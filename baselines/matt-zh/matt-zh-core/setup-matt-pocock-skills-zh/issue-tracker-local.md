@@ -17,3 +17,14 @@
 ## 当技能说“获取相关 ticket”时
 
 读取引用路径中的文件。用户通常会直接传递路径或问题编号。
+
+## Wayfinding operations
+
+由 `/wayfinder-zh` 使用。**map** 是一个文件，每个 Ticket 是一个 **child** 文件。
+
+- **Map**：`.scratch/<effort>/map.md`，保存 Notes / Decisions-so-far / Fog。
+- **Child Ticket**：`.scratch/<effort>/issues/NN-<slug>.md`，从 `01` 开始编号，正文里写 question。`Type:` 行记录 Ticket type（`research`/`prototype`/`grilling`/`task`）；`Status:` 行记录 `claimed`/`resolved`。
+- **Blocking**：顶部附近的 `Blocked by: NN, NN` 行。它列出的每个文件都是 `resolved` 后，Ticket 才 unblocked。
+- **Frontier**：扫描 `.scratch/<effort>/issues/`，找出 open、unblocked、unclaimed 的文件；按编号第一个胜出。
+- **Claim**：把 `Status:` 设为 `claimed` 并保存，之后再做任何工作。
+- **Resolve**：在 `## Answer` heading 下追加答案，把 `Status:` 设为 `resolved`，然后向 `map.md` 的 Decisions-so-far 追加 context pointer（gist + link）。

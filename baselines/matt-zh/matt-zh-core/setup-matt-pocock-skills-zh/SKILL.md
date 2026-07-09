@@ -35,7 +35,7 @@ description: 为 Matt Pocock 工程 skills 配置当前仓库：issue tracker、
 
 **A 部分 — issue tracker。**
 
-> 说明：“issue tracker”是此仓库实际跟踪工作的地方。`to-issues`、`triage`、`to-prd` 和 `qa` 等 skill 会读取和写入它，所以它们需要知道应该调用 `gh issue create`、在 `.scratch/` 下写 Markdown 文件，还是遵循你描述的其他工作流。请选择你真实使用的工作跟踪位置。
+> 说明：“issue tracker”是此仓库实际跟踪工作的地方。`to-tickets`、`triage`、`to-spec` 和 `qa` 等 skill 会读取和写入它，所以它们需要知道应该调用 `gh issue create`、在 `.scratch/` 下写 Markdown 文件，还是遵循你描述的其他工作流。请选择你真实使用的工作跟踪位置。
 
 默认姿势：这些技能是为 GitHub 设计的。如果“git Remote”指向 GitHub，请提出该建议。如果 `git remote` 指向 GitLab（`gitlab.com` 或自托管主机），则建议使用 GitLab。否则（或者如果用户愿意），提供：
 

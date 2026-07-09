@@ -7,7 +7,7 @@ description: 把当前对话压缩成交接文档，方便另一个 agent 继续
 
 在文档中包含“建议的技能”部分，其中建议 agent 应调用的 skill。
 
-不要复制其他工件（PRD、计划、ADR、问题、提交、差异）中已捕获的内容。请改为通过路径或 URL 引用它们。
+不要复制其他 artifacts（specs、plans、ADRs、issues、commits、diffs）中已捕获的内容。请改为通过路径或 URL 引用它们。
 
 编辑任何敏感信息，例如 API 密钥、密码或个人身份信息。
 

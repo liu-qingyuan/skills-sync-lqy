@@ -69,7 +69,7 @@ skills/matt-lqy-deprecated/              # deprecated 可安装 LQY 版
 - `setup-matt-pocock-skills-lqy`
 - `tdd-lqy`
 - `to-issues-lqy`
-- `to-prd-lqy`
+- `to-spec-lqy`
 - `triage-lqy`
 - `grill-me-lqy`
 - `grilling-lqy`

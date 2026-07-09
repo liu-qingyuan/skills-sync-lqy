@@ -30,7 +30,7 @@ npx skills@latest add liu-qingyuan/skills-sync-lqy
 $setup-matt-pocock-skills-lqy
 ```
 
-它会让 AI 询问当前项目的 issue tracker、triage labels、文档保存位置等，让 `to-issues-lqy`、`to-prd-lqy`、`triage-lqy`、`tdd-lqy`、`diagnosing-bugs-lqy` 等技能知道项目约定。某些 agent 可能把同一个 skill 写成 `/setup-matt-pocock-skills-lqy`；在 Codex 里优先使用 `$setup-matt-pocock-skills-lqy`。
+它会让 AI 询问当前项目的 issue tracker、triage labels、文档保存位置等，让 `to-issues-lqy`、`to-spec-lqy`、`triage-lqy`、`tdd-lqy`、`diagnosing-bugs-lqy` 等技能知道项目约定。某些 agent 可能把同一个 skill 写成 `/setup-matt-pocock-skills-lqy`；在 Codex 里优先使用 `$setup-matt-pocock-skills-lqy`。
 
 如果只安装我的本地 skills，例如 `ai-slop-cleaner`、`simple`、`pea`、`tea`、`gitnexus`、`handoff-out`，通常安装后即可使用。
 
@@ -208,7 +208,7 @@ python3 scripts/check_matt_zh_skills.py
 
 - `skills/` 只暴露可安装版本，Matt 英文官方镜像和中文 baseline 不能漏进安装列表。
 - 35 个 Matt LQY `*-lqy` skills 都有 `LOCALIZATION.md`，并指向有效 `*-zh` baseline 和上游路径。
-- 35 个 Matt 中文 `*-zh` baseline 都有 `LOCALIZATION.md` 和有效上游路径。
+- 38 个 Matt 中文 `*-zh` baseline 都有 `LOCALIZATION.md` 和有效上游路径。
 - `.claude-plugin/marketplace.json` 必须和 `skills/` 下可安装目录一致，并且不能列出 `*-zh`。
 - README 的 Codex setup 用法必须优先写 `$setup-matt-pocock-skills-lqy`。
 - 所有可安装 skill 必须通过 `quick_validate.py`。
