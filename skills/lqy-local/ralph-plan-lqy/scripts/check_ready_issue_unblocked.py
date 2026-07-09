@@ -14,6 +14,13 @@ from typing import Any
 READY_LABEL = "ready-for-agent"
 BLOCKER_HEADINGS = ("被阻止", "Blocked")
 NO_BLOCKER_MARKERS = ("无", "none", "no blockers", "no blocker", "可以立即开始")
+PARENT_TITLE_PATTERN = re.compile(r"^\s*(?:Spec|PRD)\s*:", flags=re.IGNORECASE)
+SPEC_BODY_MARKERS = (
+    "## Problem Statement",
+    "## User Stories",
+    "## Implementation Decisions",
+    "## Testing Decisions",
+)
 
 EXIT_READY = 0
 EXIT_ERROR = 1
@@ -64,6 +71,12 @@ def parse_blockers(body: str) -> BlockerParseResult:
     return BlockerParseResult(blocker_numbers=tuple(numbers), section_found=True)
 
 
+def is_parent_spec_issue(issue: IssueInfo) -> bool:
+    if PARENT_TITLE_PATTERN.search(issue.title):
+        return True
+    return sum(marker in issue.body for marker in SPEC_BODY_MARKERS) >= 3
+
+
 def issue_from_gh_json(payload: dict[str, Any]) -> IssueInfo:
     labels = frozenset(str(label.get("name", "")) for label in payload.get("labels", []) if label.get("name"))
     return IssueInfo(
@@ -97,6 +110,8 @@ def not_ready_reasons(target: IssueInfo, blockers: Sequence[IssueInfo]) -> list[
         reasons.append(f"target issue is {target.state}")
     if READY_LABEL not in target.labels:
         reasons.append(f"target issue is missing `{READY_LABEL}` label")
+    if is_parent_spec_issue(target):
+        reasons.append("target issue is a parent spec/PRD, not an implementation Ticket")
     if not parse_blockers(target.body).section_found:
         reasons.append("missing `## 被阻止` / `## Blocked` section")
 

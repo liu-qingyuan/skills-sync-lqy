@@ -12,7 +12,7 @@
 
 只挑选一个 issue。按 issue number 升序逐个检查；第一个通过 blocker gate 的 issue 就领取。
 
-PRD 父 issue 不是实现任务。若候选 issue 是 PRD（例如标题以 `PRD:` 开头，或正文是 PRD 模板），不要直接实现它。
+父 issue 不是实现任务。若候选 issue 标题以 `Spec:` 或 `PRD:` 开头，或正文是 spec/PRD 模板，不要直接实现它。只有具体 Ticket 才能交给 `$implement-lqy`。
 
 # 串行 checkout
 
