@@ -12,7 +12,7 @@
 
 只挑选一个 issue。按 issue number 升序逐个检查；第一个通过 blocker gate 的 issue 就领取。
 
-父 issue 不是实现任务。若候选 issue 标题以 `Spec:` 或 `PRD:` 开头，或正文是 spec/PRD 模板，不要直接实现它。只有具体 Ticket 才能交给 `$implement-lqy`。
+父级 spec 不是实现任务。若候选 issue 标题以 `Spec:` 开头，或正文是 spec 模板，不要直接实现它。只有具体 Ticket 才能交给 `$implement-lqy`。
 
 # 串行 checkout
 
@@ -43,7 +43,7 @@ python3 /Users/liuqingyuan/.agents/skills/ralph-plan-lqy/scripts/check_ready_iss
 
 领取到可实现 issue 后，按 `$implement-lqy GitHub issue #N` 的职责执行。Ralph 只负责选择任务、检查 blocker、维护循环状态；实现、测试、review 和 commit 交给 `implement-lqy` 的规则。
 
-每个 issue 都要按 `$implement-lqy` 检查当前 issue 的 Mermaid Gate。来源 PRD/spec 的上级 Gate 不能替代当前 issue 的 Gate。
+每个 issue 都要按 `$implement-lqy` 检查当前 issue 的 Mermaid Gate。来源 spec 的上级 Gate 不能替代当前 issue 的 Gate。
 
 # 铁律
 

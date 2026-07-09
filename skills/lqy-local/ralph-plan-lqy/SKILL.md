@@ -11,7 +11,7 @@ description: "规划 Open Ralph GitHub issue backlog 串行循环：Codex 默认
 
 - Backlog 只看 GitHub Issues：open + `ready-for-agent`。
 - 每轮按 issue number 升序找第一个通过 blocker gate 的 issue。
-- `Spec:` / `PRD:` 父 issue 跳过；可实现 Ticket 交给 `$implement-lqy GitHub issue #N`。每个 issue 的 Mermaid Gate 由 `$implement-lqy` 按当前 issue 单独检查；父级 spec 的上级 Gate 不替代它。
+- `Spec:` 父 issue 跳过；可实现 Ticket 交给 `$implement-lqy GitHub issue #N`。每个 issue 的 Mermaid Gate 由 `$implement-lqy` 按当前 issue 单独检查；父级 spec 的上级 Gate 不替代它。
 - 不使用 `.ralph/ralph-tasks.md` 或 `--tasks`。
 - `.ralph/` 是本地运行状态：不提交；`$setup-matt-pocock-skills-lqy` 默认应把它写入 `.gitignore`。
 - 使用 `--no-commit`；agent 完成后自己提交。

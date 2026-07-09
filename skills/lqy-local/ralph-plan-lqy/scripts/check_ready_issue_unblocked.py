@@ -14,7 +14,7 @@ from typing import Any
 READY_LABEL = "ready-for-agent"
 BLOCKER_HEADINGS = ("被阻止", "Blocked")
 NO_BLOCKER_MARKERS = ("无", "none", "no blockers", "no blocker", "可以立即开始")
-PARENT_TITLE_PATTERN = re.compile(r"^\s*(?:Spec|PRD)\s*:", flags=re.IGNORECASE)
+PARENT_TITLE_PATTERN = re.compile(r"^\s*Spec\s*:", flags=re.IGNORECASE)
 SPEC_BODY_MARKERS = (
     "## Problem Statement",
     "## User Stories",
@@ -111,7 +111,7 @@ def not_ready_reasons(target: IssueInfo, blockers: Sequence[IssueInfo]) -> list[
     if READY_LABEL not in target.labels:
         reasons.append(f"target issue is missing `{READY_LABEL}` label")
     if is_parent_spec_issue(target):
-        reasons.append("target issue is a parent spec/PRD, not an implementation Ticket")
+        reasons.append("target issue is a parent spec, not an implementation Ticket")
     if not parse_blockers(target.body).section_found:
         reasons.append("missing `## 被阻止` / `## Blocked` section")
 
