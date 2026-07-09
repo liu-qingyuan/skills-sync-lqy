@@ -24,7 +24,7 @@
 对每个候选 issue 运行：
 
 ```bash
-python3 /Users/liuqingyuan/.agents/skills/ralph-plan-lqy/scripts/check_ready_issue_unblocked.py <N>
+python3 ~/.agents/skills/ralph-plan-lqy/scripts/check_ready_issue_unblocked.py <N>
 ```
 
 - 退出码 `0`：可以开始。

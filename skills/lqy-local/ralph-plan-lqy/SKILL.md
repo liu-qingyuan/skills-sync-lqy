@@ -23,7 +23,7 @@ description: "规划 Open Ralph GitHub issue backlog 串行循环：Codex 默认
 本 skill 自带只读 blocker gate：
 
 ```bash
-python3 /Users/liuqingyuan/.agents/skills/ralph-plan-lqy/scripts/check_ready_issue_unblocked.py <issue-number>
+python3 ~/.agents/skills/ralph-plan-lqy/scripts/check_ready_issue_unblocked.py <issue-number>
 ```
 
 候选 issue 必须使用 `## Blocked by` 记录依赖；没有 blocker 时写 `None — can start immediately`。
@@ -39,7 +39,7 @@ python3 /Users/liuqingyuan/.agents/skills/ralph-plan-lqy/scripts/check_ready_iss
 默认直接引用本 skill 模板：
 
 ```text
-/Users/liuqingyuan/.agents/skills/ralph-plan-lqy/templates/issue-backlog-prompt.md
+~/.agents/skills/ralph-plan-lqy/templates/issue-backlog-prompt.md
 ```
 
 只有仓库需要特殊标签或额外安全规则时，才复制到 `.ralph/prompts/issue-backlog.md` 再修改。
@@ -57,7 +57,7 @@ ralph \
   --last-activity-timeout 15m \
   --no-commit \
   --no-allow-all \
-  --prompt-file /Users/liuqingyuan/.agents/skills/ralph-plan-lqy/templates/issue-backlog-prompt.md \
+  --prompt-file ~/.agents/skills/ralph-plan-lqy/templates/issue-backlog-prompt.md \
   -- \
   --dangerously-bypass-approvals-and-sandbox
 ```
