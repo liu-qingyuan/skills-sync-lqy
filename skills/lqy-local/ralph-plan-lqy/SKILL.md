@@ -15,7 +15,8 @@ description: "规划 Open Ralph GitHub issue backlog 串行循环：Codex 默认
 - 不使用 `.ralph/ralph-tasks.md` 或 `--tasks`。
 - `.ralph/` 是本地运行状态：不提交，不阻塞下一轮。
 - 使用 `--no-commit`；agent 完成后自己提交。
-- 没有可领取 issue 时输出 `<promise>NO MORE TASKS</promise>`。
+- 没有可领取 issue 时只输出 `<ralph-finished-no-ready-issues/>`。
+- 只要处理过 issue，或还有后续 issue，就禁止输出或提及 `<ralph-finished-no-ready-issues/>`。
 
 ## Blocker Gate
 
@@ -49,7 +50,7 @@ python3 /Users/liuqingyuan/.agents/skills/ralph-plan-lqy/scripts/check_ready_iss
 cd <repo-root>
 ralph \
   --agent codex \
-  --completion-promise "NO MORE TASKS" \
+  --completion-promise "<ralph-finished-no-ready-issues/>" \
   --max-iterations 20 \
   --last-activity-timeout 15m \
   --no-commit \

@@ -32,7 +32,13 @@ python3 /Users/liuqingyuan/.agents/skills/ralph-plan-lqy/scripts/check_ready_iss
 - 退出码 `2`：该 issue 当前不可领取，跳过并选择下一个 issue。
 - 退出码 `1`：环境或 GitHub API 阻塞，停止并说明原因。
 
-如果所有候选 issue 都不可领取，输出 <promise>NO MORE TASKS</promise> 并停止。
+如果所有候选 issue 都不可领取，只输出：
+
+```text
+<ralph-finished-no-ready-issues/>
+```
+
+除此之外，任何情况下都不要输出、引用、解释或否定这个 completion token。处理了某个 issue，或 backlog 里仍有后续 issue 时，正常汇报结果即可，不要写“没有输出某个 completion token”。
 
 # 实现
 
