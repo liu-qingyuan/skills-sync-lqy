@@ -30,7 +30,7 @@ npx skills@latest add liu-qingyuan/skills-sync-lqy
 $setup-matt-pocock-skills-lqy
 ```
 
-它会让 AI 询问当前项目的 issue tracker、triage labels、文档保存位置等，让 `to-issues-lqy`、`to-spec-lqy`、`triage-lqy`、`tdd-lqy`、`diagnosing-bugs-lqy` 等技能知道项目约定。某些 agent 可能把同一个 skill 写成 `/setup-matt-pocock-skills-lqy`；在 Codex 里优先使用 `$setup-matt-pocock-skills-lqy`。
+它会让 AI 询问当前项目的 issue tracker、triage labels、文档保存位置等，让 `to-tickets-lqy`、`to-spec-lqy`、`triage-lqy`、`tdd-lqy`、`diagnosing-bugs-lqy` 等技能知道项目约定。某些 agent 可能把同一个 skill 写成 `/setup-matt-pocock-skills-lqy`；在 Codex 里优先使用 `$setup-matt-pocock-skills-lqy`。
 
 如果只安装我的本地 skills，例如 `ai-slop-cleaner`、`simple`、`pea`、`tea`、`gitnexus`、`handoff-out`，通常安装后即可使用。
 

@@ -109,7 +109,7 @@ ENGLISH_COMMANDS = [
     "/setup-matt-pocock-skills",
     "/tdd",
     "/triage",
-    "/to-issues",
+    "/to-tickets",
     "/to-spec",
     "/handoff",
 ]
