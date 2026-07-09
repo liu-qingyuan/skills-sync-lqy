@@ -38,6 +38,8 @@ python3 /Users/liuqingyuan/.agents/skills/ralph-plan-lqy/scripts/check_ready_iss
 
 领取到可实现 issue 后，按 `$implement-lqy GitHub issue #N` 的职责执行。Ralph 只负责选择任务、检查 blocker、维护循环状态；实现、测试、review 和 commit 交给 `implement-lqy` 的规则。
 
+每个 issue 都要按 `$implement-lqy` 检查当前 issue 的 Mermaid Gate。来源 PRD/spec 的上级 Gate 不能替代当前 issue 的 Gate。
+
 # 铁律
 
 - 一次只做一个 issue。
