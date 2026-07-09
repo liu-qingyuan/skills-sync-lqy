@@ -9,7 +9,7 @@ spec 可以作为实现规格和验收上下文；如果用户只传入一个 sp
 
 ## Mermaid 设计图 Gate
 
-开始实现前，按 `$mermaid-gate-lqy` 检查当前 issue 是否已经满足设计图要求。需要图时，先补齐 `$mermaid-gate-lqy` 要求的 Mermaid 图，再开始实现；不需要图时，在 issue comment 或 PR 描述中说明原因。
+开始实现前，先按 `$mermaid-gate-lqy` 完成当前 issue 的设计图 gate；需要图时补齐当前/目标 Mermaid 图，不需要图时说明原因。gate 满足后再写代码。
 
 尽可能在预先商定的接缝处使用 /tdd-lqy。
 
