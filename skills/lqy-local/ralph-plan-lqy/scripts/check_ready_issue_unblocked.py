@@ -12,7 +12,7 @@ from dataclasses import dataclass
 from typing import Any
 
 READY_LABEL = "ready-for-agent"
-BLOCKER_HEADINGS = ("被阻止", "Blocked")
+BLOCKER_HEADING = "Blocked by"
 NO_BLOCKER_MARKERS = ("无", "none", "no blockers", "no blocker", "可以立即开始")
 PARENT_TITLE_PATTERN = re.compile(r"^\s*Spec\s*:", flags=re.IGNORECASE)
 SPEC_BODY_MARKERS = (
@@ -43,9 +43,8 @@ class BlockerParseResult:
 
 
 def extract_blocker_section(body: str) -> str | None:
-    heading_pattern = "|".join(re.escape(heading) for heading in BLOCKER_HEADINGS)
     pattern = re.compile(
-        rf"^##\s+(?:{heading_pattern})\s*$\n?(.*?)(?=^##\s+|\Z)",
+        rf"^##\s+{re.escape(BLOCKER_HEADING)}\s*$\n?(.*?)(?=^##\s+|\Z)",
         flags=re.IGNORECASE | re.MULTILINE | re.DOTALL,
     )
     match = pattern.search(body or "")
@@ -113,7 +112,7 @@ def not_ready_reasons(target: IssueInfo, blockers: Sequence[IssueInfo]) -> list[
     if is_parent_spec_issue(target):
         reasons.append("target issue is a parent spec, not an implementation Ticket")
     if not parse_blockers(target.body).section_found:
-        reasons.append("missing `## 被阻止` / `## Blocked` section")
+        reasons.append("missing `## Blocked by` section")
 
     open_blockers = [issue for issue in blockers if issue.state.upper() != "CLOSED"]
     if open_blockers:

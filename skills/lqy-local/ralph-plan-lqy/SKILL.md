@@ -26,6 +26,8 @@ description: "规划 Open Ralph GitHub issue backlog 串行循环：Codex 默认
 python3 /Users/liuqingyuan/.agents/skills/ralph-plan-lqy/scripts/check_ready_issue_unblocked.py <issue-number>
 ```
 
+候选 issue 必须使用 `## Blocked by` 记录依赖；没有 blocker 时写 `None — can start immediately`。
+
 - `0`：可以开始。
 - `2`：该 issue 不可领取，跳过并检查下一个 issue。
 - `1`：环境或 GitHub API 阻塞，停止并说明原因。
