@@ -16,6 +16,7 @@
         "./skills/matt-lqy-core/grilling-lqy",
         "./skills/matt-lqy-core/handoff-lqy",
         "./skills/matt-lqy-core/implement-lqy",
+        "./skills/matt-lqy-core/code-review-lqy",
         "./skills/matt-lqy-core/improve-codebase-architecture-lqy",
         "./skills/matt-lqy-core/prototype-lqy",
         "./skills/matt-lqy-core/resolving-merge-conflicts-lqy",
@@ -52,7 +53,6 @@
       "skills": [
         "./skills/matt-lqy-in-progress/decision-mapping-lqy",
         "./skills/matt-lqy-in-progress/loop-me-lqy",
-        "./skills/matt-lqy-in-progress/review-lqy",
         "./skills/matt-lqy-in-progress/writing-beats-lqy",
         "./skills/matt-lqy-in-progress/writing-fragments-lqy",
         "./skills/matt-lqy-in-progress/writing-shape-lqy"

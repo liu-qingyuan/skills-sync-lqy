@@ -58,6 +58,7 @@ skills/matt-lqy-deprecated/              # deprecated 可安装 LQY 版
 ### Core
 
 - `ask-matt-lqy`
+- `code-review-lqy`
 - `codebase-design-lqy`
 - `diagnosing-bugs-lqy`
 - `domain-modeling-lqy`
@@ -93,7 +94,6 @@ skills/matt-lqy-deprecated/              # deprecated 可安装 LQY 版
 
 - `decision-mapping-lqy`
 - `loop-me-lqy`
-- `review-lqy`
 - `writing-beats-lqy`
 - `writing-fragments-lqy`
 - `writing-shape-lqy`
