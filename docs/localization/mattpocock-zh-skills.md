@@ -72,6 +72,7 @@ skills/matt-lqy-deprecated/              # deprecated 可安装 LQY 版
 - `to-tickets-lqy`
 - `to-spec-lqy`
 - `triage-lqy`
+- `wayfinder-lqy`
 - `grill-me-lqy`
 - `grilling-lqy`
 - `handoff-lqy`
@@ -92,7 +93,6 @@ skills/matt-lqy-deprecated/              # deprecated 可安装 LQY 版
 
 ### In Progress
 
-- `decision-mapping-lqy`
 - `loop-me-lqy`
 - `writing-beats-lqy`
 - `writing-fragments-lqy`

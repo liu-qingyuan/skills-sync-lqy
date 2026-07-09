@@ -8,7 +8,7 @@ description: 询问当前情境应该使用哪一个 skill 或工作流。这是
 
 你不记得每一项技能，所以要问。
 
-**流程**是通过技能的路径。大多数路径沿着一条**主流**运行，并有两条**入口匝道**并入其中。其他一切都是独立的。
+**流程**是通过技能的路径。大多数路径沿着一条**主流**运行，并有多个**入口匝道**并入其中。其他一切都是独立的。
 
 ## 主流程：想法→船舶
 
@@ -36,6 +36,8 @@ description: 询问当前情境应该使用哪一个 skill 或工作流。这是
 - **错误和请求堆积** → **`/triage-lqy`**。它通过triage role转移问题并产生 agent-ready issue，这些问题稍后会被处理。
 
   triage 仅适用于**不是您创建的**问题 - 错误报告、传入的功能请求、任何原始的内容。 `/to-tickets-lqy` 产生的 Ticket 已经 ready-for-agent，因此**不要对它们进行 triage**。
+
+- **巨大而模糊的 effort** → **`/wayfinder-lqy`**。用于 greenfield 项目或大型 feature build，大到一个会话装不下、从当前状态到 destination 的路还看不清。它在 issue tracker 上维护共享 map，逐个解决调查 Ticket，产出**决策而不是交付物**；路线清楚后再并入 `/to-spec-lqy`，或在足够小时直接进入 `/implement-lqy`。
 
 ## 代码库健康状况
 

@@ -26,6 +26,7 @@
         "./skills/matt-lqy-core/to-tickets-lqy",
         "./skills/matt-lqy-core/to-spec-lqy",
         "./skills/matt-lqy-core/triage-lqy",
+        "./skills/matt-lqy-core/wayfinder-lqy",
         "./skills/matt-lqy-core/writing-great-skills-lqy"
       ]
     },
@@ -51,7 +52,6 @@
       "name": "Matt Pocock LQY In Progress",
       "source": "./",
       "skills": [
-        "./skills/matt-lqy-in-progress/decision-mapping-lqy",
         "./skills/matt-lqy-in-progress/loop-me-lqy",
         "./skills/matt-lqy-in-progress/writing-beats-lqy",
         "./skills/matt-lqy-in-progress/writing-fragments-lqy",
