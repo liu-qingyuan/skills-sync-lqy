@@ -7,9 +7,7 @@ description: 根据 spec 或一组 issues 实现一项工作。
 
 spec 可以作为实现规格和验收上下文；如果用户只传入一个 spec 父 issue，且它明显还需要拆成多个独立任务，不要直接把整个 spec 当作一个实现任务。先使用 /to-tickets-lqy 拆分，或要求用户指定要实现的子 Ticket。
 
-## Mermaid 设计图 Gate
-
-开始实现前，先按 `$mermaid-gate-lqy` 完成当前 issue 的设计图 gate；需要图时补齐当前/目标 Mermaid 图，不需要图时说明原因。gate 满足后再写代码。
+开始实现前，先按 `$mermaid-gate-lqy` 完成当前 issue 的设计图 gate。需要图时补齐当前/目标 Mermaid 图；不需要图时，在 issue comment 或 PR 描述中说明原因。gate 满足后再写代码。
 
 尽可能在预先商定的接缝处使用 /tdd-lqy。
 
