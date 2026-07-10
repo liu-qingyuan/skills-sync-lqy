@@ -243,6 +243,28 @@ class PublishReadyIssueCliTests(unittest.TestCase):
         self.assertEqual(1, len(self.events()))
         self.assertTrue(self.events()[0].startswith("gh "))
 
+    def test_issue_requires_exactly_one_category_role_before_publication(self) -> None:
+        state = self.state()
+        state["labels"] = ["needs-triage"]
+        self.state_file.write_text(json.dumps(state), encoding="utf-8")
+
+        result = self.publish()
+
+        self.assertEqual(3, result.returncode, result.stdout + result.stderr)
+        self.assertIn("exactly one category role", result.stderr)
+        self.assertFalse(any(event.startswith("resolve ") for event in self.events()))
+
+    def test_conflicting_status_roles_stop_before_contract_resolution(self) -> None:
+        state = self.state()
+        state["labels"] = ["enhancement", "needs-triage", "needs-info"]
+        self.state_file.write_text(json.dumps(state), encoding="utf-8")
+
+        result = self.publish()
+
+        self.assertEqual(3, result.returncode, result.stdout + result.stderr)
+        self.assertIn("conflicting triage status roles", result.stderr)
+        self.assertFalse(any(event.startswith("resolve ") for event in self.events()))
+
     def test_failed_body_or_brief_readback_leaves_the_issue_unpublished(self) -> None:
         self.env["TEST_MUTATE_READBACK"] = "1"
 
