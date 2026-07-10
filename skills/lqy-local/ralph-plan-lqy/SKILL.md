@@ -69,7 +69,7 @@ python3 ~/.agents/skills/ralph-plan-lqy/scripts/run_locked_ralph.py \
   -- <ralph-command-and-arguments>
 ```
 
-runner 在子进程退出前持有 `.ralph/worker.lock` 的 OS file lock。同一 worktree 已有 worker 时返回 `2` 并输出 `LOCK BUSY`；不同 worktree 的锁互不影响；成功取得锁后原样转发子进程退出码。
+runner 取得 `.ralph/worker.lock` 的 OS file lock，并把 lock FD 传给 Ralph 子进程；即使 wrapper 异常终止，锁也保持到 Ralph 退出。同一 worktree 已有 worker 时返回 `2` 并输出 `LOCK BUSY`；不同 worktree 的锁互不影响；成功取得锁后原样转发子进程退出码。
 
 ## Prompt 文件
 

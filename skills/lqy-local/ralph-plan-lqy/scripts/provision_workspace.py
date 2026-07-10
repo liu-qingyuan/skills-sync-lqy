@@ -78,7 +78,7 @@ def remote_for_contract(repo: Path, contract: GitContract) -> tuple[str, str]:
 
 def fetch_and_check_base(repo: Path, contract: GitContract, remote: str, remote_base: str) -> None:
     git(repo, "fetch", remote, remote_base)
-    resolved = git(repo, "rev-parse", "--verify", f"{contract.base_branch}^{{commit}}").stdout.strip()
+    resolved = git(repo, "rev-parse", "--verify", "FETCH_HEAD^{commit}").stdout.strip()
     if resolved.lower() != contract.base_commit.lower():
         raise ProvisionError(
             f"base drift: `{contract.base_branch}` is `{resolved}`, expected `{contract.base_commit}`"
@@ -86,18 +86,18 @@ def fetch_and_check_base(repo: Path, contract: GitContract, remote: str, remote_
 
 
 def remote_default_branch(repo: Path, remote: str) -> str:
+    advertised = git(repo, "ls-remote", "--symref", remote, "HEAD").stdout.splitlines()
+    prefix = "ref: refs/heads/"
+    for line in advertised:
+        if line.startswith(prefix) and line.endswith("\tHEAD"):
+            return line[len(prefix) : -len("\tHEAD")]
+
     symbolic = git(repo, "symbolic-ref", "--quiet", "--short", f"refs/remotes/{remote}/HEAD", check=False)
     if symbolic.returncode == 0:
         prefix = f"{remote}/"
         value = symbolic.stdout.strip()
         if value.startswith(prefix):
             return value[len(prefix) :]
-
-    advertised = git(repo, "ls-remote", "--symref", remote, "HEAD").stdout.splitlines()
-    prefix = "ref: refs/heads/"
-    for line in advertised:
-        if line.startswith(prefix) and line.endswith("\tHEAD"):
-            return line[len(prefix) : -len("\tHEAD")]
     raise ProvisionError(f"cannot determine default branch for remote `{remote}`")
 
 
@@ -126,6 +126,8 @@ def local_branch_head(repo: Path, branch: str) -> str | None:
 def select_or_create_worktree(repo: Path, contract: GitContract, default_branch: str) -> Path:
     worktrees = parse_worktrees(git(repo, "worktree", "list", "--porcelain").stdout)
     primary = worktrees[0]
+    if not primary.path.is_dir():
+        raise ProvisionError(f"primary worktree path is missing: {primary.path}")
     if contract.branch == default_branch:
         if primary.branch != contract.branch:
             raise ProvisionError(
@@ -137,10 +139,12 @@ def select_or_create_worktree(repo: Path, contract: GitContract, default_branch:
     if len(matches) > 1:
         raise ProvisionError(f"branch `{contract.branch}` is attached to multiple worktrees")
     if matches:
+        if not matches[0].path.is_dir():
+            raise ProvisionError(f"registered worktree path is missing: {matches[0].path}")
         return matches[0].path
 
     path = target_path(primary, contract.branch)
-    if path.exists():
+    if path.exists() or path.is_symlink():
         raise ProvisionError(f"target worktree path already exists: {path}")
 
     branch_head = local_branch_head(repo, contract.branch)

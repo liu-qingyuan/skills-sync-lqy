@@ -44,7 +44,12 @@ def run_locked(worktree: Path, command: Sequence[str]) -> int:
         lock_file.write(f"pid={os.getpid()}\n")
         lock_file.flush()
 
-        child = subprocess.Popen(command, cwd=root, start_new_session=True)
+        child = subprocess.Popen(
+            command,
+            cwd=root,
+            start_new_session=True,
+            pass_fds=(lock_file.fileno(),),
+        )
         previous_handlers: dict[int, signal.Handlers] = {}
 
         def forward(signum: int, _frame: FrameType | None) -> None:

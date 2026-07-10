@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 import json
+import os
+import signal
 import subprocess
 import tempfile
 import time
@@ -149,6 +151,23 @@ class WorkspaceProvisionerCliTests(GitRepoFixture):
         self.assertIn("base drift", result.stderr)
         self.assertFalse((self.root / "project-feature-drifted").exists())
 
+    def test_fetch_head_detects_drift_with_nonstandard_refspec(self) -> None:
+        updater = self.root / "updater"
+        run("git", "clone", str(self.remote), str(updater))
+        run("git", "config", "user.name", "Test User", cwd=updater)
+        run("git", "config", "user.email", "test@example.com", cwd=updater)
+        (updater / "remote.txt").write_text("remote advanced\n", encoding="utf-8")
+        run("git", "add", "remote.txt", cwd=updater)
+        run("git", "commit", "-m", "advance remote", cwd=updater)
+        run("git", "push", "origin", "main", cwd=updater)
+        run("git", "config", "--unset-all", "remote.origin.fetch", cwd=self.repo)
+
+        result = self.provision(branch="feature/refspec")
+
+        self.assertEqual(3, result.returncode, result.stdout + result.stderr)
+        self.assertIn("base drift", result.stderr)
+        self.assertFalse((self.root / "project-feature-refspec").exists())
+
     def test_occupied_deterministic_path_is_not_overwritten(self) -> None:
         occupied = self.root / "project-feature-occupied"
         occupied.mkdir()
@@ -200,10 +219,21 @@ class LockedRalphRunnerCliTests(GitRepoFixture):
                 self.fail(f"timed out waiting for {path}")
             time.sleep(0.01)
 
+    def wait_for_process_exit(self, pid: int) -> None:
+        deadline = time.monotonic() + 5
+        while True:
+            try:
+                os.kill(pid, 0)
+            except ProcessLookupError:
+                return
+            if time.monotonic() >= deadline:
+                self.fail(f"timed out waiting for process {pid} to exit")
+            time.sleep(0.01)
+
     def start_holder(self, worktree: Path, marker: Path, release: Path) -> subprocess.Popen[str]:
         child = (
-            "import pathlib,time; "
-            f"pathlib.Path({str(marker)!r}).write_text('ready'); "
+            "import os,pathlib,time; "
+            f"pathlib.Path({str(marker)!r}).write_text(str(os.getpid())); "
             f"release=pathlib.Path({str(release)!r}); "
             "deadline=time.monotonic()+10; "
             "\nwhile not release.exists() and time.monotonic()<deadline: time.sleep(0.01)"
@@ -252,6 +282,52 @@ class LockedRalphRunnerCliTests(GitRepoFixture):
         release.write_text("release\n", encoding="utf-8")
         stdout, stderr = holder.communicate(timeout=5)
         self.assertEqual(0, holder.returncode, stdout + stderr)
+
+    def test_child_keeps_lock_after_wrapper_is_killed(self) -> None:
+        marker = self.root / "orphan-ready"
+        release = self.root / "release-orphan"
+        holder = self.start_holder(self.repo, marker, release)
+        self.wait_for(marker)
+        child_pid = int(marker.read_text(encoding="utf-8"))
+
+        def cleanup() -> None:
+            release.write_text("release\n", encoding="utf-8")
+            try:
+                self.wait_for_process_exit(child_pid)
+            except AssertionError:
+                os.kill(child_pid, signal.SIGKILL)
+            if holder.poll() is None:
+                holder.kill()
+                holder.wait(timeout=5)
+            if holder.stdout is not None:
+                holder.stdout.close()
+            if holder.stderr is not None:
+                holder.stderr.close()
+
+        self.addCleanup(cleanup)
+        holder.kill()
+        holder.wait(timeout=5)
+
+        contender = subprocess.run(
+            [
+                "python3",
+                str(LOCKED_RUNNER),
+                "--worktree",
+                str(self.repo),
+                "--",
+                "python3",
+                "-c",
+                "raise SystemExit(99)",
+            ],
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+
+        self.assertEqual(2, contender.returncode, contender.stdout + contender.stderr)
+        self.assertIn("LOCK BUSY", contender.stderr)
+        release.write_text("release\n", encoding="utf-8")
+        self.wait_for_process_exit(child_pid)
 
     def test_different_worktrees_can_hold_locks_concurrently(self) -> None:
         other = (self.root / "other-worktree").resolve()
