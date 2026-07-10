@@ -350,9 +350,9 @@ def create_ticket(draft: TicketDraft, body: str, body_dir: Path) -> PublishedTic
 def publication_gate_draft(parent_number: int) -> TicketDraft:
     body = (
         "## What to build\n\n"
-        f"Hold the publication gate for the Ticket frontier of parent spec #{parent_number}.\n\n"
+        f"为父 spec #{parent_number} 的 Ticket frontier 保存发布 gate 状态。\n\n"
         "## Acceptance criteria\n\n"
-        "- [ ] Close only after every Ticket has a validated `ready-for-agent` label.\n\n"
+        "- [ ] 仅在每个 Ticket 的 `ready-for-agent` 状态都已回读验证后关闭。\n\n"
         "## Mermaid Gate\n\n"
         "不需要图。此 issue 只保存发布事务状态，不改变模块接口或调用流程。"
     )
