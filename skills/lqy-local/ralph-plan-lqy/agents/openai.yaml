@@ -1,4 +1,4 @@
 interface:
   display_name: "Ralph Plan LQY"
-  short_description: "Plan an Open Ralph GitHub issue backlog loop."
-  default_prompt: "Use $ralph-plan-lqy to create a concise Open Ralph issue-backlog command, prompt path, blocker gate, and monitoring notes."
+  short_description: "Plan a branch-aware Ralph loop with a worktree lock."
+  default_prompt: "Use $ralph-plan-lqy to create a branch-aware Open Ralph issue-backlog command with the Git contract, eligibility gate, per-worktree lock, prompt path, and monitoring notes."

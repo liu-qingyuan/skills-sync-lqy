@@ -9,4 +9,6 @@
 - Spec Git resolver：`scripts/resolve_spec_git.py`，从 remote default 或显式输入解析父 spec 的 branch/base commit，并在发布前拒绝 branch collision
 - Workspace provision：`scripts/provision_workspace.py`，按 exact branch 创建或复用 worktree、默认严格检查 base drift，并只在用户显式选择旧 SHA 后允许 clean、ancestor-valid、upstream/remote 同步的 advanced target
 - Worker lock：`scripts/run_locked_ralph.py`，在 Ralph 生命周期内持有每个 worktree 的 `.ralph/worker.lock`
+- 端到端验证：`tests/test_branch_workflow_e2e.py` 使用临时 bare remote、两个真实 worktrees 和 `gh` stub 验证 branch-local selection、锁隔离、`.ralph/`/dirty state 隔离、commits/upstream pushes、completion 与契约错误
+- Backlog policy：完全忽略 assignees，不使用 assignee claim；PR 不进入 Ralph issue backlog；完成后不自动清理 branch/worktree
 - Policy: self-contained；上游 CLI flag 变化时同步更新参数说明

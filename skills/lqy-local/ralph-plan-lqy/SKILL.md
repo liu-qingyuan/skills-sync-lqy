@@ -1,6 +1,6 @@
 ---
 name: ralph-plan-lqy
-description: "规划 Open Ralph GitHub issue backlog 串行循环：Codex 默认、branch-aware eligibility gate、本地 commit。Use for `$ralph-plan`, `$ralph`, AFK coding loops, or clearing GitHub issue backlogs."
+description: "规划 Open Ralph GitHub issue backlog 串行循环：Codex 默认、branch-aware eligibility gate、per-worktree lock、本地 commit。Use for `$ralph-plan`, `$ralph`, AFK coding loops, or clearing GitHub issue backlogs."
 ---
 
 # Ralph Plan
