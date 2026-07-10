@@ -7,6 +7,6 @@
 - 自带脚本：`scripts/check_ready_issue_unblocked.py`，作为只读 branch-aware eligibility gate，统一检查 `## Git`、当前 branch、base commit、`## Blocked by` 和跨 branch 依赖
 - 共享模块：`scripts/git_contract.py`，严格解析正文最后一个 `## Git` section
 - Spec Git resolver：`scripts/resolve_spec_git.py`，从 remote default 或显式输入解析父 spec 的 branch/base commit，并在发布前拒绝 branch collision
-- Workspace provision：`scripts/provision_workspace.py`，按 exact branch 创建或复用 worktree、检查 base drift/clean HEAD/path 并建立同名 upstream
+- Workspace provision：`scripts/provision_workspace.py`，按 exact branch 创建或复用 worktree、默认严格检查 base drift，并只在用户显式选择旧 SHA 后允许 clean、ancestor-valid、upstream/remote 同步的 advanced target
 - Worker lock：`scripts/run_locked_ralph.py`，在 Ralph 生命周期内持有每个 worktree 的 `.ralph/worker.lock`
 - Policy: self-contained；上游 CLI flag 变化时同步更新参数说明

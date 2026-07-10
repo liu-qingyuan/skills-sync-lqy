@@ -63,10 +63,14 @@ resolver 不读取当前 checkout 来决定默认值，也不创建 branch 或 w
 
 ```bash
 gh issue view <N> --json body --jq .body \
-  | python3 ~/.agents/skills/ralph-plan-lqy/scripts/provision_workspace.py --repo <repo-path>
+  | python3 ~/.agents/skills/ralph-plan-lqy/scripts/provision_workspace.py \
+      --repo <repo-path> \
+      [--allow-base-drift]
 ```
 
 成功时输出包含 `path`、`branch`、`head` 和 `upstream` 的 JSON。退出码 `1` 表示 Git、I/O 或环境失败；退出码 `3` 表示 drift、dirty worktree、路径占用、意外 HEAD/upstream 或 Git 契约错误。provisioner 不执行 reset、rebase、force-push、覆盖或清理。
+
+默认严格拒绝 base drift。只有 producer 已展示旧/新 SHA 和提交摘要，并且用户明确选择保留父 spec 记录的旧 SHA 时，才可重新运行并传入 `--allow-base-drift`；不要把该 flag 作为默认值。已前进的目标 branch 只有在 worktree clean、`Base commit` 是 HEAD 祖先、upstream 精确匹配且 remote HEAD 与本地 HEAD 同步时才可复用。未 push、分叉或错误 upstream 的 advanced HEAD 仍返回 `3`。
 
 默认 branch 复用已注册的主 worktree。未绑定的非主 branch 使用主 worktree 同级的 `<repo-name>-<branch-slug>`；已有 branch 只按 `git worktree list --porcelain` 的 exact branch 结果复用，不通过目录名猜测。
 

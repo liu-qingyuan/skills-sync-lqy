@@ -83,10 +83,13 @@ class PublishTicketSetCliTests(unittest.TestCase):
             "import json, os, pathlib, sys\n"
             "log = pathlib.Path(os.environ['TEST_EVENT_LOG'])\n"
             "with log.open('a', encoding='utf-8') as handle:\n"
-            "    handle.write('provision\\n')\n"
+            "    handle.write('provision ' + json.dumps(sys.argv[1:]) + '\\n')\n"
             "if os.environ.get('TEST_FAIL_PROVISION'):\n"
             "    print('PROVISION ERROR: requested failure', file=sys.stderr)\n"
             "    raise SystemExit(3)\n"
+            "if os.environ.get('TEST_MALFORMED_PROVISION'):\n"
+            "    print('{}')\n"
+            "    raise SystemExit(0)\n"
             "json.dump({'branch': 'main', 'path': '/tmp/project', 'head': '"
             + BASE_COMMIT
             + "', 'upstream': 'origin/main'}, sys.stdout)\n",
@@ -142,11 +145,20 @@ class PublishTicketSetCliTests(unittest.TestCase):
             "            raise SystemExit(1)\n"
             "        labels[str(number)] = ['ready-for-agent']\n"
             "    elif '--remove-label' in args:\n"
+            "        if os.environ.get('TEST_FAIL_REMOVE_LABEL') == str(number):\n"
+            "            print('requested remove label failure', file=sys.stderr)\n"
+            "            raise SystemExit(1)\n"
             "        labels[str(number)] = []\n"
             "    else:\n"
             "        print(f'unexpected edit argv: {args}', file=sys.stderr)\n"
             "        raise SystemExit(2)\n"
             "    labels_file.write_text(json.dumps(labels))\n"
+            "elif args[:2] == ['issue', 'close']:\n"
+            "    number = int(args[2])\n"
+            "    record_path = issue_dir / f'{number}.json'\n"
+            "    record = json.loads(record_path.read_text())\n"
+            "    record['state'] = 'CLOSED'\n"
+            "    record_path.write_text(json.dumps(record))\n"
             "else:\n"
             "    print(f'unexpected gh argv: {args}', file=sys.stderr)\n"
             "    raise SystemExit(2)\n",
@@ -184,7 +196,7 @@ class PublishTicketSetCliTests(unittest.TestCase):
             encoding="utf-8",
         )
 
-    def publish(self) -> subprocess.CompletedProcess[str]:
+    def publish(self, *extra_args: str) -> subprocess.CompletedProcess[str]:
         return subprocess.run(
             [
                 sys.executable,
@@ -195,6 +207,7 @@ class PublishTicketSetCliTests(unittest.TestCase):
                 "1",
                 "--manifest",
                 str(self.manifest),
+                *extra_args,
             ],
             text=True,
             capture_output=True,
@@ -216,21 +229,42 @@ class PublishTicketSetCliTests(unittest.TestCase):
 
         self.assertEqual(0, result.returncode, result.stdout + result.stderr)
         events = self.events()
-        operations = ["provision" if event == "provision" else json.loads(event[3:])[1] for event in events]
+        operations = [
+            "provision" if event.startswith("provision ") else json.loads(event[3:])[1]
+            for event in events
+        ]
         self.assertEqual(
-            ["view", "provision", "create", "create", "view", "view", "edit", "edit"],
+            [
+                "view",
+                "provision",
+                "create",
+                "create",
+                "create",
+                "view",
+                "view",
+                "view",
+                "edit",
+                "edit",
+                "view",
+                "view",
+                "close",
+            ],
             operations,
         )
-        first_body = str(self.issue(42)["body"])
-        second_body = str(self.issue(43)["body"])
+        gate_body = str(self.issue(42)["body"])
+        first_body = str(self.issue(43)["body"])
+        second_body = str(self.issue(44)["body"])
+        self.assertIn("## Blocked by\n\n- None — can start immediately", gate_body)
         self.assertIn("## Parent\n\n#1", first_body)
-        self.assertIn("## Blocked by\n\n- None — can start immediately", first_body)
-        self.assertIn("## Blocked by\n\n- #42", second_body)
+        self.assertIn("## Blocked by\n\n- #42", first_body)
+        self.assertIn("## Blocked by\n\n- #42\n- #43", second_body)
         self.assertTrue(first_body.rstrip().endswith(git_section()))
         self.assertTrue(second_body.rstrip().endswith(git_section()))
-        self.assertEqual({"42": ["ready-for-agent"], "43": ["ready-for-agent"]}, self.labels())
+        self.assertEqual("CLOSED", self.issue(42)["state"])
+        self.assertEqual({"43": ["ready-for-agent"], "44": ["ready-for-agent"]}, self.labels())
         output = json.loads(result.stdout)
-        self.assertEqual([42, 43], [ticket["number"] for ticket in output["tickets"]])
+        self.assertEqual(42, output["publication_gate"])
+        self.assertEqual([43, 44], [ticket["number"] for ticket in output["tickets"]])
 
     def test_invalid_parent_contract_stops_before_provisioning_or_creation(self) -> None:
         self.parent_body.write_text(f"{git_section()}\n\n{git_section()}\n", encoding="utf-8")
@@ -272,23 +306,45 @@ class PublishTicketSetCliTests(unittest.TestCase):
         result = self.publish()
 
         self.assertEqual(3, result.returncode, result.stdout + result.stderr)
-        self.assertEqual(["view", "provision"], [
-            json.loads(event[3:])[1] if event.startswith("gh ") else event for event in self.events()
-        ])
+        self.assertEqual(
+            ["view", "provision"],
+            [json.loads(event[3:])[1] if event.startswith("gh ") else "provision" for event in self.events()],
+        )
+
+    def test_malformed_provision_result_stops_before_creating_issues(self) -> None:
+        self.env["TEST_MALFORMED_PROVISION"] = "1"
+
+        result = self.publish()
+
+        self.assertEqual(1, result.returncode, result.stdout + result.stderr)
+        self.assertIn("incomplete", result.stderr)
+        self.assertEqual(
+            ["view", "provision"],
+            [json.loads(event[3:])[1] if event.startswith("gh ") else "provision" for event in self.events()],
+        )
+
+    def test_explicit_old_base_choice_is_forwarded_to_the_provisioner(self) -> None:
+        result = self.publish("--allow-base-drift")
+
+        self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+        provision_event = next(event for event in self.events() if event.startswith("provision "))
+        self.assertIn("--allow-base-drift", json.loads(provision_event.removeprefix("provision ")))
 
     def test_partial_create_failure_leaves_every_created_ticket_unlabeled(self) -> None:
-        self.env["TEST_FAIL_CREATE"] = "43"
+        self.env["TEST_FAIL_CREATE"] = "44"
 
         result = self.publish()
 
         self.assertEqual(1, result.returncode, result.stdout + result.stderr)
         self.assertTrue((self.issue_dir / "42.json").exists())
-        self.assertFalse((self.issue_dir / "43.json").exists())
+        self.assertTrue((self.issue_dir / "43.json").exists())
+        self.assertFalse((self.issue_dir / "44.json").exists())
+        self.assertEqual("OPEN", self.issue(42)["state"])
         self.assertEqual({}, self.labels())
         self.assertNotIn("edit", [json.loads(event[3:])[1] for event in self.events() if event.startswith("gh ")])
 
     def test_failed_readback_validation_leaves_the_set_unlabeled(self) -> None:
-        self.env["TEST_MUTATE_READBACK"] = "43"
+        self.env["TEST_MUTATE_READBACK"] = "44"
 
         result = self.publish()
 
@@ -296,26 +352,17 @@ class PublishTicketSetCliTests(unittest.TestCase):
         self.assertEqual({}, self.labels())
         self.assertNotIn("edit", [json.loads(event[3:])[1] for event in self.events() if event.startswith("gh ")])
 
-    def test_label_failure_rolls_back_labels_from_the_complete_set(self) -> None:
-        self.env["TEST_FAIL_LABEL"] = "42"
+    def test_label_and_rollback_failure_remains_blocked_by_the_publication_gate(self) -> None:
+        self.env["TEST_FAIL_LABEL"] = "43"
+        self.env["TEST_FAIL_REMOVE_LABEL"] = "44"
 
         result = self.publish()
 
         self.assertEqual(1, result.returncode, result.stdout + result.stderr)
-        self.assertEqual([], self.labels().get("43", []))
-        edit_events = [
-            json.loads(event[3:])
-            for event in self.events()
-            if event.startswith("gh ") and json.loads(event[3:])[1] == "edit"
-        ]
-        self.assertEqual(
-            [
-                ["issue", "edit", "43", "--add-label", "ready-for-agent"],
-                ["issue", "edit", "42", "--add-label", "ready-for-agent"],
-                ["issue", "edit", "43", "--remove-label", "ready-for-agent"],
-            ],
-            edit_events,
-        )
+        self.assertEqual(["ready-for-agent"], self.labels().get("44", []))
+        self.assertEqual("OPEN", self.issue(42)["state"])
+        self.assertIn("## Blocked by\n\n- #42", str(self.issue(43)["body"]))
+        self.assertIn("## Blocked by\n\n- #42", str(self.issue(44)["body"]))
 
 
 if __name__ == "__main__":

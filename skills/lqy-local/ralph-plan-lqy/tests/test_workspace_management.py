@@ -53,9 +53,17 @@ class GitRepoFixture(unittest.TestCase):
             f"- Base commit: `{self.base_commit}`\n"
         )
 
-    def provision(self, *, branch: str = "main") -> subprocess.CompletedProcess[str]:
+    def provision(
+        self,
+        *,
+        branch: str = "main",
+        allow_base_drift: bool = False,
+    ) -> subprocess.CompletedProcess[str]:
+        command = ["python3", str(PROVISIONER), "--repo", str(self.repo)]
+        if allow_base_drift:
+            command.append("--allow-base-drift")
         return subprocess.run(
-            ["python3", str(PROVISIONER), "--repo", str(self.repo)],
+            command,
             input=self.contract_body(branch=branch),
             text=True,
             stdout=subprocess.PIPE,
@@ -151,6 +159,49 @@ class WorkspaceProvisionerCliTests(GitRepoFixture):
         self.assertIn("base drift", result.stderr)
         self.assertFalse((self.root / "project-feature-drifted").exists())
 
+    def test_explicit_old_base_choice_allows_provisioning_from_the_recorded_commit(self) -> None:
+        (self.repo / "change.txt").write_text("remote advanced\n", encoding="utf-8")
+        run("git", "add", "change.txt", cwd=self.repo)
+        run("git", "commit", "-m", "advance base", cwd=self.repo)
+        run("git", "push", "origin", "main", cwd=self.repo)
+
+        result = self.provision(branch="feature/old-base", allow_base_drift=True)
+
+        self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+        self.assertEqual(self.base_commit, json.loads(result.stdout)["head"])
+
+    def test_explicit_old_base_choice_reuses_a_synced_advanced_target(self) -> None:
+        initial = self.provision(branch="feature/continued")
+        self.assertEqual(0, initial.returncode, initial.stdout + initial.stderr)
+        feature_path = Path(json.loads(initial.stdout)["path"])
+        (feature_path / "feature.txt").write_text("completed ticket\n", encoding="utf-8")
+        run("git", "add", "feature.txt", cwd=feature_path)
+        run("git", "commit", "-m", "complete ticket", cwd=feature_path)
+        run("git", "push", cwd=feature_path)
+        feature_head = run("git", "rev-parse", "HEAD", cwd=feature_path)
+
+        (self.repo / "base.txt").write_text("base advanced\n", encoding="utf-8")
+        run("git", "add", "base.txt", cwd=self.repo)
+        run("git", "commit", "-m", "advance base", cwd=self.repo)
+        run("git", "push", "origin", "main", cwd=self.repo)
+
+        result = self.provision(branch="feature/continued", allow_base_drift=True)
+
+        self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+        self.assertEqual(feature_head, json.loads(result.stdout)["head"])
+
+    def test_explicit_old_base_choice_reuses_synced_main_progress(self) -> None:
+        (self.repo / "ticket.txt").write_text("completed ticket\n", encoding="utf-8")
+        run("git", "add", "ticket.txt", cwd=self.repo)
+        run("git", "commit", "-m", "complete ticket", cwd=self.repo)
+        run("git", "push", "origin", "main", cwd=self.repo)
+        advanced_head = run("git", "rev-parse", "HEAD", cwd=self.repo)
+
+        result = self.provision(allow_base_drift=True)
+
+        self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+        self.assertEqual(advanced_head, json.loads(result.stdout)["head"])
+
     def test_fetch_head_detects_drift_with_nonstandard_refspec(self) -> None:
         updater = self.root / "updater"
         run("git", "clone", str(self.remote), str(updater))
@@ -196,7 +247,7 @@ class WorkspaceProvisionerCliTests(GitRepoFixture):
         result = self.provision()
 
         self.assertEqual(3, result.returncode, result.stdout + result.stderr)
-        self.assertIn("HEAD is", result.stderr)
+        self.assertIn("is not synchronized with `origin/main`", result.stderr)
         self.assertEqual("origin/main", run("git", "rev-parse", "--abbrev-ref", "main@{upstream}", cwd=self.repo))
 
     def test_unexpected_upstream_is_not_replaced(self) -> None:

@@ -76,10 +76,17 @@ def remote_for_contract(repo: Path, contract: GitContract) -> tuple[str, str]:
     raise ProvisionError(f"cannot determine remote for base branch `{contract.base_branch}`")
 
 
-def fetch_and_check_base(repo: Path, contract: GitContract, remote: str, remote_base: str) -> None:
+def fetch_and_check_base(
+    repo: Path,
+    contract: GitContract,
+    remote: str,
+    remote_base: str,
+    *,
+    allow_base_drift: bool,
+) -> None:
     git(repo, "fetch", remote, remote_base)
     resolved = git(repo, "rev-parse", "--verify", "FETCH_HEAD^{commit}").stdout.strip()
-    if resolved.lower() != contract.base_commit.lower():
+    if resolved.lower() != contract.base_commit.lower() and not allow_base_drift:
         raise ProvisionError(
             f"base drift: `{contract.base_branch}` is `{resolved}`, expected `{contract.base_commit}`"
         )
@@ -159,19 +166,45 @@ def select_or_create_worktree(repo: Path, contract: GitContract, default_branch:
     return path.resolve()
 
 
-def validate_target(path: Path, contract: GitContract) -> str:
+def validate_target(path: Path, contract: GitContract, remote: str) -> str:
     branch = git(path, "symbolic-ref", "--quiet", "--short", "HEAD").stdout.strip()
     if branch != contract.branch:
         raise ProvisionError(f"worktree `{path}` is on `{branch}`, expected `{contract.branch}`")
     head = git(path, "rev-parse", "HEAD").stdout.strip()
-    if head.lower() != contract.base_commit.lower():
-        raise ProvisionError(f"worktree `{path}` HEAD is `{head}`, expected `{contract.base_commit}`")
     if git(path, "status", "--porcelain").stdout:
         raise ProvisionError(f"worktree `{path}` is dirty")
+    if head.lower() == contract.base_commit.lower():
+        return head
+
+    ancestor = git(path, "merge-base", "--is-ancestor", contract.base_commit, head, check=False)
+    if ancestor.returncode == 1:
+        raise ProvisionError(
+            f"worktree `{path}` HEAD is `{head}`, which is not a descendant of `{contract.base_commit}`"
+        )
+    if ancestor.returncode != 0:
+        raise OSError(ancestor.stderr.strip() or "git merge-base failed")
+
+    expected_upstream = f"{remote}/{contract.branch}"
+    upstream = git(
+        path,
+        "for-each-ref",
+        "--format=%(upstream:short)",
+        f"refs/heads/{contract.branch}",
+    ).stdout.strip()
+    if upstream != expected_upstream:
+        raise ProvisionError(
+            f"advanced branch `{contract.branch}` tracks `{upstream or '<none>'}`, expected `{expected_upstream}`"
+        )
+    remote_head = git(path, "ls-remote", "--heads", remote, f"refs/heads/{contract.branch}").stdout.strip()
+    remote_commit = remote_head.split()[0] if remote_head else ""
+    if remote_commit.lower() != head.lower():
+        raise ProvisionError(
+            f"advanced branch `{contract.branch}` is not synchronized with `{expected_upstream}`"
+        )
     return head
 
 
-def ensure_upstream(path: Path, contract: GitContract, remote: str) -> str:
+def ensure_upstream(path: Path, contract: GitContract, remote: str, head: str) -> str:
     expected = f"{remote}/{contract.branch}"
     current = git(
         path,
@@ -188,10 +221,10 @@ def ensure_upstream(path: Path, contract: GitContract, remote: str) -> str:
     if remote_head:
         remote_commit = remote_head.split()[0]
         git(path, "fetch", remote, contract.branch)
-        ancestor = git(path, "merge-base", "--is-ancestor", remote_commit, contract.base_commit, check=False)
+        ancestor = git(path, "merge-base", "--is-ancestor", remote_commit, head, check=False)
         if ancestor.returncode == 1:
             raise ProvisionError(
-                f"remote branch `{expected}` cannot fast-forward to `{contract.base_commit}`"
+                f"remote branch `{expected}` cannot fast-forward to `{head}`"
             )
         if ancestor.returncode != 0:
             raise OSError(ancestor.stderr.strip() or "git merge-base failed")
@@ -200,13 +233,19 @@ def ensure_upstream(path: Path, contract: GitContract, remote: str) -> str:
     return expected
 
 
-def provision(repo: Path, contract: GitContract) -> WorktreeResult:
+def provision(repo: Path, contract: GitContract, *, allow_base_drift: bool = False) -> WorktreeResult:
     repo_root = Path(git(repo, "rev-parse", "--show-toplevel").stdout.strip()).resolve()
     remote, remote_base = remote_for_contract(repo_root, contract)
-    fetch_and_check_base(repo_root, contract, remote, remote_base)
+    fetch_and_check_base(
+        repo_root,
+        contract,
+        remote,
+        remote_base,
+        allow_base_drift=allow_base_drift,
+    )
     path = select_or_create_worktree(repo_root, contract, remote_default_branch(repo_root, remote))
-    head = validate_target(path, contract)
-    upstream = ensure_upstream(path, contract, remote)
+    head = validate_target(path, contract, remote)
+    upstream = ensure_upstream(path, contract, remote, head)
     return WorktreeResult(path=str(path), branch=contract.branch, head=head, upstream=upstream)
 
 
@@ -214,6 +253,11 @@ def parse_args(argv: Sequence[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Provision a Git-bound branch worktree and upstream.")
     parser.add_argument("body_file", nargs="?", default="-", help="Issue body file, or `-` to read stdin.")
     parser.add_argument("--repo", default=".", help="Any path inside the common Git repository.")
+    parser.add_argument(
+        "--allow-base-drift",
+        action="store_true",
+        help="Continue from the recorded base only after the user explicitly chooses the old SHA.",
+    )
     return parser.parse_args(argv)
 
 
@@ -221,7 +265,11 @@ def main(argv: Sequence[str] | None = None) -> int:
     args = parse_args(sys.argv[1:] if argv is None else argv)
     try:
         body = sys.stdin.read() if args.body_file == "-" else Path(args.body_file).read_text(encoding="utf-8")
-        result = provision(Path(args.repo), parse_git_contract(body))
+        result = provision(
+            Path(args.repo),
+            parse_git_contract(body),
+            allow_base_drift=args.allow_base_drift,
+        )
     except (GitContractError, ProvisionError) as exc:
         print(f"PROVISION ERROR: {exc}", file=sys.stderr)
         return 3

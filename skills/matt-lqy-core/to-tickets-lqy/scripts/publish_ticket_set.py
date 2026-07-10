@@ -10,7 +10,7 @@ import subprocess
 import sys
 import tempfile
 from collections.abc import Sequence
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any
 
@@ -19,6 +19,7 @@ READY_LABEL = "ready-for-agent"
 REQUIRED_DRAFT_SECTIONS = ("What to build", "Acceptance criteria", "Mermaid Gate")
 TICKET_ID_PATTERN = re.compile(r"^[a-z0-9][a-z0-9._-]*$")
 EXTERNAL_BLOCKER_PATTERN = re.compile(r"^#([1-9][0-9]*)$")
+FULL_SHA_PATTERN = re.compile(r"^[0-9a-fA-F]{40}$")
 
 
 class PublishError(RuntimeError):
@@ -49,6 +50,14 @@ class PublishedTicket:
     title: str
     body: str
     url: str
+
+
+@dataclass(frozen=True)
+class WorktreeResult:
+    path: str
+    branch: str
+    head: str
+    upstream: str
 
 
 def run(command: list[str], *, input_text: str | None = None) -> subprocess.CompletedProcess[str]:
@@ -102,10 +111,38 @@ def validate_contract(body: str) -> dict[str, str]:
         raise OSError("shared Git contract validator returned incomplete JSON") from exc
 
 
-def provision_workspace(repo: Path, parent_body: str) -> dict[str, Any]:
-    return command_json(
-        [sys.executable, str(shared_script("provision_workspace.py")), "--repo", str(repo)],
+def provision_workspace(
+    repo: Path,
+    parent_body: str,
+    *,
+    expected_branch: str,
+    allow_base_drift: bool,
+) -> WorktreeResult:
+    command = [sys.executable, str(shared_script("provision_workspace.py")), "--repo", str(repo)]
+    if allow_base_drift:
+        command.append("--allow-base-drift")
+    payload = command_json(
+        command,
         input_text=parent_body,
+    )
+    missing = [field for field in ("path", "branch", "head", "upstream") if field not in payload]
+    if missing:
+        raise OSError(f"workspace provisioner returned incomplete JSON; missing: {', '.join(missing)}")
+    if not all(isinstance(payload[field], str) and payload[field] for field in ("path", "branch", "head", "upstream")):
+        raise OSError("workspace provisioner returned invalid WorktreeResult field types")
+    if payload["branch"] != expected_branch:
+        raise OSError(
+            f"workspace provisioner returned branch `{payload['branch']}`, expected `{expected_branch}`"
+        )
+    if not Path(payload["path"]).is_absolute():
+        raise OSError("workspace provisioner returned a non-absolute worktree path")
+    if FULL_SHA_PATTERN.fullmatch(payload["head"]) is None:
+        raise OSError("workspace provisioner returned an invalid HEAD commit")
+    return WorktreeResult(
+        path=payload["path"],
+        branch=payload["branch"],
+        head=payload["head"],
+        upstream=payload["upstream"],
     )
 
 
@@ -270,8 +307,9 @@ def render_ticket_body(
     internal_numbers: dict[str, int],
     external_numbers: dict[str, int],
     contract: dict[str, str],
+    publication_gate: int | None,
 ) -> str:
-    blocker_numbers = [
+    blocker_numbers = ([] if publication_gate is None else [publication_gate]) + [
         internal_numbers[blocker] if blocker in internal_numbers else external_numbers[blocker]
         for blocker in draft.blockers
     ]
@@ -309,6 +347,23 @@ def create_ticket(draft: TicketDraft, body: str, body_dir: Path) -> PublishedTic
     )
 
 
+def publication_gate_draft(parent_number: int) -> TicketDraft:
+    body = (
+        "## What to build\n\n"
+        f"Hold the publication gate for the Ticket frontier of parent spec #{parent_number}.\n\n"
+        "## Acceptance criteria\n\n"
+        "- [ ] Close only after every Ticket has a validated `ready-for-agent` label.\n\n"
+        "## Mermaid Gate\n\n"
+        "不需要图。此 issue 只保存发布事务状态，不改变模块接口或调用流程。"
+    )
+    return TicketDraft(
+        ticket_id="publication-gate",
+        title=f"发布 #{parent_number} Ticket frontier",
+        body=body,
+        blockers=(),
+    )
+
+
 def validate_published_set(
     tickets: Sequence[PublishedTicket],
     *,
@@ -324,6 +379,15 @@ def validate_published_set(
             raise PublishError(f"issue #{ticket.number} received `{READY_LABEL}` before set validation")
         if validate_contract(issue.body) != contract:
             raise PublishError(f"issue #{ticket.number} Git contract does not match parent")
+
+
+def validate_ready_labels(tickets: Sequence[PublishedTicket]) -> None:
+    for ticket in tickets:
+        issue = view_issue(ticket.number)
+        if issue.state.upper() != "OPEN" or READY_LABEL not in issue.labels:
+            raise PublishError(
+                f"issue #{ticket.number} did not retain the validated `{READY_LABEL}` state; publication gate stays open"
+            )
 
 
 def apply_ready_labels(tickets: Sequence[PublishedTicket]) -> None:
@@ -345,7 +409,13 @@ def apply_ready_labels(tickets: Sequence[PublishedTicket]) -> None:
         raise OSError(f"ready label publication failed; applied labels were rolled back: {exc}") from exc
 
 
-def publish(repo: Path, parent_number: int, manifest: Path) -> dict[str, Any]:
+def publish(
+    repo: Path,
+    parent_number: int,
+    manifest: Path,
+    *,
+    allow_base_drift: bool,
+) -> dict[str, Any]:
     parent = view_issue(parent_number)
     parent_contract = validate_parent(parent)
     drafts = load_manifest(manifest)
@@ -354,12 +424,27 @@ def publish(repo: Path, parent_number: int, manifest: Path) -> dict[str, Any]:
         parent_number=parent_number,
         parent_contract=parent_contract,
     )
-    workspace = provision_workspace(repo, parent.body)
+    workspace = provision_workspace(
+        repo,
+        parent.body,
+        expected_branch=parent_contract["branch"],
+        allow_base_drift=allow_base_drift,
+    )
 
     published: list[PublishedTicket] = []
     internal_numbers: dict[str, int] = {}
     with tempfile.TemporaryDirectory(prefix="to-tickets-lqy-") as temporary:
         body_dir = Path(temporary)
+        gate_draft = publication_gate_draft(parent_number)
+        gate_body = render_ticket_body(
+            gate_draft,
+            parent_number=parent_number,
+            internal_numbers={},
+            external_numbers={},
+            contract=parent_contract,
+            publication_gate=None,
+        )
+        publication_gate = create_ticket(gate_draft, gate_body, body_dir)
         for draft in drafts:
             body = render_ticket_body(
                 draft,
@@ -367,21 +452,31 @@ def publish(repo: Path, parent_number: int, manifest: Path) -> dict[str, Any]:
                 internal_numbers=internal_numbers,
                 external_numbers=external_numbers,
                 contract=parent_contract,
+                publication_gate=publication_gate.number,
             )
             ticket = create_ticket(draft, body, body_dir)
             published.append(ticket)
             internal_numbers[draft.ticket_id] = ticket.number
 
-    validate_published_set(published, contract=parent_contract)
+    validate_published_set([publication_gate, *published], contract=parent_contract)
     apply_ready_labels(published)
+    validate_ready_labels(published)
+    gh(
+        "issue",
+        "close",
+        str(publication_gate.number),
+        "--comment",
+        "Ticket frontier 已完整验证并发布。",
+    )
     return {
         "label": READY_LABEL,
         "parent": parent_number,
+        "publication_gate": publication_gate.number,
         "tickets": [
             {"id": ticket.ticket_id, "number": ticket.number, "title": ticket.title, "url": ticket.url}
             for ticket in published
         ],
-        "workspace": workspace,
+        "workspace": asdict(workspace),
     }
 
 
@@ -390,13 +485,23 @@ def parse_args(argv: Sequence[str]) -> argparse.Namespace:
     parser.add_argument("--repo", default=".", type=Path, help="Any path inside the target Git repository.")
     parser.add_argument("--parent", required=True, type=int, help="Git-bound parent spec issue number.")
     parser.add_argument("--manifest", required=True, type=Path, help="JSON Ticket manifest in dependency order.")
+    parser.add_argument(
+        "--allow-base-drift",
+        action="store_true",
+        help="Continue from the recorded base only after the user explicitly chooses the old SHA.",
+    )
     return parser.parse_args(argv)
 
 
 def main(argv: Sequence[str] | None = None) -> int:
     args = parse_args(sys.argv[1:] if argv is None else argv)
     try:
-        result = publish(args.repo, args.parent, args.manifest)
+        result = publish(
+            args.repo,
+            args.parent,
+            args.manifest,
+            allow_base_drift=args.allow_base_drift,
+        )
     except PublishError as exc:
         print(f"PUBLISH ERROR: {exc}", file=sys.stderr)
         return 3
