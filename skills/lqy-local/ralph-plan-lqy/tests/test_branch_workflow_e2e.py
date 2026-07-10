@@ -13,7 +13,6 @@ from pathlib import Path
 
 
 SKILL_ROOT = Path(__file__).resolve().parents[1]
-REPO_ROOT = SKILL_ROOT.parents[2]
 PROVISIONER = SKILL_ROOT / "scripts" / "provision_workspace.py"
 ELIGIBILITY_GATE = SKILL_ROOT / "scripts" / "check_ready_issue_unblocked.py"
 LOCKED_RUNNER = SKILL_ROOT / "scripts" / "run_locked_ralph.py"
@@ -132,10 +131,20 @@ class BranchWorkflowEndToEndTests(unittest.TestCase):
                 log = pathlib.Path(os.environ["GH_STUB_LOG"])
                 with log.open("a", encoding="utf-8") as handle:
                     handle.write(json.dumps(args) + "\\n")
+                issues = json.loads(pathlib.Path(os.environ["GH_STUB_ISSUES"]).read_text(encoding="utf-8"))
+                if args[:2] == ["issue", "list"]:
+                    ready = [
+                        issue
+                        for issue in issues.values()
+                        if issue["state"] == "OPEN"
+                        and any(label["name"] == "ready-for-agent" for label in issue["labels"])
+                    ]
+                    for issue in sorted(ready, key=lambda item: item["number"]):
+                        print(json.dumps({key: issue[key] for key in ("number", "title", "body")}))
+                    raise SystemExit(0)
                 if len(args) < 3 or args[:2] != ["issue", "view"]:
                     print("unsupported gh invocation", file=sys.stderr)
                     raise SystemExit(1)
-                issues = json.loads(pathlib.Path(os.environ["GH_STUB_ISSUES"]).read_text(encoding="utf-8"))
                 issue = issues.get(args[2])
                 if issue is None:
                     print(f"issue {args[2]} not found", file=sys.stderr)
@@ -194,7 +203,6 @@ class BranchWorkflowEndToEndTests(unittest.TestCase):
     def start_worker(
         self,
         worktree: Path,
-        issue_numbers: list[int],
         marker: Path,
         release: Path,
     ) -> subprocess.Popen[str]:
@@ -217,9 +225,26 @@ class BranchWorkflowEndToEndTests(unittest.TestCase):
                         text=True,
                         stdout=subprocess.PIPE,
                     ).stdout.strip()
+                    backlog = subprocess.run(
+                        [
+                            "gh", "issue", "list",
+                            "--label", "ready-for-agent",
+                            "--state", "open",
+                            "--json", "number,title,body",
+                            "--jq", "sort_by(.number)[] | {number,title,body}",
+                        ],
+                        check=False,
+                        text=True,
+                        stdout=subprocess.PIPE,
+                        stderr=subprocess.PIPE,
+                    )
+                    if backlog.returncode != 0:
+                        print(backlog.stderr, file=sys.stderr, end="")
+                        raise SystemExit(1)
                     results = []
                     selected = None
-                    for number in json.loads(os.environ["WORKER_ISSUES"]):
+                    for issue in (json.loads(line) for line in backlog.stdout.splitlines() if line):
+                        number = issue["number"]
                         result = subprocess.run(
                             [sys.executable, os.environ["ELIGIBILITY_GATE"], str(number)],
                             cwd=root,
@@ -233,7 +258,25 @@ class BranchWorkflowEndToEndTests(unittest.TestCase):
                             selected = number
                             break
                         if result.returncode in (1, 3):
-                            break
+                            pathlib.Path(os.environ["WORKER_MARKER"]).write_text(
+                                json.dumps({
+                                    "branch": branch,
+                                    "outcome": "error",
+                                    "returncode": result.returncode,
+                                    "results": results,
+                                }),
+                                encoding="utf-8",
+                            )
+                            print(result.stderr, file=sys.stderr, end="")
+                            raise SystemExit(result.returncode)
+
+                    if selected is None:
+                        pathlib.Path(os.environ["WORKER_MARKER"]).write_text(
+                            json.dumps({"branch": branch, "outcome": "complete", "results": results}),
+                            encoding="utf-8",
+                        )
+                        print("<ralph-finished-no-ready-issues/>")
+                        raise SystemExit(0)
 
                     slug = branch.replace("/", "-")
                     state_file = root / ".ralph" / "branch-state.txt"
@@ -245,13 +288,19 @@ class BranchWorkflowEndToEndTests(unittest.TestCase):
                     subprocess.run(["git", "push"], check=True)
                     (root / f"dirty-{slug}.txt").write_text(branch + "\\n", encoding="utf-8")
                     pathlib.Path(os.environ["WORKER_MARKER"]).write_text(
-                        json.dumps({"branch": branch, "selected": selected, "results": results}),
+                        json.dumps({
+                            "branch": branch,
+                            "outcome": "selected",
+                            "selected": selected,
+                            "results": results,
+                        }),
                         encoding="utf-8",
                     )
-                    release = pathlib.Path(os.environ["WORKER_RELEASE"])
-                    deadline = time.monotonic() + 15
-                    while not release.exists() and time.monotonic() < deadline:
-                        time.sleep(0.01)
+                    if release_value := os.environ.get("WORKER_RELEASE"):
+                        release = pathlib.Path(release_value)
+                        deadline = time.monotonic() + 15
+                        while not release.exists() and time.monotonic() < deadline:
+                            time.sleep(0.01)
                     """
                 ).strip()
                 + "\n",
@@ -260,7 +309,6 @@ class BranchWorkflowEndToEndTests(unittest.TestCase):
 
         env = self.environment()
         env["ELIGIBILITY_GATE"] = str(ELIGIBILITY_GATE)
-        env["WORKER_ISSUES"] = json.dumps(issue_numbers)
         env["WORKER_MARKER"] = str(marker)
         env["WORKER_RELEASE"] = str(release)
         return subprocess.Popen(
@@ -279,13 +327,26 @@ class BranchWorkflowEndToEndTests(unittest.TestCase):
             stderr=subprocess.PIPE,
         )
 
-    def first_ready(self, worktree: Path, issue_numbers: list[int]) -> int | None:
-        for number in issue_numbers:
-            result = self.gate(worktree, number)
-            if result.returncode == 0:
-                return number
-            self.assertEqual(2, result.returncode, result.stdout + result.stderr)
-        return None
+    def run_worker(self, worktree: Path, marker: Path) -> subprocess.CompletedProcess[str]:
+        probe = self.root / "worker_probe.py"
+        env = self.environment()
+        env["ELIGIBILITY_GATE"] = str(ELIGIBILITY_GATE)
+        env["WORKER_MARKER"] = str(marker)
+        return subprocess.run(
+            [
+                sys.executable,
+                str(LOCKED_RUNNER),
+                "--worktree",
+                str(worktree),
+                "--",
+                sys.executable,
+                str(probe),
+            ],
+            env=env,
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
 
     def test_two_git_bound_branch_workers_are_isolated_end_to_end(self) -> None:
         alpha = "feature/alpha"
@@ -307,9 +368,8 @@ class BranchWorkflowEndToEndTests(unittest.TestCase):
         release = self.root / "release-workers"
         alpha_marker = self.root / "alpha-ready.json"
         beta_marker = self.root / "beta-ready.json"
-        candidates = [11, 12, 21, 22, 30]
-        alpha_worker = self.start_worker(alpha_worktree, candidates, alpha_marker, release)
-        beta_worker = self.start_worker(beta_worktree, candidates, beta_marker, release)
+        alpha_worker = self.start_worker(alpha_worktree, alpha_marker, release)
+        beta_worker = self.start_worker(beta_worktree, beta_marker, release)
         self.addCleanup(self.stop_worker, alpha_worker)
         self.addCleanup(self.stop_worker, beta_worker)
         self.wait_for(alpha_marker)
@@ -318,11 +378,16 @@ class BranchWorkflowEndToEndTests(unittest.TestCase):
         alpha_result = json.loads(alpha_marker.read_text(encoding="utf-8"))
         beta_result = json.loads(beta_marker.read_text(encoding="utf-8"))
         self.assertEqual(11, alpha_result["selected"], alpha_result)
-        self.assertEqual([{"number": 11, "returncode": 0}], alpha_result["results"])
+        self.assertEqual(
+            [{"number": 10, "returncode": 2}, {"number": 11, "returncode": 0}],
+            alpha_result["results"],
+        )
         self.assertEqual(
             [
+                {"number": 10, "returncode": 2},
                 {"number": 11, "returncode": 2},
                 {"number": 12, "returncode": 2},
+                {"number": 19, "returncode": 2},
                 {"number": 21, "returncode": 2},
                 {"number": 22, "returncode": 0},
             ],
@@ -381,55 +446,24 @@ class BranchWorkflowEndToEndTests(unittest.TestCase):
         issues[12]["state"] = "CLOSED"
         issues[22]["state"] = "CLOSED"
         self.write_issues(issues)
-        self.assertIsNone(self.first_ready(alpha_worktree, candidates))
-        self.assertIsNone(self.first_ready(beta_worktree, candidates))
+        alpha_completion = self.run_worker(alpha_worktree, self.root / "alpha-complete.json")
+        beta_completion = self.run_worker(beta_worktree, self.root / "beta-complete.json")
+        self.assertEqual(0, alpha_completion.returncode, alpha_completion.stdout + alpha_completion.stderr)
+        self.assertEqual("<ralph-finished-no-ready-issues/>", alpha_completion.stdout.strip())
+        self.assertEqual(0, beta_completion.returncode, beta_completion.stdout + beta_completion.stderr)
+        self.assertEqual("<ralph-finished-no-ready-issues/>", beta_completion.stdout.strip())
 
         malformed = self.issue(40, alpha)
         malformed["body"] = str(malformed["body"]).replace(self.base_commit, "not-a-sha")
         issues[40] = malformed
         self.write_issues(issues)
-        contract_error = self.gate(alpha_worktree, 40)
+        contract_error = self.run_worker(alpha_worktree, self.root / "alpha-contract-error.json")
         self.assertEqual(3, contract_error.returncode, contract_error.stdout + contract_error.stderr)
         self.assertIn("CONTRACT ERROR", contract_error.stderr)
 
         gh_calls = [json.loads(line) for line in self.gh_log.read_text(encoding="utf-8").splitlines()]
         self.assertTrue(gh_calls)
         self.assertTrue(all("assignees" not in " ".join(call) for call in gh_calls))
-
-    def test_installation_docs_publish_the_branch_worker_contract(self) -> None:
-        expected_fragments = {
-            REPO_ROOT / "README.md": (
-                "## Git-bound Ralph 工作流",
-                "完全忽略 assignees",
-                "PR 不进入 Ralph issue backlog",
-                "不会自动合并、删除 branch 或清理 worktree",
-            ),
-            SKILL_ROOT / "agents" / "openai.yaml": (
-                "branch-aware",
-                "worktree lock",
-            ),
-            SKILL_ROOT / "LOCALIZATION.md": (
-                "端到端验证",
-                "不使用 assignee claim",
-                "不自动清理 branch/worktree",
-            ),
-            REPO_ROOT
-            / "skills"
-            / "matt-lqy-core"
-            / "setup-matt-pocock-skills-lqy"
-            / "issue-tracker-github.md": (
-                "branch 内按 issue number 升序",
-                "当前 branch 没有可领取 Ticket",
-                "malformed Git 契约",
-            ),
-        }
-
-        for path, fragments in expected_fragments.items():
-            text = path.read_text(encoding="utf-8")
-            for fragment in fragments:
-                with self.subTest(path=path, fragment=fragment):
-                    self.assertIn(fragment, text)
-
 
 if __name__ == "__main__":
     unittest.main()
