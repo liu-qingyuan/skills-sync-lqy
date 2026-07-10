@@ -39,11 +39,13 @@ def is_valid_git_ref(value: str, *, branch: bool = False) -> bool:
     return all(component and not component.startswith(".") and not component.endswith(".lock") for component in value.split("/"))
 
 
-def parse_git_contract(body: str) -> GitContract:
+def parse_git_contract(body: str, *, require_unique: bool = False) -> GitContract:
     headings = list(re.finditer(r"^##\s+([^\n]+?)\s*$", body or "", flags=re.MULTILINE))
     git_headings = [match for match in headings if match.group(1) == GIT_HEADING]
     if not git_headings:
         raise GitContractError("missing `## Git` section")
+    if require_unique and len(git_headings) != 1:
+        raise GitContractError(f"expected exactly one `## Git` section, found {len(git_headings)}")
 
     git_heading = git_headings[-1]
     if headings[-1] is not git_heading:
@@ -73,6 +75,11 @@ def parse_git_contract(body: str) -> GitContract:
 def parse_args(argv: Sequence[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Validate the final `## Git` section in an issue body.")
     parser.add_argument("body_file", nargs="?", default="-", help="Issue body file, or `-` to read stdin.")
+    parser.add_argument(
+        "--require-unique",
+        action="store_true",
+        help="Reject bodies containing historical `## Git` sections; intended for issue producers.",
+    )
     return parser.parse_args(argv)
 
 
@@ -80,7 +87,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     args = parse_args(sys.argv[1:] if argv is None else argv)
     try:
         body = sys.stdin.read() if args.body_file == "-" else Path(args.body_file).read_text(encoding="utf-8")
-        contract = parse_git_contract(body)
+        contract = parse_git_contract(body, require_unique=args.require_unique)
     except GitContractError as exc:
         print(f"CONTRACT ERROR: {exc}", file=sys.stderr)
         return 3

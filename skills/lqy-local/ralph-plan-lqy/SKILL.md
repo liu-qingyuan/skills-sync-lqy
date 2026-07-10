@@ -44,6 +44,17 @@ gh issue view <N> --json body --jq .body \
   | python3 ~/.agents/skills/ralph-plan-lqy/scripts/git_contract.py
 ```
 
+producer 创建新 issue 时追加 `--require-unique`，确保正文只包含一个 `## Git`。`to-spec-lqy` 在发布父 spec 前使用共享 resolver；它从远程默认 branch 得到默认 `Branch`/`Base branch`，fetch base ref 并固定完整 SHA，显式输入通过参数覆盖：
+
+```bash
+python3 ~/.agents/skills/ralph-plan-lqy/scripts/resolve_spec_git.py \
+  --repo <repo-path> \
+  [--branch <target-branch>] \
+  [--base-branch <remote/base>]
+```
+
+resolver 不读取当前 checkout 来决定默认值，也不创建 branch 或 worktree。已有目标 branch 不在解析出的 base commit 时返回 `3` 并报告 collision；Git/I/O 错误返回 `1`。
+
 如果 skill 安装在不同位置，输出命令时按实际路径替换。
 
 ## Workspace Provision
