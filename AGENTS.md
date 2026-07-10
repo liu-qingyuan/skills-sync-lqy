@@ -31,3 +31,17 @@
 - 如果无法运行验证命令，必须说明原因和替代验证方式。
 - 没有当前验证证据，不要声称架构或测试已完成。
 - 除非用户明确要求，不要生成 ADR、长篇架构文档、Design It Twice 或完整工程生命周期流程。
+
+## Agent skills
+
+### Issue tracker
+
+GitHub issues；外部 PR 不作为 triage 请求入口。见 `docs/agents/issue-tracker.md`。
+
+### Triage labels
+
+使用 `needs-triage`、`needs-info`、`ready-for-agent`、`ready-for-human`、`wontfix`。见 `docs/agents/triage-labels.md`。
+
+### Domain docs
+
+单上下文：根目录 `CONTEXT.md`，ADR 按需放在 `docs/adr/`。见 `docs/agents/domain.md`。
