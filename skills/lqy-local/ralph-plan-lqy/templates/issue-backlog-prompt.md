@@ -20,7 +20,7 @@ gh issue list \
   --jq 'sort_by(.number)[] | {number,title,body}'
 ```
 
-只处理 open + `ready-for-agent` issues。完全忽略 assignees，不读取、不修改，也不用于领取。每个候选必须把唯一、格式完整的 `## Git` 放在正文最后；缺失、重复或损坏的契约是持久错误，立即停止。
+只处理 open + `ready-for-agent` issues。完全忽略 assignees，不读取、不修改，也不用于领取。每个候选正文最后一个 `## Git` 必须格式完整；section 缺失、字段重复或格式损坏是持久错误，立即停止。
 
 # 任务选择
 

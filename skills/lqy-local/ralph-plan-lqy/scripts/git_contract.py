@@ -13,7 +13,7 @@ from pathlib import Path
 
 GIT_HEADING = "Git"
 FIELD_NAMES = ("Branch", "Base branch", "Base commit")
-FULL_SHA_PATTERN = re.compile(r"^[0-9a-f]{40}$")
+FULL_SHA_PATTERN = re.compile(r"^[0-9a-fA-F]{40}$")
 FIELD_PATTERN = re.compile(r"^- ([^:]+): `([^`]+)`$")
 FORBIDDEN_REF_CHARS = re.compile(r"[\x00-\x20\x7f~^:?*\\[]")
 
@@ -42,10 +42,10 @@ def is_valid_git_ref(value: str, *, branch: bool = False) -> bool:
 def parse_git_contract(body: str) -> GitContract:
     headings = list(re.finditer(r"^##\s+([^\n]+?)\s*$", body or "", flags=re.MULTILINE))
     git_headings = [match for match in headings if match.group(1) == GIT_HEADING]
-    if len(git_headings) != 1:
-        raise GitContractError(f"expected exactly one `## Git` section, found {len(git_headings)}")
+    if not git_headings:
+        raise GitContractError("missing `## Git` section")
 
-    git_heading = git_headings[0]
+    git_heading = git_headings[-1]
     if headings[-1] is not git_heading:
         raise GitContractError("`## Git` must be the final section")
 
@@ -66,7 +66,7 @@ def parse_git_contract(body: str) -> GitContract:
     if not is_valid_git_ref(base_branch):
         raise GitContractError("invalid `Base branch` Git ref")
     if not FULL_SHA_PATTERN.fullmatch(base_commit):
-        raise GitContractError("`Base commit` must be a full lowercase 40-character SHA")
+        raise GitContractError("`Base commit` must be a full 40-character SHA")
     return GitContract(branch=branch, base_branch=base_branch, base_commit=base_commit)
 
 

@@ -27,7 +27,7 @@ description: "规划 Open Ralph GitHub issue backlog 串行循环：Codex 默认
 python3 ~/.agents/skills/ralph-plan-lqy/scripts/check_ready_issue_unblocked.py <issue-number>
 ```
 
-候选 Ticket 必须把唯一的 `## Git` 作为正文最后一个 section，依次包含 `Branch`、`Base branch` 和完整 40 位 `Base commit`。它还必须使用唯一的 `## Blocked by` 记录同 branch 依赖；没有 blocker 时写 `None — can start immediately`。
+候选 Ticket 正文最后一个 `## Git` section 必须依次包含 `Branch`、`Base branch` 和完整 40 位 `Base commit`。它还必须使用唯一的 `## Blocked by` 记录同 branch 依赖；没有 blocker 时写 `None — can start immediately`。
 
 - `0`：可以开始。
 - `1`：GitHub、git 或环境错误，停止并说明原因。
