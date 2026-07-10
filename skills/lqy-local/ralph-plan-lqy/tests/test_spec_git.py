@@ -80,6 +80,14 @@ class SpecGitResolverCliTests(unittest.TestCase):
             json.loads(result.stdout),
         )
 
+    def test_fully_explicit_contract_does_not_require_remote_default(self) -> None:
+        run("git", "update-ref", "--no-deref", "HEAD", self.main_commit, cwd=self.remote)
+
+        result = self.resolve("--branch", "feature/spec", "--base-branch", "origin/main")
+
+        self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+        self.assertEqual("feature/spec", json.loads(result.stdout)["branch"])
+
     def test_detached_checkout_does_not_change_defaults(self) -> None:
         run("git", "checkout", "--detach", self.main_commit, cwd=self.repo)
 

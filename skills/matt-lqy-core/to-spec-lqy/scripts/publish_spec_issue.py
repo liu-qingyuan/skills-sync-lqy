@@ -13,6 +13,16 @@ from pathlib import Path
 
 
 READY_LABEL = "ready-for-agent"
+REQUIRED_SPEC_SECTIONS = (
+    "Problem Statement",
+    "Solution",
+    "User Stories",
+    "Implementation Decisions",
+    "Testing Decisions",
+    "Mermaid Gate",
+    "Out of Scope",
+    "Further Notes",
+)
 
 
 class PublishError(RuntimeError):
@@ -48,6 +58,25 @@ def validate_body(validator: Path, body: str) -> None:
         raise OSError(f"shared Git contract validator failed: {detail}")
 
 
+def validate_spec_structure(body: str) -> None:
+    headings = list(re.finditer(r"^##\s+([^\n]+?)\s*$", body, flags=re.MULTILINE))
+    positions: list[int] = []
+    for required in REQUIRED_SPEC_SECTIONS:
+        matches = [match for match in headings if match.group(1) == required]
+        if not matches:
+            raise PublishError(f"missing `## {required}` section")
+        if len(matches) != 1:
+            raise PublishError(f"expected exactly one `## {required}` section, found {len(matches)}")
+        match = matches[0]
+        positions.append(match.start())
+        next_heading = next((heading for heading in headings if heading.start() > match.start()), None)
+        end = next_heading.start() if next_heading is not None else len(body)
+        if not body[match.end() : end].strip():
+            raise PublishError(f"`## {required}` section must not be empty")
+    if positions != sorted(positions):
+        raise PublishError("spec template sections are out of order")
+
+
 def gh(*args: str) -> str:
     result = run(["gh", *args])
     if result.returncode != 0:
@@ -69,12 +98,14 @@ def publish(title: str, body_file: Path) -> dict[str, object]:
         raise PublishError("parent spec title must use `Spec: <short title>`")
     body = body_file.read_text(encoding="utf-8")
     validator = contract_validator()
+    validate_spec_structure(body)
     validate_body(validator, body)
 
     number, url = issue_number_from_url(
         gh("issue", "create", "--title", title, "--body-file", str(body_file))
     )
     readback = gh("issue", "view", str(number), "--json", "body", "--jq", ".body")
+    validate_spec_structure(readback)
     validate_body(validator, readback)
     if readback.rstrip("\n") != body.rstrip("\n"):
         raise PublishError(f"issue #{number} body changed during publication; ready label was not applied")

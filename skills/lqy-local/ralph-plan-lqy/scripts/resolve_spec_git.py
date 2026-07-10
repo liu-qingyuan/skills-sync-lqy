@@ -114,9 +114,13 @@ def render_contract(contract: GitContract) -> str:
 def resolve(repo: Path, branch: str | None, base_branch: str | None) -> GitContract:
     repo_root = Path(git(repo, "rev-parse", "--show-toplevel").stdout.strip()).resolve()
     remote, explicit_remote_base = configured_remote(repo_root, base_branch)
-    default_branch = remote_default_branch(repo_root, remote)
-    target_branch = branch or default_branch
-    remote_base = explicit_remote_base or default_branch
+    default_branch: str | None = None
+    if branch is None or explicit_remote_base is None:
+        default_branch = remote_default_branch(repo_root, remote)
+    target_branch = branch if branch is not None else default_branch
+    remote_base = explicit_remote_base if explicit_remote_base is not None else default_branch
+    if target_branch is None or remote_base is None:
+        raise ResolutionError("cannot resolve branch defaults")
     target_base_branch = base_branch or f"{remote}/{remote_base}"
 
     if not is_valid_git_ref(target_branch, branch=True):

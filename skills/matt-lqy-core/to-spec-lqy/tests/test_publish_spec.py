@@ -23,6 +23,34 @@ def spec_body() -> str:
 
         Test spec.
 
+        ## Solution
+
+        Publish safely.
+
+        ## User Stories
+
+        1. As a maintainer, I want a validated spec, so that Ralph sees complete work.
+
+        ## Implementation Decisions
+
+        - Resolve the Git contract from the remote.
+
+        ## Testing Decisions
+
+        - Test the publisher command.
+
+        ## Mermaid Gate
+
+        不需要图。测试 fixture 不改变架构或公共接口。
+
+        ## Out of Scope
+
+        - Worktree provisioning.
+
+        ## Further Notes
+
+        None.
+
         ## Git
 
         - Branch: `main`
@@ -104,6 +132,18 @@ class PublishSpecIssueCliTests(unittest.TestCase):
         result = self.publish()
 
         self.assertEqual(3, result.returncode, result.stdout + result.stderr)
+        self.assertEqual([], self.calls())
+
+    def test_missing_mermaid_gate_stops_before_creating_issue(self) -> None:
+        body = spec_body()
+        start = body.index("## Mermaid Gate")
+        end = body.index("## Out of Scope")
+        self.body_file.write_text(body[:start] + body[end:], encoding="utf-8")
+
+        result = self.publish()
+
+        self.assertEqual(3, result.returncode, result.stdout + result.stderr)
+        self.assertIn("missing `## Mermaid Gate`", result.stderr)
         self.assertEqual([], self.calls())
 
     def test_failed_readback_validation_leaves_issue_without_ready_label(self) -> None:
