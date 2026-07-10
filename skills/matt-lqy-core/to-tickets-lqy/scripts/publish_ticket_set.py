@@ -3,23 +3,26 @@
 from __future__ import annotations
 
 import argparse
+import importlib.util
 import json
 import os
 import re
-import subprocess
 import sys
 import tempfile
 from collections.abc import Sequence
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any, cast
+
+
+if TYPE_CHECKING:
+    from producer_adapter import GitContract, ProducerToolAdapter
 
 
 READY_LABEL = "ready-for-agent"
 REQUIRED_DRAFT_SECTIONS = ("What to build", "Acceptance criteria", "Mermaid Gate")
 TICKET_ID_PATTERN = re.compile(r"^[a-z0-9][a-z0-9._-]*$")
 EXTERNAL_BLOCKER_PATTERN = re.compile(r"^#([1-9][0-9]*)$")
-FULL_SHA_PATTERN = re.compile(r"^[0-9a-fA-F]{40}$")
 
 
 class PublishError(RuntimeError):
@@ -52,106 +55,20 @@ class PublishedTicket:
     url: str
 
 
-@dataclass(frozen=True)
-class WorktreeResult:
-    path: str
-    branch: str
-    head: str
-    upstream: str
-
-
-def run(command: list[str], *, input_text: str | None = None) -> subprocess.CompletedProcess[str]:
-    return subprocess.run(
-        command,
-        input=input_text,
-        text=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-    )
-
-
-def shared_script(name: str) -> Path:
+def load_producer_adapter(repo: Path) -> ProducerToolAdapter:
     skill_dir = Path(
         os.environ.get("RALPH_PLAN_SKILL_DIR", Path.home() / ".agents" / "skills" / "ralph-plan-lqy")
     )
-    script = skill_dir / "scripts" / name
-    if not script.is_file():
-        raise PublishError(f"required ralph-plan-lqy script is not installed: {script}")
-    return script
-
-
-def command_json(command: list[str], *, input_text: str | None = None) -> dict[str, Any]:
-    result = run(command, input_text=input_text)
-    if result.returncode == 3:
-        raise PublishError(result.stderr.strip() or result.stdout.strip() or f"{' '.join(command)} failed")
-    if result.returncode != 0:
-        detail = result.stderr.strip() or result.stdout.strip() or f"exit {result.returncode}"
-        raise OSError(f"{' '.join(command)} failed: {detail}")
-    try:
-        payload = json.loads(result.stdout)
-    except json.JSONDecodeError as exc:
-        raise OSError(f"{' '.join(command)} returned invalid JSON") from exc
-    if not isinstance(payload, dict):
-        raise OSError(f"{' '.join(command)} returned a non-object JSON value")
-    return payload
-
-
-def validate_contract(body: str) -> dict[str, str]:
-    payload = command_json(
-        [sys.executable, str(shared_script("git_contract.py")), "--require-unique"],
-        input_text=body,
-    )
-    try:
-        return {
-            "branch": str(payload["branch"]),
-            "base_branch": str(payload["base_branch"]),
-            "base_commit": str(payload["base_commit"]),
-        }
-    except KeyError as exc:
-        raise OSError("shared Git contract validator returned incomplete JSON") from exc
-
-
-def provision_workspace(
-    repo: Path,
-    parent_body: str,
-    *,
-    expected_branch: str,
-    allow_base_drift: bool,
-) -> WorktreeResult:
-    command = [sys.executable, str(shared_script("provision_workspace.py")), "--repo", str(repo)]
-    if allow_base_drift:
-        command.append("--allow-base-drift")
-    payload = command_json(
-        command,
-        input_text=parent_body,
-    )
-    missing = [field for field in ("path", "branch", "head", "upstream") if field not in payload]
-    if missing:
-        raise OSError(f"workspace provisioner returned incomplete JSON; missing: {', '.join(missing)}")
-    if not all(isinstance(payload[field], str) and payload[field] for field in ("path", "branch", "head", "upstream")):
-        raise OSError("workspace provisioner returned invalid WorktreeResult field types")
-    if payload["branch"] != expected_branch:
-        raise OSError(
-            f"workspace provisioner returned branch `{payload['branch']}`, expected `{expected_branch}`"
-        )
-    if not Path(payload["path"]).is_absolute():
-        raise OSError("workspace provisioner returned a non-absolute worktree path")
-    if FULL_SHA_PATTERN.fullmatch(payload["head"]) is None:
-        raise OSError("workspace provisioner returned an invalid HEAD commit")
-    return WorktreeResult(
-        path=payload["path"],
-        branch=payload["branch"],
-        head=payload["head"],
-        upstream=payload["upstream"],
-    )
-
-
-def gh(*args: str) -> str:
-    result = run(["gh", *args])
-    if result.returncode != 0:
-        detail = result.stderr.strip() or result.stdout.strip() or f"exit {result.returncode}"
-        raise OSError(f"gh {' '.join(args)} failed: {detail}")
-    return result.stdout
+    adapter_path = skill_dir / "scripts" / "producer_adapter.py"
+    if not adapter_path.is_file():
+        raise PublishError(f"shared producer adapter is not installed: {adapter_path}")
+    spec = importlib.util.spec_from_file_location("ralph_plan_producer_adapter", adapter_path)
+    if spec is None or spec.loader is None:
+        raise PublishError(f"cannot load shared producer adapter: {adapter_path}")
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module
+    spec.loader.exec_module(module)
+    return cast("ProducerToolAdapter", module.ProducerToolAdapter(repo, skill_dir=skill_dir))
 
 
 def issue_from_json(payload: dict[str, Any]) -> Issue:
@@ -172,8 +89,8 @@ def issue_from_json(payload: dict[str, Any]) -> Issue:
         raise OSError("gh issue view returned malformed issue JSON") from exc
 
 
-def view_issue(number: int) -> Issue:
-    output = gh("issue", "view", str(number), "--json", "number,title,body,state,labels")
+def view_issue(tools: ProducerToolAdapter, number: int) -> Issue:
+    output = tools.gh("issue", "view", str(number), "--json", "number,title,body,state,labels")
     try:
         payload = json.loads(output)
     except json.JSONDecodeError as exc:
@@ -183,12 +100,12 @@ def view_issue(number: int) -> Issue:
     return issue_from_json(payload)
 
 
-def validate_parent(issue: Issue) -> dict[str, str]:
+def validate_parent(tools: ProducerToolAdapter, issue: Issue) -> GitContract:
     if issue.state.upper() != "OPEN":
         raise PublishError(f"parent issue #{issue.number} is {issue.state or 'not open'}")
     if not re.match(r"^\s*Spec\s*:", issue.title, flags=re.IGNORECASE):
         raise PublishError(f"parent issue #{issue.number} title must start with `Spec:`")
-    return validate_contract(issue.body)
+    return tools.validate_git_contract(issue.body)
 
 
 def validate_draft_body(body: str, *, ticket_id: str) -> None:
@@ -269,10 +186,11 @@ def load_manifest(path: Path) -> list[TicketDraft]:
 
 
 def validate_external_blockers(
+    tools: ProducerToolAdapter,
     drafts: Sequence[TicketDraft],
     *,
     parent_number: int,
-    parent_contract: dict[str, str],
+    parent_contract: GitContract,
 ) -> dict[str, int]:
     resolved: dict[str, int] = {}
     for draft in drafts:
@@ -283,20 +201,20 @@ def validate_external_blockers(
             number = int(match.group(1))
             if number == parent_number:
                 raise PublishError(f"ticket `{draft.ticket_id}` cannot be blocked by its parent spec #{number}")
-            issue = view_issue(number)
-            blocker_contract = validate_contract(issue.body)
+            issue = view_issue(tools, number)
+            blocker_contract = tools.validate_git_contract(issue.body)
             if blocker_contract != parent_contract:
                 raise PublishError(f"blocker #{number} does not match parent Git contract")
             resolved[blocker] = number
     return resolved
 
 
-def render_git_contract(contract: dict[str, str]) -> str:
+def render_git_contract(contract: GitContract) -> str:
     return (
         "## Git\n\n"
-        f"- Branch: `{contract['branch']}`\n"
-        f"- Base branch: `{contract['base_branch']}`\n"
-        f"- Base commit: `{contract['base_commit']}`"
+        f"- Branch: `{contract.branch}`\n"
+        f"- Base branch: `{contract.base_branch}`\n"
+        f"- Base commit: `{contract.base_commit}`"
     )
 
 
@@ -306,7 +224,7 @@ def render_ticket_body(
     parent_number: int,
     internal_numbers: dict[str, int],
     external_numbers: dict[str, int],
-    contract: dict[str, str],
+    contract: GitContract,
     publication_gate: int | None,
 ) -> str:
     blocker_numbers = ([] if publication_gate is None else [publication_gate]) + [
@@ -332,11 +250,16 @@ def issue_number_from_url(output: str) -> tuple[int, str]:
     return int(match.group(1)), url
 
 
-def create_ticket(draft: TicketDraft, body: str, body_dir: Path) -> PublishedTicket:
+def create_ticket(
+    tools: ProducerToolAdapter,
+    draft: TicketDraft,
+    body: str,
+    body_dir: Path,
+) -> PublishedTicket:
     body_file = body_dir / f"{draft.ticket_id}.md"
     body_file.write_text(body, encoding="utf-8")
     number, url = issue_number_from_url(
-        gh("issue", "create", "--title", draft.title, "--body-file", str(body_file))
+        tools.gh("issue", "create", "--title", draft.title, "--body-file", str(body_file))
     )
     return PublishedTicket(
         ticket_id=draft.ticket_id,
@@ -365,42 +288,46 @@ def publication_gate_draft(parent_number: int) -> TicketDraft:
 
 
 def validate_published_set(
+    tools: ProducerToolAdapter,
     tickets: Sequence[PublishedTicket],
     *,
-    contract: dict[str, str],
+    contract: GitContract,
 ) -> None:
     for ticket in tickets:
-        issue = view_issue(ticket.number)
+        issue = view_issue(tools, ticket.number)
         if issue.title != ticket.title or issue.body.rstrip("\n") != ticket.body.rstrip("\n"):
             raise PublishError(f"issue #{ticket.number} changed during publication; ready labels were not applied")
         if issue.state.upper() != "OPEN":
             raise PublishError(f"issue #{ticket.number} is {issue.state or 'not open'} after publication")
         if READY_LABEL in issue.labels:
             raise PublishError(f"issue #{ticket.number} received `{READY_LABEL}` before set validation")
-        if validate_contract(issue.body) != contract:
+        if tools.validate_git_contract(issue.body) != contract:
             raise PublishError(f"issue #{ticket.number} Git contract does not match parent")
 
 
-def validate_ready_labels(tickets: Sequence[PublishedTicket]) -> None:
+def validate_ready_labels(
+    tools: ProducerToolAdapter,
+    tickets: Sequence[PublishedTicket],
+) -> None:
     for ticket in tickets:
-        issue = view_issue(ticket.number)
+        issue = view_issue(tools, ticket.number)
         if issue.state.upper() != "OPEN" or READY_LABEL not in issue.labels:
             raise PublishError(
                 f"issue #{ticket.number} did not retain the validated `{READY_LABEL}` state; publication gate stays open"
             )
 
 
-def apply_ready_labels(tickets: Sequence[PublishedTicket]) -> None:
+def apply_ready_labels(tools: ProducerToolAdapter, tickets: Sequence[PublishedTicket]) -> None:
     applied: list[int] = []
     try:
         for ticket in reversed(tickets):
-            gh("issue", "edit", str(ticket.number), "--add-label", READY_LABEL)
+            tools.gh("issue", "edit", str(ticket.number), "--add-label", READY_LABEL)
             applied.append(ticket.number)
     except OSError as exc:
         rollback_errors: list[str] = []
         for number in reversed(applied):
             try:
-                gh("issue", "edit", str(number), "--remove-label", READY_LABEL)
+                tools.gh("issue", "edit", str(number), "--remove-label", READY_LABEL)
             except OSError as rollback_exc:
                 rollback_errors.append(str(rollback_exc))
         if rollback_errors:
@@ -416,18 +343,19 @@ def publish(
     *,
     allow_base_drift: bool,
 ) -> dict[str, Any]:
-    parent = view_issue(parent_number)
-    parent_contract = validate_parent(parent)
+    tools = load_producer_adapter(repo)
+    parent = view_issue(tools, parent_number)
+    parent_contract = validate_parent(tools, parent)
     drafts = load_manifest(manifest)
     external_numbers = validate_external_blockers(
+        tools,
         drafts,
         parent_number=parent_number,
         parent_contract=parent_contract,
     )
-    workspace = provision_workspace(
-        repo,
+    workspace = tools.provision_workspace(
         parent.body,
-        expected_branch=parent_contract["branch"],
+        expected_branch=parent_contract.branch,
         allow_base_drift=allow_base_drift,
     )
 
@@ -444,7 +372,7 @@ def publish(
             contract=parent_contract,
             publication_gate=None,
         )
-        publication_gate = create_ticket(gate_draft, gate_body, body_dir)
+        publication_gate = create_ticket(tools, gate_draft, gate_body, body_dir)
         for draft in drafts:
             body = render_ticket_body(
                 draft,
@@ -454,14 +382,14 @@ def publish(
                 contract=parent_contract,
                 publication_gate=publication_gate.number,
             )
-            ticket = create_ticket(draft, body, body_dir)
+            ticket = create_ticket(tools, draft, body, body_dir)
             published.append(ticket)
             internal_numbers[draft.ticket_id] = ticket.number
 
-    validate_published_set([publication_gate, *published], contract=parent_contract)
-    apply_ready_labels(published)
-    validate_ready_labels(published)
-    gh(
+    validate_published_set(tools, [publication_gate, *published], contract=parent_contract)
+    apply_ready_labels(tools, published)
+    validate_ready_labels(tools, published)
+    tools.gh(
         "issue",
         "close",
         str(publication_gate.number),
@@ -502,7 +430,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             args.manifest,
             allow_base_drift=args.allow_base_drift,
         )
-    except PublishError as exc:
+    except (PublishError, ValueError) as exc:
         print(f"PUBLISH ERROR: {exc}", file=sys.stderr)
         return 3
     except OSError as exc:

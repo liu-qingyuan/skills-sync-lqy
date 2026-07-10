@@ -3,13 +3,18 @@
 from __future__ import annotations
 
 import argparse
+import importlib.util
 import json
 import os
 import re
-import subprocess
 import sys
 from collections.abc import Sequence
 from pathlib import Path
+from typing import TYPE_CHECKING, cast
+
+
+if TYPE_CHECKING:
+    from producer_adapter import ProducerToolAdapter
 
 
 READY_LABEL = "ready-for-agent"
@@ -29,33 +34,20 @@ class PublishError(RuntimeError):
     """Raised when publication cannot preserve the Git-bound issue contract."""
 
 
-def run(command: list[str], *, input_text: str | None = None) -> subprocess.CompletedProcess[str]:
-    return subprocess.run(
-        command,
-        input=input_text,
-        text=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-    )
-
-
-def contract_validator() -> Path:
+def load_producer_adapter(repo: Path) -> ProducerToolAdapter:
     skill_dir = Path(
         os.environ.get("RALPH_PLAN_SKILL_DIR", Path.home() / ".agents" / "skills" / "ralph-plan-lqy")
     )
-    validator = skill_dir / "scripts" / "git_contract.py"
-    if not validator.is_file():
-        raise PublishError(f"shared Git contract validator is not installed: {validator}")
-    return validator
-
-
-def validate_body(validator: Path, body: str) -> None:
-    result = run([sys.executable, str(validator), "--require-unique"], input_text=body)
-    if result.returncode == 3:
-        raise PublishError(result.stderr.strip())
-    if result.returncode != 0:
-        detail = result.stderr.strip() or result.stdout.strip() or f"exit {result.returncode}"
-        raise OSError(f"shared Git contract validator failed: {detail}")
+    adapter_path = skill_dir / "scripts" / "producer_adapter.py"
+    if not adapter_path.is_file():
+        raise PublishError(f"shared producer adapter is not installed: {adapter_path}")
+    spec = importlib.util.spec_from_file_location("ralph_plan_producer_adapter", adapter_path)
+    if spec is None or spec.loader is None:
+        raise PublishError(f"cannot load shared producer adapter: {adapter_path}")
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module
+    spec.loader.exec_module(module)
+    return cast("ProducerToolAdapter", module.ProducerToolAdapter(repo, skill_dir=skill_dir))
 
 
 def validate_spec_structure(body: str) -> None:
@@ -77,14 +69,6 @@ def validate_spec_structure(body: str) -> None:
         raise PublishError("spec template sections are out of order")
 
 
-def gh(*args: str) -> str:
-    result = run(["gh", *args])
-    if result.returncode != 0:
-        detail = result.stderr.strip() or result.stdout.strip() or f"exit {result.returncode}"
-        raise OSError(f"gh {' '.join(args)} failed: {detail}")
-    return result.stdout
-
-
 def issue_number_from_url(output: str) -> tuple[int, str]:
     url = output.strip().splitlines()[-1] if output.strip() else ""
     match = re.search(r"/issues/(\d+)/?$", url)
@@ -93,28 +77,30 @@ def issue_number_from_url(output: str) -> tuple[int, str]:
     return int(match.group(1)), url
 
 
-def publish(title: str, body_file: Path) -> dict[str, object]:
+def publish(repo: Path, title: str, body_file: Path) -> dict[str, object]:
     if not title.startswith("Spec: ") or not title.removeprefix("Spec: ").strip():
         raise PublishError("parent spec title must use `Spec: <short title>`")
+    body_file = body_file.expanduser().resolve()
     body = body_file.read_text(encoding="utf-8")
-    validator = contract_validator()
+    tools = load_producer_adapter(repo)
     validate_spec_structure(body)
-    validate_body(validator, body)
+    tools.validate_git_contract(body)
 
     number, url = issue_number_from_url(
-        gh("issue", "create", "--title", title, "--body-file", str(body_file))
+        tools.gh("issue", "create", "--title", title, "--body-file", str(body_file))
     )
-    readback = gh("issue", "view", str(number), "--json", "body", "--jq", ".body")
+    readback = tools.gh("issue", "view", str(number), "--json", "body", "--jq", ".body")
     validate_spec_structure(readback)
-    validate_body(validator, readback)
+    tools.validate_git_contract(readback)
     if readback.rstrip("\n") != body.rstrip("\n"):
         raise PublishError(f"issue #{number} body changed during publication; ready label was not applied")
-    gh("issue", "edit", str(number), "--add-label", READY_LABEL)
+    tools.gh("issue", "edit", str(number), "--add-label", READY_LABEL)
     return {"label": READY_LABEL, "number": number, "url": url}
 
 
 def parse_args(argv: Sequence[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Publish a Git-bound parent spec with label-last semantics.")
+    parser.add_argument("--repo", default=".", type=Path, help="Any path inside the target Git repository.")
     parser.add_argument("--title", required=True, help="Parent issue title in `Spec: <short title>` form.")
     parser.add_argument("--body-file", required=True, type=Path, help="Complete spec body with final `## Git`.")
     return parser.parse_args(argv)
@@ -123,8 +109,8 @@ def parse_args(argv: Sequence[str]) -> argparse.Namespace:
 def main(argv: Sequence[str] | None = None) -> int:
     args = parse_args(sys.argv[1:] if argv is None else argv)
     try:
-        result = publish(args.title, args.body_file)
-    except PublishError as exc:
+        result = publish(args.repo, args.title, args.body_file)
+    except (PublishError, ValueError) as exc:
         print(f"PUBLISH ERROR: {exc}", file=sys.stderr)
         return 3
     except OSError as exc:

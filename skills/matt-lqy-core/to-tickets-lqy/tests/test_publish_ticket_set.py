@@ -57,6 +57,20 @@ class PublishTicketSetCliTests(unittest.TestCase):
         self.temp_dir = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp_dir.cleanup)
         self.root = Path(self.temp_dir.name)
+        self.repo = self.root / "repo"
+        self.repo.mkdir()
+        subprocess.run(
+            ["git", "init", "--initial-branch=main", str(self.repo)],
+            check=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+        subprocess.run(
+            ["git", "-C", str(self.repo), "remote", "add", "origin", "https://github.com/example/project.git"],
+            check=True,
+        )
+        self.outside = self.root / "outside"
+        self.outside.mkdir()
         self.parent_body = self.root / "parent.md"
         self.parent_body.write_text(f"## Problem Statement\n\nTest parent.\n\n{git_section()}\n", encoding="utf-8")
         self.external_body = self.root / "external.md"
@@ -75,6 +89,11 @@ class PublishTicketSetCliTests(unittest.TestCase):
         scripts_dir.mkdir(parents=True)
         (scripts_dir / "git_contract.py").write_text(
             REAL_CONTRACT_VALIDATOR.read_text(encoding="utf-8"),
+            encoding="utf-8",
+        )
+        real_adapter = REAL_CONTRACT_VALIDATOR.with_name("producer_adapter.py")
+        (scripts_dir / "producer_adapter.py").write_text(
+            real_adapter.read_text(encoding="utf-8"),
             encoding="utf-8",
         )
         provisioner = scripts_dir / "provision_workspace.py"
@@ -104,6 +123,10 @@ class PublishTicketSetCliTests(unittest.TestCase):
             "#!/usr/bin/env python3\n"
             "import json, os, pathlib, sys\n"
             "args = sys.argv[1:]\n"
+            "expected_repo = pathlib.Path(os.environ['TEST_EXPECTED_REPO']).resolve()\n"
+            "if pathlib.Path.cwd().resolve() != expected_repo:\n"
+            "    print(f'wrong gh cwd: {pathlib.Path.cwd()}', file=sys.stderr)\n"
+            "    raise SystemExit(2)\n"
             "log = pathlib.Path(os.environ['TEST_EVENT_LOG'])\n"
             "with log.open('a', encoding='utf-8') as handle:\n"
             "    handle.write('gh ' + json.dumps(args) + '\\n')\n"
@@ -172,6 +195,7 @@ class PublishTicketSetCliTests(unittest.TestCase):
         self.env["TEST_ISSUE_DIR"] = str(self.issue_dir)
         self.env["TEST_PARENT_BODY"] = str(self.parent_body)
         self.env["TEST_EXTERNAL_BODY"] = str(self.external_body)
+        self.env["TEST_EXPECTED_REPO"] = str(self.repo)
 
     def write_manifest(self, *, second_blockers: list[str] | None = None) -> None:
         self.manifest.write_text(
@@ -202,7 +226,7 @@ class PublishTicketSetCliTests(unittest.TestCase):
                 sys.executable,
                 str(PUBLISHER),
                 "--repo",
-                str(self.root),
+                str(self.repo),
                 "--parent",
                 "1",
                 "--manifest",
@@ -212,6 +236,7 @@ class PublishTicketSetCliTests(unittest.TestCase):
             text=True,
             capture_output=True,
             env=self.env,
+            cwd=self.outside,
         )
 
     def events(self) -> list[str]:

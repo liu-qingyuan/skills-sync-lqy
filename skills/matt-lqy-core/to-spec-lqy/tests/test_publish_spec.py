@@ -65,6 +65,20 @@ class PublishSpecIssueCliTests(unittest.TestCase):
         self.temp_dir = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp_dir.cleanup)
         self.root = Path(self.temp_dir.name)
+        self.repo = self.root / "repo"
+        self.repo.mkdir()
+        subprocess.run(
+            ["git", "init", "--initial-branch=main", str(self.repo)],
+            check=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+        subprocess.run(
+            ["git", "-C", str(self.repo), "remote", "add", "origin", "https://github.com/example/project.git"],
+            check=True,
+        )
+        self.outside = self.root / "outside"
+        self.outside.mkdir()
         self.body_file = self.root / "spec.md"
         self.body_file.write_text(spec_body(), encoding="utf-8")
         self.log_file = self.root / "gh.log"
@@ -76,7 +90,7 @@ class PublishSpecIssueCliTests(unittest.TestCase):
             "import json, os, pathlib, sys\n"
             "log = pathlib.Path(os.environ['TEST_GH_LOG'])\n"
             "with log.open('a', encoding='utf-8') as handle:\n"
-            "    handle.write(json.dumps(sys.argv[1:]) + '\\n')\n"
+            "    handle.write(json.dumps({'argv': sys.argv[1:], 'cwd': str(pathlib.Path.cwd())}) + '\\n')\n"
             "args = sys.argv[1:]\n"
             "if args[:2] == ['issue', 'create']:\n"
             "    print('https://github.com/example/project/issues/42')\n"
@@ -101,20 +115,34 @@ class PublishSpecIssueCliTests(unittest.TestCase):
             [
                 sys.executable,
                 str(PUBLISHER),
+                "--repo",
+                str(self.repo),
                 "--title",
                 "Spec: Test flow",
                 "--body-file",
-                str(self.body_file),
+                os.path.relpath(self.body_file, self.outside),
             ],
             text=True,
             capture_output=True,
             env=self.env,
+            cwd=self.outside,
         )
 
     def calls(self) -> list[list[str]]:
         if not self.log_file.exists():
             return []
-        return [json.loads(line) for line in self.log_file.read_text(encoding="utf-8").splitlines()]
+        return [
+            json.loads(line)["argv"]
+            for line in self.log_file.read_text(encoding="utf-8").splitlines()
+        ]
+
+    def call_cwds(self) -> list[str]:
+        if not self.log_file.exists():
+            return []
+        return [
+            json.loads(line)["cwd"]
+            for line in self.log_file.read_text(encoding="utf-8").splitlines()
+        ]
 
     def test_ready_label_is_applied_only_after_create_and_readback_validation(self) -> None:
         result = self.publish()
@@ -124,6 +152,7 @@ class PublishSpecIssueCliTests(unittest.TestCase):
         self.assertEqual(["create", "view", "edit"], [call[1] for call in calls])
         self.assertNotIn("--label", calls[0])
         self.assertEqual(["--add-label", "ready-for-agent"], calls[2][-2:])
+        self.assertEqual([str(self.repo.resolve())] * 3, self.call_cwds())
         self.assertEqual(42, json.loads(result.stdout)["number"])
 
     def test_invalid_contract_stops_before_creating_issue(self) -> None:

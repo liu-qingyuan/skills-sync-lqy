@@ -50,6 +50,18 @@ class PublishReadyIssueCliTests(unittest.TestCase):
         self.root = Path(self.temp_dir.name)
         self.repo = self.root / "repo"
         self.repo.mkdir()
+        subprocess.run(
+            ["git", "init", "--initial-branch=main", str(self.repo)],
+            check=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+        subprocess.run(
+            ["git", "-C", str(self.repo), "remote", "add", "origin", "https://github.com/example/project.git"],
+            check=True,
+        )
+        self.outside = self.root / "outside"
+        self.outside.mkdir()
         self.brief_file = self.root / "brief.md"
         self.brief_file.write_text(brief_body(), encoding="utf-8")
         self.state_file = self.root / "state.json"
@@ -72,6 +84,17 @@ class PublishReadyIssueCliTests(unittest.TestCase):
         self.skill_dir = self.root / "ralph-plan-lqy"
         scripts_dir = self.skill_dir / "scripts"
         scripts_dir.mkdir(parents=True)
+        real_adapter = (
+            Path(__file__).resolve().parents[3]
+            / "lqy-local"
+            / "ralph-plan-lqy"
+            / "scripts"
+            / "producer_adapter.py"
+        )
+        (scripts_dir / "producer_adapter.py").write_text(
+            real_adapter.read_text(encoding="utf-8"),
+            encoding="utf-8",
+        )
         resolver = scripts_dir / "resolve_spec_git.py"
         resolver.write_text(
             "#!/usr/bin/env python3\n"
@@ -115,6 +138,10 @@ class PublishReadyIssueCliTests(unittest.TestCase):
             "#!/usr/bin/env python3\n"
             "import json, os, pathlib, sys\n"
             "args = sys.argv[1:]\n"
+            "expected_repo = pathlib.Path(os.environ['TEST_EXPECTED_REPO']).resolve()\n"
+            "if pathlib.Path.cwd().resolve() != expected_repo:\n"
+            "    print(f'wrong gh cwd: {pathlib.Path.cwd()}', file=sys.stderr)\n"
+            "    raise SystemExit(2)\n"
             "state_path = pathlib.Path(os.environ['TEST_STATE_FILE'])\n"
             "state = json.loads(state_path.read_text())\n"
             "log = pathlib.Path(os.environ['TEST_EVENT_LOG'])\n"
@@ -162,6 +189,7 @@ class PublishReadyIssueCliTests(unittest.TestCase):
         self.env["RALPH_PLAN_SKILL_DIR"] = str(self.skill_dir)
         self.env["TEST_EVENT_LOG"] = str(self.event_log)
         self.env["TEST_STATE_FILE"] = str(self.state_file)
+        self.env["TEST_EXPECTED_REPO"] = str(self.repo)
 
     def publish(self, *extra_args: str) -> subprocess.CompletedProcess[str]:
         return subprocess.run(
@@ -173,12 +201,13 @@ class PublishReadyIssueCliTests(unittest.TestCase):
                 "--issue",
                 "42",
                 "--brief-file",
-                str(self.brief_file),
+                os.path.relpath(self.brief_file, self.outside),
                 *extra_args,
             ],
             text=True,
             capture_output=True,
             env=self.env,
+            cwd=self.outside,
         )
 
     def events(self) -> list[str]:
