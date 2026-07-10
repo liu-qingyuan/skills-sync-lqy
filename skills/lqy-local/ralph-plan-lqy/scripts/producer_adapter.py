@@ -31,6 +31,15 @@ class GitContract:
 
 
 @dataclass(frozen=True)
+class IssueSnapshot:
+    number: int
+    title: str
+    body: str
+    state: str
+    labels: frozenset[str]
+
+
+@dataclass(frozen=True)
 class WorktreeResult:
     path: str
     branch: str
@@ -124,6 +133,40 @@ class ProducerToolAdapter:
             raise ProducerToolError(f"gh {' '.join(args)} failed: {detail}")
         return result.stdout
 
+    def view_issue(self, number: int) -> IssueSnapshot:
+        source = f"gh issue view {number}"
+        payload = self._gh_json(
+            "issue",
+            "view",
+            str(number),
+            "--json",
+            "number,title,body,state,labels",
+            source=source,
+        )
+        if not isinstance(payload, dict):
+            raise ProducerToolError(f"{source} returned a non-object JSON value")
+        return self._issue_snapshot(payload, source=source)
+
+    def list_issues(self) -> tuple[IssueSnapshot, ...]:
+        source = "gh issue list"
+        payload = self._gh_json(
+            "issue",
+            "list",
+            "--state",
+            "all",
+            "--limit",
+            "100000",
+            "--json",
+            "number,title,body,state,labels",
+            source=source,
+        )
+        if not isinstance(payload, list):
+            raise ProducerToolError(f"{source} returned a non-array JSON value")
+        return tuple(
+            self._issue_snapshot(item, source=f"{source} entry {index}")
+            for index, item in enumerate(payload, start=1)
+        )
+
     @staticmethod
     def _remote_url(repository: Path, remote: str) -> str | None:
         result = subprocess.run(
@@ -202,6 +245,39 @@ class ProducerToolAdapter:
         if FULL_SHA_PATTERN.fullmatch(fields["base_commit"]) is None:
             raise ProducerToolError(f"{source} returned an invalid base commit")
         return GitContract(**fields)
+
+    def _gh_json(self, *args: str, source: str) -> Any:
+        output = self.gh(*args)
+        try:
+            return json.loads(output)
+        except json.JSONDecodeError as exc:
+            raise ProducerToolError(f"{source} returned invalid JSON") from exc
+
+    @staticmethod
+    def _issue_snapshot(payload: Any, *, source: str) -> IssueSnapshot:
+        if not isinstance(payload, dict):
+            raise ProducerToolError(f"{source} is not an object")
+        number = payload.get("number")
+        title = payload.get("title")
+        body = payload.get("body")
+        state = payload.get("state")
+        labels = payload.get("labels")
+        if not isinstance(number, int) or isinstance(number, bool) or number < 1:
+            raise ProducerToolError(f"{source} returned an invalid issue number")
+        if not all(isinstance(value, str) for value in (title, body, state)):
+            raise ProducerToolError(f"{source} returned invalid issue fields")
+        if not isinstance(labels, list) or not all(
+            isinstance(label, dict) and isinstance(label.get("name"), str) and label["name"]
+            for label in labels
+        ):
+            raise ProducerToolError(f"{source} returned invalid issue labels")
+        return IssueSnapshot(
+            number=number,
+            title=title,
+            body=body,
+            state=state,
+            labels=frozenset(label["name"] for label in labels),
+        )
 
     @staticmethod
     def _strings(

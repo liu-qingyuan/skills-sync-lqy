@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import os
 import subprocess
 import sys
@@ -80,6 +81,53 @@ class ProducerToolAdapterTests(unittest.TestCase):
 
         with self.assertRaises(ProducerContractError):
             ProducerToolAdapter(plain_directory, skill_dir=self.skill_dir)
+
+    def test_issue_queries_hide_github_json_behind_typed_snapshots(self) -> None:
+        issue = {
+            "number": 10,
+            "title": "Existing Ticket",
+            "body": "## Parent\n\n#1",
+            "state": "OPEN",
+            "labels": [{"name": "ready-for-agent"}],
+        }
+        with patch.object(self.adapter, "gh", return_value=json.dumps(issue)) as gh:
+            snapshot = self.adapter.view_issue(10)
+        gh.assert_called_once_with(
+            "issue",
+            "view",
+            "10",
+            "--json",
+            "number,title,body,state,labels",
+        )
+        with patch.object(self.adapter, "gh", return_value=json.dumps([issue])) as gh:
+            snapshots = self.adapter.list_issues()
+        gh.assert_called_once_with(
+            "issue",
+            "list",
+            "--state",
+            "all",
+            "--limit",
+            "100000",
+            "--json",
+            "number,title,body,state,labels",
+        )
+
+        self.assertEqual(10, snapshot.number)
+        self.assertEqual(frozenset({"ready-for-agent"}), snapshot.labels)
+        self.assertEqual((snapshot,), snapshots)
+
+    def test_issue_queries_reject_malformed_github_schema(self) -> None:
+        malformed = {
+            "number": 10,
+            "title": "Existing Ticket",
+            "body": "body",
+            "state": "OPEN",
+            "labels": ["ready-for-agent"],
+        }
+
+        with patch.object(self.adapter, "gh", return_value=json.dumps([malformed])):
+            with self.assertRaises(ProducerToolError):
+                self.adapter.list_issues()
 
     def test_exit_three_is_a_contract_error(self) -> None:
         command = self.write_script("contract_error.py", "raise SystemExit(3)\n")

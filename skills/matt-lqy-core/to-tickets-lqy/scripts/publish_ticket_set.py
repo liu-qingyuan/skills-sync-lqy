@@ -16,26 +16,21 @@ from typing import TYPE_CHECKING, Any, cast
 
 
 if TYPE_CHECKING:
-    from producer_adapter import GitContract, ProducerToolAdapter
+    from producer_adapter import GitContract, IssueSnapshot, ProducerToolAdapter
 
 
 READY_LABEL = "ready-for-agent"
 REQUIRED_DRAFT_SECTIONS = ("What to build", "Acceptance criteria", "Mermaid Gate")
 TICKET_ID_PATTERN = re.compile(r"^[a-z0-9][a-z0-9._-]*$")
 EXTERNAL_BLOCKER_PATTERN = re.compile(r"^#([1-9][0-9]*)$")
+PARENT_SECTION_PATTERN = re.compile(
+    r"^##[ \t]+Parent[ \t]*\r?\n(?P<body>.*?)(?=^##[ \t]+|\Z)",
+    flags=re.MULTILINE | re.DOTALL,
+)
 
 
 class PublishError(RuntimeError):
     """Raised when publication cannot preserve the Ticket-set contract."""
-
-
-@dataclass(frozen=True)
-class Issue:
-    number: int
-    title: str
-    body: str
-    state: str
-    labels: frozenset[str]
 
 
 @dataclass(frozen=True)
@@ -71,41 +66,57 @@ def load_producer_adapter(repo: Path) -> ProducerToolAdapter:
     return cast("ProducerToolAdapter", module.ProducerToolAdapter(repo, skill_dir=skill_dir))
 
 
-def issue_from_json(payload: dict[str, Any]) -> Issue:
-    try:
-        labels = frozenset(
-            str(label["name"])
-            for label in payload.get("labels", [])
-            if isinstance(label, dict) and label.get("name")
-        )
-        return Issue(
-            number=int(payload["number"]),
-            title=str(payload.get("title") or ""),
-            body=str(payload.get("body") or ""),
-            state=str(payload.get("state") or ""),
-            labels=labels,
-        )
-    except (KeyError, TypeError, ValueError) as exc:
-        raise OSError("gh issue view returned malformed issue JSON") from exc
+def list_child_issues(tools: ProducerToolAdapter, parent_number: int) -> list[IssueSnapshot]:
+    children: list[IssueSnapshot] = []
+    expected_reference = f"#{parent_number}"
+    for issue in tools.list_issues():
+        parent_sections = PARENT_SECTION_PATTERN.findall(issue.body)
+        if len(parent_sections) == 1 and parent_sections[0].strip() == expected_reference:
+            children.append(issue)
+    return sorted(children, key=lambda issue: issue.number)
 
 
-def view_issue(tools: ProducerToolAdapter, number: int) -> Issue:
-    output = tools.gh("issue", "view", str(number), "--json", "number,title,body,state,labels")
-    try:
-        payload = json.loads(output)
-    except json.JSONDecodeError as exc:
-        raise OSError(f"gh issue view {number} returned invalid JSON") from exc
-    if not isinstance(payload, dict):
-        raise OSError(f"gh issue view {number} returned a non-object JSON value")
-    return issue_from_json(payload)
-
-
-def validate_parent(tools: ProducerToolAdapter, issue: Issue) -> GitContract:
+def validate_parent(tools: ProducerToolAdapter, issue: IssueSnapshot) -> GitContract:
     if issue.state.upper() != "OPEN":
         raise PublishError(f"parent issue #{issue.number} is {issue.state or 'not open'}")
     if not re.match(r"^\s*Spec\s*:", issue.title, flags=re.IGNORECASE):
         raise PublishError(f"parent issue #{issue.number} title must start with `Spec:`")
     return tools.validate_git_contract(issue.body)
+
+
+def validate_child_contract(tools: ProducerToolAdapter, issue: IssueSnapshot) -> GitContract:
+    try:
+        return tools.validate_git_contract(issue.body)
+    except ValueError as exc:
+        raise PublishError(f"child issue #{issue.number} has an invalid Git contract: {exc}") from exc
+
+
+def resolve_frozen_contract(
+    tools: ProducerToolAdapter,
+    *,
+    parent: IssueSnapshot,
+    parent_contract: GitContract,
+) -> GitContract:
+    children = list_child_issues(tools, parent.number)
+    ready_children = [issue for issue in children if READY_LABEL in issue.labels]
+    if not ready_children:
+        return parent_contract
+
+    frozen_source = ready_children[0]
+    frozen_contract = validate_child_contract(tools, frozen_source)
+    for child in children:
+        child_contract = validate_child_contract(tools, child)
+        if child_contract != frozen_contract:
+            raise PublishError(
+                f"child issue #{child.number} Git contract does not match frozen contract "
+                f"from child #{frozen_source.number}"
+            )
+    if parent_contract != frozen_contract:
+        raise PublishError(
+            f"parent issue #{parent.number} Git contract drifted from frozen contract "
+            f"in child #{frozen_source.number}"
+        )
+    return frozen_contract
 
 
 def validate_draft_body(body: str, *, ticket_id: str) -> None:
@@ -201,10 +212,18 @@ def validate_external_blockers(
             number = int(match.group(1))
             if number == parent_number:
                 raise PublishError(f"ticket `{draft.ticket_id}` cannot be blocked by its parent spec #{number}")
-            issue = view_issue(tools, number)
-            blocker_contract = tools.validate_git_contract(issue.body)
-            if blocker_contract != parent_contract:
-                raise PublishError(f"blocker #{number} does not match parent Git contract")
+            issue = tools.view_issue(number)
+            if re.match(r"^\s*Spec\s*:", issue.title, flags=re.IGNORECASE):
+                raise PublishError(f"blocker #{number} must be a concrete Ticket, not a parent spec")
+            try:
+                blocker_contract = tools.validate_git_contract(issue.body)
+            except ValueError as exc:
+                raise PublishError(f"blocker #{number} has an invalid Git contract: {exc}") from exc
+            if blocker_contract.branch != parent_contract.branch:
+                raise PublishError(
+                    f"blocker #{number} branch `{blocker_contract.branch}` does not match "
+                    f"parent branch `{parent_contract.branch}`"
+                )
             resolved[blocker] = number
     return resolved
 
@@ -294,7 +313,7 @@ def validate_published_set(
     contract: GitContract,
 ) -> None:
     for ticket in tickets:
-        issue = view_issue(tools, ticket.number)
+        issue = tools.view_issue(ticket.number)
         if issue.title != ticket.title or issue.body.rstrip("\n") != ticket.body.rstrip("\n"):
             raise PublishError(f"issue #{ticket.number} changed during publication; ready labels were not applied")
         if issue.state.upper() != "OPEN":
@@ -310,7 +329,7 @@ def validate_ready_labels(
     tickets: Sequence[PublishedTicket],
 ) -> None:
     for ticket in tickets:
-        issue = view_issue(tools, ticket.number)
+        issue = tools.view_issue(ticket.number)
         if issue.state.upper() != "OPEN" or READY_LABEL not in issue.labels:
             raise PublishError(
                 f"issue #{ticket.number} did not retain the validated `{READY_LABEL}` state; publication gate stays open"
@@ -344,9 +363,14 @@ def publish(
     allow_base_drift: bool,
 ) -> dict[str, Any]:
     tools = load_producer_adapter(repo)
-    parent = view_issue(tools, parent_number)
+    parent = tools.view_issue(parent_number)
     parent_contract = validate_parent(tools, parent)
     drafts = load_manifest(manifest)
+    parent_contract = resolve_frozen_contract(
+        tools,
+        parent=parent,
+        parent_contract=parent_contract,
+    )
     external_numbers = validate_external_blockers(
         tools,
         drafts,

@@ -125,7 +125,8 @@ python3 ~/.agents/skills/to-tickets-lqy/scripts/publish_ticket_set.py \
 publisher 负责完整事务：
 
 - 回读 open 父 spec，并通过 `ralph-plan-lqy` 的共享 contract validator 验证唯一且最终的 `## Git`。
-- 验证每个外部 blocker 的 Git 契约与父 spec 完全一致；跨 branch blocker、未知或逆序的内部 blocker 都在写入前停止。
+- 读取同一父 spec 的既有子 Tickets；若已有 ready 子 Ticket，则用它确认冻结 contract，并要求父 spec 与全部既有子 Tickets 完整一致。没有 ready 子 Ticket 时使用父 spec 当前 contract。
+- 验证每个外部 blocker 具有有效 Git 契约且 `Branch` 与冻结 contract exact match；同 branch 下不同 `Base branch` 或 `Base commit` 可以形成依赖。跨 branch blocker、未知或逆序的内部 blocker 都在写入前停止。
 - 调用共享 provisioner fetch `Base branch`、检查 base drift，并创建或复用 branch/worktree/upstream。provision 失败时不创建 Ticket。
 - 先创建一个无 ready label 的同 branch publication gate issue，再按依赖顺序创建全部无 ready label 的 Tickets；publisher 统一生成 `## Parent`、包含 publication gate 和真实依赖的 `## Blocked by`，以及最终 `## Git`。
 - 回读并验证 gate 与整组 Ticket 的标题、正文、open 状态、Mermaid Gate 和 Git 契约；全部通过后才按反向依赖顺序应用 `ready-for-agent` 并回读确认。

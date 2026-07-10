@@ -22,14 +22,19 @@ REAL_CONTRACT_VALIDATOR = (
 BASE_COMMIT = "02b192be4d60ed1f57f27231b7e1d0b31fb5eec2"
 
 
-def git_section(*, branch: str = "main") -> str:
+def git_section(
+    *,
+    branch: str = "main",
+    base_branch: str = "origin/main",
+    base_commit: str = BASE_COMMIT,
+) -> str:
     return textwrap.dedent(
         f"""
         ## Git
 
         - Branch: `{branch}`
-        - Base branch: `origin/main`
-        - Base commit: `{BASE_COMMIT}`
+        - Base branch: `{base_branch}`
+        - Base commit: `{base_commit}`
         """
     ).strip()
 
@@ -50,6 +55,22 @@ def ticket_draft(name: str) -> str:
         No diagram is needed because this fixture does not change an interface.
         """
     ).strip()
+
+
+def existing_ticket_body(*, contract: str | None = None) -> str:
+    return (
+        "## Parent\n\n"
+        "#1\n\n"
+        "## What to build\n\n"
+        "Existing Ticket.\n\n"
+        "## Acceptance criteria\n\n"
+        "- [x] Existing behavior works.\n\n"
+        "## Mermaid Gate\n\n"
+        "No diagram was needed.\n\n"
+        "## Blocked by\n\n"
+        "- None — can start immediately\n\n"
+        f"{git_section() if contract is None else contract}"
+    )
 
 
 class PublishTicketSetCliTests(unittest.TestCase):
@@ -140,7 +161,8 @@ class PublishTicketSetCliTests(unittest.TestCase):
             "'state': 'OPEN', 'labels': [{'name': 'ready-for-agent'}]}\n"
             "    if number == 99:\n"
             "        body = pathlib.Path(os.environ['TEST_EXTERNAL_BODY']).read_text()\n"
-            "        return {'number': 99, 'title': 'Existing blocker', 'body': body, "
+            "        title = os.environ.get('TEST_EXTERNAL_TITLE', 'Existing blocker')\n"
+            "        return {'number': 99, 'title': title, 'body': body, "
             "'state': 'OPEN', 'labels': [{'name': 'ready-for-agent'}]}\n"
             "    record = json.loads((issue_dir / f'{number}.json').read_text())\n"
             "    record['labels'] = [{'name': value} for value in labels.get(str(number), [])]\n"
@@ -149,9 +171,14 @@ class PublishTicketSetCliTests(unittest.TestCase):
             "    return record\n"
             "if args[:2] == ['issue', 'view']:\n"
             "    print(json.dumps(issue_data(int(args[2]))))\n"
+            "elif args[:2] == ['issue', 'list']:\n"
+            "    records = [issue_data(int(path.stem)) for path in sorted(issue_dir.glob('[0-9]*.json'))]\n"
+            "    if os.environ.get('TEST_REVERSE_ISSUE_LIST'):\n"
+            "        records.reverse()\n"
+            "    print(json.dumps(records))\n"
             "elif args[:2] == ['issue', 'create']:\n"
             "    existing = sorted(int(path.stem) for path in issue_dir.glob('[0-9]*.json'))\n"
-            "    number = 42 if not existing else max(existing) + 1\n"
+            "    number = max([41, *existing]) + 1\n"
             "    if os.environ.get('TEST_FAIL_CREATE') == str(number):\n"
             "        print('requested create failure', file=sys.stderr)\n"
             "        raise SystemExit(1)\n"
@@ -249,6 +276,30 @@ class PublishTicketSetCliTests(unittest.TestCase):
         path = self.issue_dir / "labels.json"
         return json.loads(path.read_text(encoding="utf-8")) if path.exists() else {}
 
+    def write_existing_issue(
+        self,
+        number: int,
+        *,
+        body: str | None = None,
+        labels: list[str] | None = None,
+        state: str = "OPEN",
+    ) -> None:
+        (self.issue_dir / f"{number}.json").write_text(
+            json.dumps(
+                {
+                    "number": number,
+                    "title": f"Existing Ticket {number}",
+                    "body": existing_ticket_body() if body is None else body,
+                    "state": state,
+                }
+            ),
+            encoding="utf-8",
+        )
+        if labels:
+            current = self.labels()
+            current[str(number)] = labels
+            (self.issue_dir / "labels.json").write_text(json.dumps(current), encoding="utf-8")
+
     def test_provisions_then_publishes_and_validates_the_complete_set_before_labeling(self) -> None:
         result = self.publish()
 
@@ -261,6 +312,7 @@ class PublishTicketSetCliTests(unittest.TestCase):
         self.assertEqual(
             [
                 "view",
+                "list",
                 "provision",
                 "create",
                 "create",
@@ -322,8 +374,143 @@ class PublishTicketSetCliTests(unittest.TestCase):
         result = self.publish()
 
         self.assertEqual(3, result.returncode, result.stdout + result.stderr)
-        self.assertIn("does not match parent Git contract", result.stderr)
-        self.assertEqual(["view", "view"], [json.loads(event[3:])[1] for event in self.events()])
+        self.assertIn("branch `feature/other` does not match parent branch `main`", result.stderr)
+        self.assertEqual(["view", "list", "view"], [json.loads(event[3:])[1] for event in self.events()])
+
+    def test_same_branch_external_blocker_with_different_base_is_allowed(self) -> None:
+        self.write_manifest(second_blockers=["#99"])
+        self.external_body.write_text(
+            "## Parent\n\n#77\n\n"
+            "## What to build\n\nOther spec on the same branch.\n\n"
+            f"{git_section(base_branch='origin/release', base_commit='1' * 40)}\n",
+            encoding="utf-8",
+        )
+
+        result = self.publish()
+
+        self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+        self.assertIn("## Blocked by\n\n- #42\n- #99", str(self.issue(44)["body"]))
+
+    def test_external_parent_spec_is_not_accepted_as_a_ticket_blocker(self) -> None:
+        self.write_manifest(second_blockers=["#99"])
+        self.env["TEST_EXTERNAL_TITLE"] = "Spec: Other work"
+
+        result = self.publish()
+
+        self.assertEqual(3, result.returncode, result.stdout + result.stderr)
+        self.assertIn("blocker #99 must be a concrete Ticket, not a parent spec", result.stderr)
+        self.assertFalse((self.issue_dir / "42.json").exists())
+
+    def test_malformed_external_blocker_contract_is_a_contract_error(self) -> None:
+        self.write_manifest(second_blockers=["#99"])
+        self.external_body.write_text("## Git\n\n- Branch: `main`\n", encoding="utf-8")
+
+        result = self.publish()
+
+        self.assertEqual(3, result.returncode, result.stdout + result.stderr)
+        self.assertIn("blocker #99 has an invalid Git contract", result.stderr)
+        self.assertFalse((self.issue_dir / "42.json").exists())
+
+    def test_matching_ready_child_freezes_contract_and_allows_incremental_publication(self) -> None:
+        self.write_existing_issue(10, labels=["ready-for-agent"])
+        existing_before = self.issue(10)
+
+        result = self.publish()
+
+        self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+        self.assertIn("list", [json.loads(event[3:])[1] for event in self.events() if event.startswith("gh ")])
+        self.assertEqual(existing_before, self.issue(10))
+        mutations = [
+            json.loads(event[3:])
+            for event in self.events()
+            if event.startswith("gh ") and json.loads(event[3:])[1] in {"edit", "close"}
+        ]
+        self.assertNotIn("10", [args[2] for args in mutations])
+
+    def test_first_publication_uses_current_parent_contract_without_ready_children(self) -> None:
+        result = self.publish()
+
+        self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+        self.assertTrue(str(self.issue(43)["body"]).rstrip().endswith(git_section()))
+
+    def test_parent_and_ready_child_cannot_drift_past_the_existing_frontier_anchor(self) -> None:
+        self.write_existing_issue(9)
+        drifted_contract = git_section(base_commit="2" * 40)
+        self.write_existing_issue(
+            10,
+            body=existing_ticket_body(contract=drifted_contract),
+            labels=["ready-for-agent"],
+        )
+        self.parent_body.write_text(
+            f"## Problem Statement\n\nEdited parent.\n\n{drifted_contract}\n",
+            encoding="utf-8",
+        )
+
+        result = self.publish()
+
+        self.assertEqual(3, result.returncode, result.stdout + result.stderr)
+        self.assertIn(
+            "child issue #9 Git contract does not match frozen contract from child #10",
+            result.stderr,
+        )
+        self.assertFalse((self.issue_dir / "42.json").exists())
+
+    def test_issue_list_order_does_not_change_the_earliest_frontier_anchor(self) -> None:
+        self.write_existing_issue(10, labels=["ready-for-agent"])
+        split_contract = git_section(base_commit="3" * 40)
+        self.write_existing_issue(
+            11,
+            body=existing_ticket_body(contract=split_contract),
+            labels=["ready-for-agent"],
+        )
+        self.env["TEST_REVERSE_ISSUE_LIST"] = "1"
+
+        result = self.publish()
+
+        self.assertEqual(3, result.returncode, result.stdout + result.stderr)
+        self.assertIn(
+            "child issue #11 Git contract does not match frozen contract from child #10",
+            result.stderr,
+        )
+
+    def test_parent_contract_drift_stops_before_provisioning_or_creation(self) -> None:
+        self.write_existing_issue(10, labels=["ready-for-agent"])
+        self.parent_body.write_text(
+            f"## Problem Statement\n\nEdited parent.\n\n{git_section(base_commit='2' * 40)}\n",
+            encoding="utf-8",
+        )
+
+        result = self.publish()
+
+        self.assertEqual(3, result.returncode, result.stdout + result.stderr)
+        self.assertIn("parent issue #1 Git contract drifted", result.stderr)
+        self.assertNotIn(
+            "provision",
+            [event.split(" ", 1)[0] for event in self.events()],
+        )
+        self.assertFalse((self.issue_dir / "42.json").exists())
+
+    def test_existing_child_contract_split_stops_before_provisioning_or_creation(self) -> None:
+        self.write_existing_issue(10, labels=["ready-for-agent"])
+        split_contract = git_section(base_branch="origin/other", base_commit="3" * 40)
+        self.write_existing_issue(11, body=existing_ticket_body(contract=split_contract))
+
+        result = self.publish()
+
+        self.assertEqual(3, result.returncode, result.stdout + result.stderr)
+        self.assertIn("child issue #11 Git contract does not match frozen contract", result.stderr)
+        self.assertFalse((self.issue_dir / "42.json").exists())
+
+    def test_malformed_existing_child_contract_is_a_contract_error(self) -> None:
+        self.write_existing_issue(10, labels=["ready-for-agent"])
+        malformed = existing_ticket_body(contract="## Git\n\n- Branch: `main`")
+        self.write_existing_issue(11, body=malformed)
+
+        result = self.publish()
+
+        self.assertEqual(3, result.returncode, result.stdout + result.stderr)
+        self.assertIn("child issue #11 has an invalid Git contract", result.stderr)
+        self.assertFalse((self.issue_dir / "42.json").exists())
 
     def test_provision_failure_does_not_create_tickets(self) -> None:
         self.env["TEST_FAIL_PROVISION"] = "1"
@@ -332,7 +519,7 @@ class PublishTicketSetCliTests(unittest.TestCase):
 
         self.assertEqual(3, result.returncode, result.stdout + result.stderr)
         self.assertEqual(
-            ["view", "provision"],
+            ["view", "list", "provision"],
             [json.loads(event[3:])[1] if event.startswith("gh ") else "provision" for event in self.events()],
         )
 
@@ -344,7 +531,7 @@ class PublishTicketSetCliTests(unittest.TestCase):
         self.assertEqual(1, result.returncode, result.stdout + result.stderr)
         self.assertIn("incomplete", result.stderr)
         self.assertEqual(
-            ["view", "provision"],
+            ["view", "list", "provision"],
             [json.loads(event[3:])[1] if event.startswith("gh ") else "provision" for event in self.events()],
         )
 
