@@ -1,0 +1,4 @@
+interface:
+  display_name: "Amis Pixel Implementation"
+  short_description: "Match Amis Figma designs in macOS SwiftUI."
+  default_prompt: "Use $amis-pixel-implementation to implement this Figma node in Amis SwiftUI with current semantic variables, macOS interaction states, and retained automation evidence."

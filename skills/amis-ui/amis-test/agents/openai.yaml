@@ -1,0 +1,4 @@
+interface:
+  display_name: "Amis Test"
+  short_description: "Run and inspect Amis local automation safely"
+  default_prompt: "Use $amis-test to inspect the latest Amis automation run."

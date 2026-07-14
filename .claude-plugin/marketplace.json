@@ -72,8 +72,9 @@
       "name": "AMIS UI",
       "source": "./",
       "skills": [
+        "./skills/amis-ui/amis-test",
         "./skills/amis-ui/amis-variables",
-        "./skills/amis-ui/figma-pixel-implementation"
+        "./skills/amis-ui/amis-pixel-implementation"
       ]
     },
     {

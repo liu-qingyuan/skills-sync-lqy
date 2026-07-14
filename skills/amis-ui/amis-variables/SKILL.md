@@ -1,108 +1,86 @@
 ---
 name: amis-variables
-description: Apply the Amis V1.0 design system semantic variables for product design and UI implementation. Use when Codex needs to choose or reference Amis surface/background, border/divider, text, or icon tokens; preserve light and dark mode values, usage rules, and pairing tables; never hardcode hex values when these semantic variables apply.
+description: Apply the current Amis Figma semantic variables in macOS SwiftUI design and implementation. Use when Codex needs to inspect a Figma node's bound background, line, text, icon, link, layer, function, or chart variables; map those bindings into centralized Amis SwiftUI Color and ShapeStyle tokens; preserve the selected Figma mode; or distinguish Amis variables from Apple Appearance, Vibrant, Liquid Glass, Menu, and raw design values.
 ---
 
-# Amis V1.0 Design Variables — Surface, Border, Text & Icon
+# Amis Variables
 
-Use this skill when designing with the Amis V1.0 design system. It teaches which semantic variables to apply for backgrounds, borders, text, and icons — in both light and dark modes.
+Use the target Figma node as the source of truth. The current semantic collection
+is still named `Amis V1.0 色卡`, but its actual 48-token contents and current
+Main Chat bindings supersede the previous skill text.
 
-All variables reference Core Color aliases (e.g. `Neutral/12`, `Brand/6`). Never hardcode hex values; always use the semantic token.
+## Inspect The Target
 
----
+1. Freeze the exact Figma file, node, visual state, and mode.
+2. Call `get_design_context` for layout and property bindings.
+3. Call `get_variable_defs` on the concrete frame or component. Page canvas
+   `784:6` is only an index and may return no variable selection; drill into the
+   relevant child such as `784:429`, `784:721`, `784:884`, `822:540`, or
+   `822:663`.
+4. Read [references/current-main-chat-variables.md](references/current-main-chat-variables.md)
+   when working on Main Chat, Composer, Voice Input, or Output Metrics.
+5. Record raw values only as verification evidence. Implement the bound semantic
+   variable whenever one exists.
 
-## Bg (Surface / Background)
+## Apply Precedence
 
-| Token | Light | Dark | When to use |
-|---|---|---|---|
-| `Bg/Primary` | Neutral/White | Neutral/12 | Main page/screen background |
-| `Bg/Secondary` | Neutral/1 | Neutral/10 | Cards, panels, slightly elevated surfaces |
-| `Bg/Tertiary` | Neutral/2 | Neutral/9 | Nested containers, input backgrounds |
-| `Bg/Quaternary` | Neutral/3 | Neutral/7 | Hover states, subtle fills |
-| `Bg/Inverse-Primary` | Neutral/12 | Neutral/White | Dark surface on light bg (tooltips, toasts) |
-| `Bg/Inverse-Secondary` | Neutral/9 | Neutral/1 | Secondary inverse surface |
-| `Bg/Inverse-Tertiary` | Neutral/11 | Neutral/2 | Tertiary inverse surface |
-| `Bg/Always-Black` | Neutral/12 | Neutral/12 | Always dark regardless of mode (overlays) |
-| `Bg/Always-White` | Neutral/White | Neutral/White | Always light regardless of mode |
-| `Bg/Mask` | Alpha/Black/50 | Alpha/Black/70 | Modal/drawer scrim overlay |
+Use this order when evidence differs:
 
-**Rules:**
-- Use `Bg/Primary` → `Secondary` → `Tertiary` → `Quaternary` for layering depth (each step is one level deeper/elevated)
-- Use `Bg/Inverse-*` for reversed-theme surfaces (e.g. dark tooltip on light page)
-- Use `Bg/Mask` only for full-screen overlays behind modals/drawers
-- Never use `Always-Black` / `Always-White` unless the surface must ignore theme (e.g. brand splash)
+1. The exact variable bound to the target node and state.
+2. The target frame's selected Figma mode.
+3. The current Figma collection aliases in the bundled reference.
+4. An existing centralized Swift token only when its role and resolved value
+   match the Figma evidence.
+5. A raw value only when Figma leaves that property unbound; record it as a
+   design exception rather than inventing a new global variable.
 
----
+Target bindings override generic usage heuristics. For example, Composer node
+`822:664` deliberately uses `Line/Gutter/Gutter` as its component border, and
+node `822:668` deliberately uses `Text/Text-Secondary` for the placeholder.
 
-## Line (Border & Divider)
+## Keep Variable Systems Distinct
 
-| Token | Light | Dark | When to use |
-|---|---|---|---|
-| `Line/Border/Subtle` | Neutral/2 | Neutral/11 | Default card/container border, low emphasis |
-| `Line/Border/Strong` | Neutral/3 | Neutral/7 | Focused inputs, selected states, high-emphasis borders |
-| `Line/Divider/Divider` | Neutral/2 | Neutral/11 | Full-width section dividers |
-| `Line/Divider/Short Divider` | Neutral/4 | Neutral/7 | Short/inset dividers, list item separators with more contrast |
-| `Line/Divider/Strong` | Neutral/2 | Neutral/8 | Strong section separation |
-| `Line/Gutter/Gutter` | Neutral/3 | Neutral/11 | Layout gutters, grid lines |
+- Treat `Bg/*`, `Line/*`, `Text/*`, `Icon/*`, `Link/*`, `Layer/*`,
+  `Function/*`, and `Chart/*` as Amis semantic variables.
+- Treat Apple `Labels/*`, Vibrant Fills/Labels, Liquid Glass, Menu, and Sizes as
+  platform or component variables. Preserve their semantics; do not rename them
+  into Amis tokens.
+- Treat literals, opacity, blend mode, material, blur, and shadow as explicit
+  node properties unless Figma binds them to a variable.
+- Do not reintroduce names absent from the current 48-token collection. In
+  particular, the current collection has no `Bg/Inverse-*`, `Bg/Always-Black`,
+  `Bg/Mask`, `Text/Brand-White`, `Text/Text-Error`, or `Text/Text-Warning`.
 
-**Rules:**
-- Default border → `Border/Subtle`; use `Border/Strong` only for active/focused/selected states
-- Default divider → `Divider/Divider`; use `Divider/Short Divider` for inset list separators needing more visual weight
-- `Gutter` is for layout structure only, not component borders
+## Map Into SwiftUI
 
----
+- Keep SwiftUI Views on centralized semantic aliases from `DesignTokens.swift`;
+  do not scatter Figma hex values through View code.
+- Match both meaning and value before reusing a legacy alias. Update the
+  centralized alias or add one clear semantic alias when the current code is
+  stale or missing the Figma role.
+- Keep AppKit-backed adaptive colors or native materials for Apple appearance
+  variables. Do not emulate platform semantics with fixed light-mode RGB.
+- Preserve alpha, material, blur, blend, and shadow separately from the base
+  color token.
+- Add a short token comment with the source Figma variable and node when a
+  mapping is new or non-obvious.
+- Mirror reusable `Color` tokens onto `ShapeStyle` only when the repository's
+  existing shorthand pattern benefits multiple call sites.
 
-## Text
+## Handle Modes Correctly
 
-| Token | Light | Dark | When to use |
-|---|---|---|---|
-| `Text/Text-Primary` | Neutral/12 | Neutral/White | Body copy, headings, default readable text |
-| `Text/Text-Secondary` | Neutral/6 | Neutral/5 | Supporting text, subtitles, metadata |
-| `Text/Text-Tertiary` | Neutral/5 | Neutral/6 | Placeholder text, captions, low-priority labels |
-| `Text/Text-Tips` | Neutral/4 | Neutral/7 | Helper text, hints, very low emphasis |
-| `Text/Text-Disable` | Neutral/4 | Neutral/7 | Disabled state text |
-| `Text/Text-Brand` | Brand/6 | Brand/5 | Links, brand-colored labels, active tab text |
-| `Text/Brand-White` | Brand/6 | Neutral/White | Brand text that inverts on dark mode |
-| `Text/Text-Error` | RedFunct/6 | RedFunct/6 | Error messages, validation failures |
-| `Text/Text-Warning` | Orange/6 | Orange/5 | Warning messages |
-| `Text/Text-Success` | GreenFunct/6 | GreenFunct/6 | Success messages, confirmations |
-| `Text/Inverse-Primary` | Neutral/White | Neutral/12 | Text on inverse/dark surfaces |
-| `Text/Always-Black` | Neutral/12 | Neutral/12 | Text that must stay dark regardless of mode |
-| `Text/Always-White` | Neutral/White | Neutral/White | Text that must stay light regardless of mode |
+The collection defines `V1.0_light` and `V1.0_dark`, and the bundled reference
+records both alias mappings. The inspected Main Chat frames are light-mode
+fixtures. Do not claim dark visual fidelity from alias definitions alone; use a
+dark target frame or an explicit mode switch before verifying composition,
+materials, contrast, or effects.
 
-**Rules:**
-- Hierarchy: `Primary` → `Secondary` → `Tertiary` → `Tips` (decreasing emphasis)
-- `Disable` and `Tips` use the same color — `Disable` is for interactive disabled states, `Tips` is for passive helper text
-- Use semantic status tokens (`Error`/`Warning`/`Success`) only for feedback states, never for decoration
-- `Inverse-Primary` pairs with `Bg/Inverse-Primary` surfaces
-- Never use `Always-*` unless the text must ignore theme switching
+## Verify
 
----
-
-## Icon
-
-| Token | Light | Dark | When to use |
-|---|---|---|---|
-| `Icon/Icon-Primary` | Neutral/8 | Neutral/White | Default icons, high-emphasis actions |
-| `Icon/Icon-Secondary` | Neutral/7 | Neutral/4 | Supporting icons, secondary actions |
-| `Icon/Icon-Tertiary` | Neutral/6 | Neutral/5 | Low-emphasis icons, decorative |
-| `Icon/Icon-Quaternary` | Neutral/5 | Neutral/6 | Subtle/disabled-adjacent icons |
-
-**Rules:**
-- Match icon emphasis to adjacent text: `Icon-Primary` with `Text-Primary`, `Icon-Secondary` with `Text-Secondary`, etc.
-- Use `Icon-Primary` for interactive icons (buttons, nav items)
-- Use `Icon-Tertiary` / `Icon-Quaternary` for decorative or contextual icons that shouldn't compete with content
-
----
-
-## Quick Reference: Pairing Rules
-
-| Context | Bg | Border | Text | Icon |
-|---|---|---|---|---|
-| Default card | `Bg/Secondary` | `Border/Subtle` | `Text-Primary` | `Icon-Primary` |
-| Focused input | `Bg/Primary` | `Border/Strong` | `Text-Primary` | `Icon-Secondary` |
-| Disabled element | `Bg/Tertiary` | `Border/Subtle` | `Text-Disable` | `Icon-Quaternary` |
-| Modal overlay | `Bg/Primary` + `Bg/Mask` | — | `Text-Primary` | `Icon-Primary` |
-| Tooltip (dark) | `Bg/Inverse-Primary` | — | `Text/Inverse-Primary` | — |
-| Error state | `Bg/Primary` | `Border/Strong` | `Text-Error` | — |
-| Brand CTA | `Bg/Primary` | — | `Text/Text-Brand` | `Icon-Primary` |
+- Confirm the implemented semantic role and resolved value against the target
+  node, not only against the reference table.
+- Check light and dark behavior when both modes are in scope.
+- Verify interaction-state bindings independently: default, hover, focused,
+  pressed, disabled, recording, and finalizing may use different variables.
+- Report any raw design value that still lacks an Amis semantic variable instead
+  of silently promoting it into the token system.
