@@ -28,14 +28,14 @@ class InstallationDocsTests(unittest.TestCase):
                 "Dirty recovery",
             ),
             REPO_ROOT / "skills" / "matt-lqy-core" / "to-tickets-lqy" / "SKILL.md": (
-                "不要把清理工作交给用户",
-                "不要改用临时 clone",
-                "按 coherent commits 提交和正常 push",
+                "由 agent 完成可确认的改动",
+                "commit/push 后重跑 publisher",
+                "禁止 stash",
             ),
             REPO_ROOT / "skills" / "matt-lqy-core" / "triage-lqy" / "SKILL.md": (
-                "不要要求用户手工清理",
-                "不要改用临时 clone",
-                "按 coherent commits 提交并正常 push",
+                "由 agent 完成可确认的改动",
+                "commit/push 后重跑 publisher",
+                "禁止 stash",
             ),
             REPO_ROOT
             / "skills"

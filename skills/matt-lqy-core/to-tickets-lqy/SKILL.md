@@ -134,7 +134,7 @@ publisher 负责完整事务：
 
 如果 provisioner 报告 `base drift`，停止并向用户展示记录的旧 SHA、远程新 SHA 和相关提交摘要，等待明确选择。选择保留旧 SHA 时，在用户明确批准后从头重新运行 publisher 并添加 `--allow-base-drift`；该路径仍只接受 clean、base-ancestor、upstream/remote 同步的目标 branch。选择新 SHA 时先由用户明确批准更新父 spec 的 `Base commit`，然后不带 flag 从头重新验证。不要静默刷新父 spec，也不要默认绕过 drift gate。
 
-如果 provisioner 报告 dirty worktree，不要把清理工作交给用户，也不要改用临时 clone 或另一个 worktree。进入错误指出的 exact target worktree，检查 status、diff、untracked files、相关 issue/对话和近期历史：能确认的当前或已完成工作由 agent 自行补完、验证，并按 coherent commits 提交和正常 push；然后从头重跑 publisher。只有无法确定改动意图、归属或完成标准时才询问用户。禁止 stash、reset、checkout、`git clean`、删除内容或提交 secrets/generated/local-state 来制造表面 clean。
+worktree dirty 时，由 agent 完成可确认的改动，验证并 commit/push 后重跑 publisher。仅在意图不明时询问用户；禁止 stash、reset、`git clean` 或临时 workspace 绕过 gate。
 
 部分创建、回读或标签失败时，publication gate 保持 open，所有已创建 issues 都不可领取；其中部分 Ticket 可能已经带 `ready-for-agent`，不要手工关闭 gate、补标签或关闭/修改父 spec。修复原因后重新规划如何处理这些 draft issues，避免重复发布。
 
