@@ -78,6 +78,31 @@ def local_branch_head(repo: Path, branch: str) -> str | None:
     return git(repo, "rev-parse", "--verify", f"{ref}^{{commit}}").stdout.strip()
 
 
+def attached_branch(repo: Path) -> str | None:
+    result = git(repo, "symbolic-ref", "--quiet", "--short", "HEAD", check=False)
+    if result.returncode == 0:
+        return result.stdout.strip()
+    if result.returncode == 1:
+        return None
+    raise OSError(result.stderr.strip() or "git symbolic-ref failed")
+
+
+def remote_branch_upstream(repo: Path, branch: str) -> str | None:
+    result = git(
+        repo,
+        "for-each-ref",
+        "--format=%(upstream:short)",
+        f"refs/heads/{branch}",
+    )
+    upstream = result.stdout.strip()
+    if not upstream:
+        return None
+    remotes = git(repo, "remote").stdout.splitlines()
+    if any(upstream.startswith(f"{remote}/") for remote in remotes):
+        return upstream
+    return None
+
+
 def check_branch_collision(repo: Path, remote: str, branch: str, base_commit: str) -> None:
     head = local_branch_head(repo, branch)
     if head is not None and head.lower() != base_commit.lower():
@@ -113,15 +138,20 @@ def render_contract(contract: GitContract) -> str:
 
 def resolve(repo: Path, branch: str | None, base_branch: str | None) -> GitContract:
     repo_root = Path(git(repo, "rev-parse", "--show-toplevel").stdout.strip()).resolve()
-    remote, explicit_remote_base = configured_remote(repo_root, base_branch)
+    current_branch = attached_branch(repo_root) if branch is None else None
+    inferred_base_branch = base_branch
+    if inferred_base_branch is None and current_branch is not None:
+        inferred_base_branch = remote_branch_upstream(repo_root, current_branch)
+
+    remote, explicit_remote_base = configured_remote(repo_root, inferred_base_branch)
     default_branch: str | None = None
-    if branch is None or explicit_remote_base is None:
+    if (branch is None and current_branch is None) or explicit_remote_base is None:
         default_branch = remote_default_branch(repo_root, remote)
-    target_branch = branch if branch is not None else default_branch
+    target_branch = branch if branch is not None else current_branch or default_branch
     remote_base = explicit_remote_base if explicit_remote_base is not None else default_branch
     if target_branch is None or remote_base is None:
         raise ResolutionError("cannot resolve branch defaults")
-    target_base_branch = base_branch or f"{remote}/{remote_base}"
+    target_base_branch = inferred_base_branch or f"{remote}/{remote_base}"
 
     if not is_valid_git_ref(target_branch, branch=True):
         raise ResolutionError(f"invalid target branch `{target_branch}`")
@@ -141,7 +171,10 @@ def resolve(repo: Path, branch: str | None, base_branch: str | None) -> GitContr
 def parse_args(argv: Sequence[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Resolve the Git contract for a new Ralph parent spec.")
     parser.add_argument("--repo", default=".", help="Any path inside the target Git repository.")
-    parser.add_argument("--branch", help="Explicit target branch; defaults to the remote default branch.")
+    parser.add_argument(
+        "--branch",
+        help="Explicit target branch; defaults to the branch attached to --repo, or the remote default when detached.",
+    )
     parser.add_argument("--base-branch", help="Explicit remote base ref, for example `origin/release`.")
     return parser.parse_args(argv)
 

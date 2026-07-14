@@ -45,17 +45,18 @@ class SpecGitResolverCliTests(unittest.TestCase):
             capture_output=True,
         )
 
-    def test_default_contract_uses_remote_default_branch_not_checkout(self) -> None:
-        run("git", "checkout", "-b", "scratch", cwd=self.repo)
+    def test_default_contract_uses_the_branch_attached_to_the_requested_worktree(self) -> None:
+        worktree = self.root / "project-feature"
+        run("git", "worktree", "add", "-b", "feature/spec", str(worktree), "main", cwd=self.repo)
 
-        result = self.resolve()
+        result = self.resolve(repo=worktree)
 
         self.assertEqual(0, result.returncode, result.stdout + result.stderr)
         self.assertEqual(
             {
                 "base_branch": "origin/main",
                 "base_commit": self.main_commit,
-                "branch": "main",
+                "branch": "feature/spec",
             },
             json.loads(result.stdout),
         )
@@ -80,6 +81,42 @@ class SpecGitResolverCliTests(unittest.TestCase):
             json.loads(result.stdout),
         )
 
+    def test_current_branch_upstream_becomes_the_default_base_branch(self) -> None:
+        run("git", "checkout", "-b", "release", cwd=self.repo)
+        (self.repo / "release.txt").write_text("release\n", encoding="utf-8")
+        run("git", "add", "release.txt", cwd=self.repo)
+        run("git", "commit", "-m", "release base", cwd=self.repo)
+        release_commit = run("git", "rev-parse", "HEAD", cwd=self.repo).stdout.strip()
+        run("git", "push", "-u", "origin", "release", cwd=self.repo)
+
+        result = self.resolve()
+
+        self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+        self.assertEqual(
+            {
+                "base_branch": "origin/release",
+                "base_commit": release_commit,
+                "branch": "release",
+            },
+            json.loads(result.stdout),
+        )
+
+    def test_local_branch_upstream_falls_back_to_the_remote_default(self) -> None:
+        run("git", "checkout", "-b", "feature/local-upstream", cwd=self.repo)
+        run("git", "branch", "--set-upstream-to=main", cwd=self.repo)
+
+        result = self.resolve()
+
+        self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+        self.assertEqual(
+            {
+                "base_branch": "origin/main",
+                "base_commit": self.main_commit,
+                "branch": "feature/local-upstream",
+            },
+            json.loads(result.stdout),
+        )
+
     def test_fully_explicit_contract_does_not_require_remote_default(self) -> None:
         run("git", "update-ref", "--no-deref", "HEAD", self.main_commit, cwd=self.remote)
 
@@ -88,7 +125,7 @@ class SpecGitResolverCliTests(unittest.TestCase):
         self.assertEqual(0, result.returncode, result.stdout + result.stderr)
         self.assertEqual("feature/spec", json.loads(result.stdout)["branch"])
 
-    def test_detached_checkout_does_not_change_defaults(self) -> None:
+    def test_detached_checkout_falls_back_to_the_remote_default_branch(self) -> None:
         run("git", "checkout", "--detach", self.main_commit, cwd=self.repo)
 
         result = self.resolve()

@@ -290,7 +290,10 @@ def parse_args(argv: Sequence[str]) -> argparse.Namespace:
     parser.add_argument("--repo", default=".", type=Path, help="Any path inside the target Git repository.")
     parser.add_argument("--issue", required=True, type=int, help="Open GitHub issue number to publish.")
     parser.add_argument("--brief-file", required=True, type=Path, help="Complete triage agent brief comment.")
-    parser.add_argument("--branch", help="Explicit target branch; defaults to the remote default branch.")
+    parser.add_argument(
+        "--branch",
+        help="Explicit target branch; defaults to the branch attached to --repo, or the remote default when detached.",
+    )
     parser.add_argument("--base-branch", help="Explicit remote base ref, for example `origin/release`.")
     return parser.parse_args(argv)
 

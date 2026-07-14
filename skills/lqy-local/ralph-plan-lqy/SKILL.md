@@ -44,7 +44,7 @@ gh issue view <N> --json body --jq .body \
   | python3 ~/.agents/skills/ralph-plan-lqy/scripts/git_contract.py
 ```
 
-producer 创建新 issue 时追加 `--require-unique`，确保正文只包含一个 `## Git`。`to-spec-lqy` 在发布父 spec 前使用共享 resolver；它从远程默认 branch 得到默认 `Branch`/`Base branch`，fetch base ref 并固定完整 SHA，显式输入通过参数覆盖：
+producer 创建新 issue 时追加 `--require-unique`，确保正文只包含一个 `## Git`。`to-spec-lqy` 在发布父 spec 前使用共享 resolver；显式输入优先，否则 resolver 从 `--repo` 所在 worktree 的 attached branch 得到默认 `Branch`。该 branch 有 remote upstream 时用 upstream 作为 `Base branch`，否则回退 remote default；detached worktree 也回退 remote default。resolver fetch base ref 并固定完整 SHA：
 
 ```bash
 python3 ~/.agents/skills/ralph-plan-lqy/scripts/resolve_spec_git.py \
@@ -53,7 +53,7 @@ python3 ~/.agents/skills/ralph-plan-lqy/scripts/resolve_spec_git.py \
   [--base-branch <remote/base>]
 ```
 
-resolver 不读取当前 checkout 来决定默认值，也不创建 branch 或 worktree。已有目标 branch 不在解析出的 base commit 时返回 `3` 并报告 collision；Git/I/O 错误返回 `1`。
+`--repo` 必须指向当前工作区所在的 exact worktree，不能为了方便替换成 primary/main worktree。resolver 只读取 branch/upstream，不创建 branch、worktree 或 upstream。已有目标 branch 不在解析出的 base commit 时返回 `3` 并报告 collision；Git/I/O 错误返回 `1`。
 
 如果 skill 安装在不同位置，输出命令时按实际路径替换。
 
