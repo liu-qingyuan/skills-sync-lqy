@@ -59,7 +59,7 @@ python3 ~/.agents/skills/ralph-plan-lqy/scripts/resolve_spec_git.py \
 
 ## Workspace Provision
 
-`to-tickets-lqy` 和普通 issue 的 `triage-lqy` 在应用 `ready-for-agent` 前调用共享 provisioner。它读取 issue body 中最后一个 `## Git`，fetch 并检查 base drift，通过 exact branch worktree registry 创建或复用目标 worktree，并建立同名 remote upstream：
+`to-spec-lqy`、`to-tickets-lqy` 和普通 issue 的 `triage-lqy` 在创建 ready issue 或应用 `ready-for-agent` 前调用共享 provisioner。它读取正文最后一个 `## Git`，fetch 并检查 base drift，通过 exact branch worktree registry 创建或复用目标 worktree，并建立同名 remote upstream：
 
 ```bash
 gh issue view <N> --json body --jq .body \
@@ -75,6 +75,8 @@ worktree dirty 时，producer agent 完成可确认的改动，验证并 commit/
 默认严格拒绝 base drift。只有 producer 已展示旧/新 SHA 和提交摘要，并且用户明确选择保留父 spec 记录的旧 SHA 时，才可重新运行并传入 `--allow-base-drift`；不要把该 flag 作为默认值。已前进的目标 branch 只有在 worktree clean、`Base commit` 是 HEAD 祖先、upstream 精确匹配且 remote HEAD 与本地 HEAD 同步时才可复用。未 push、分叉或错误 upstream 的 advanced HEAD 仍返回 `3`。
 
 默认 branch 复用已注册的主 worktree。未绑定的非主 branch 使用主 worktree 同级的 `<repo-name>-<branch-slug>`；已有 branch 只按 `git worktree list --porcelain` 的 exact branch 结果复用，不通过目录名猜测。
+
+linked worktree 共享仓库 Git config、`.git/info/exclude` 和全局 excludes，tracked `.gitignore` 随 checkout 生效。provisioner 不复制 ignored 文件内容；项目若需要额外本地初始化，只运行仓库明确声明的 bootstrap 命令。
 
 ## Worker Lock
 

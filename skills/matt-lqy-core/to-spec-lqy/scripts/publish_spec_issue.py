@@ -9,6 +9,7 @@ import os
 import re
 import sys
 from collections.abc import Sequence
+from dataclasses import asdict
 from pathlib import Path
 from typing import TYPE_CHECKING, cast
 
@@ -84,7 +85,8 @@ def publish(repo: Path, title: str, body_file: Path) -> dict[str, object]:
     body = body_file.read_text(encoding="utf-8")
     tools = load_producer_adapter(repo)
     validate_spec_structure(body)
-    tools.validate_git_contract(body)
+    contract = tools.validate_git_contract(body)
+    workspace = tools.provision_workspace(body, expected_branch=contract.branch)
 
     number, url = issue_number_from_url(
         tools.gh("issue", "create", "--title", title, "--body-file", str(body_file))
@@ -95,7 +97,7 @@ def publish(repo: Path, title: str, body_file: Path) -> dict[str, object]:
     if readback.rstrip("\n") != body.rstrip("\n"):
         raise PublishError(f"issue #{number} body changed during publication; ready label was not applied")
     tools.gh("issue", "edit", str(number), "--add-label", READY_LABEL)
-    return {"label": READY_LABEL, "number": number, "url": url}
+    return {"label": READY_LABEL, "number": number, "url": url, "workspace": asdict(workspace)}
 
 
 def parse_args(argv: Sequence[str]) -> argparse.Namespace:

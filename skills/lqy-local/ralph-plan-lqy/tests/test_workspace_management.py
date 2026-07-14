@@ -118,6 +118,27 @@ class WorkspaceProvisionerCliTests(GitRepoFixture):
             run("git", "ls-remote", "--heads", str(self.remote), "refs/heads/feature/alpha").split()[0],
         )
 
+    def test_linked_worktree_inherits_repository_config_and_local_excludes(self) -> None:
+        exclude = Path(run("git", "rev-parse", "--git-path", "info/exclude", cwd=self.repo))
+        if not exclude.is_absolute():
+            exclude = self.repo / exclude
+        exclude.write_text("local-only/\n", encoding="utf-8")
+
+        result = self.provision(branch="feature/local-settings")
+
+        self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+        worktree = Path(json.loads(result.stdout)["path"])
+        self.assertEqual("Test User", run("git", "config", "--local", "user.name", cwd=worktree))
+        linked_exclude = Path(run("git", "rev-parse", "--git-path", "info/exclude", cwd=worktree))
+        if not linked_exclude.is_absolute():
+            linked_exclude = worktree / linked_exclude
+        self.assertEqual(exclude.resolve(), linked_exclude.resolve())
+        ignored = worktree / "local-only" / "settings.json"
+        ignored.parent.mkdir()
+        ignored.write_text("{}\n", encoding="utf-8")
+        self.assertIn("local-only/", run("git", "check-ignore", "-v", str(ignored), cwd=worktree))
+        self.assertEqual("", run("git", "status", "--porcelain", cwd=worktree))
+
     def test_registered_branch_reuses_its_exact_worktree_path(self) -> None:
         custom_path = (self.root / "custom-location").resolve()
         run(

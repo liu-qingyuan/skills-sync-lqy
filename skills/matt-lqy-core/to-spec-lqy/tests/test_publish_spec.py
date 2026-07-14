@@ -12,7 +12,7 @@ from pathlib import Path
 
 SKILL_DIR = Path(__file__).resolve().parents[1]
 PUBLISHER = SKILL_DIR / "scripts" / "publish_spec_issue.py"
-RALPH_SKILL_DIR = Path(__file__).resolve().parents[3] / "lqy-local" / "ralph-plan-lqy"
+REAL_RALPH_SKILL_DIR = Path(__file__).resolve().parents[3] / "lqy-local" / "ralph-plan-lqy"
 BASE_COMMIT = "02b192be4d60ed1f57f27231b7e1d0b31fb5eec2"
 
 
@@ -55,7 +55,7 @@ def spec_body() -> str:
 
         ## Out of Scope
 
-        - Worktree provisioning.
+        - Swift implementation.
 
         ## Further Notes
 
@@ -92,6 +92,32 @@ class PublishSpecIssueCliTests(unittest.TestCase):
         self.body_file = self.root / "spec.md"
         self.body_file.write_text(spec_body(), encoding="utf-8")
         self.log_file = self.root / "gh.log"
+        self.provision_log = self.root / "provision.json"
+        self.skill_dir = self.root / "ralph-plan-lqy"
+        scripts_dir = self.skill_dir / "scripts"
+        scripts_dir.mkdir(parents=True)
+        for name in ("producer_adapter.py", "git_contract.py"):
+            (scripts_dir / name).write_text(
+                (REAL_RALPH_SKILL_DIR / "scripts" / name).read_text(encoding="utf-8"),
+                encoding="utf-8",
+            )
+        provisioner = scripts_dir / "provision_workspace.py"
+        provisioner.write_text(
+            "#!/usr/bin/env python3\n"
+            "import json, os, pathlib, re, sys\n"
+            "body = sys.stdin.read()\n"
+            "pathlib.Path(os.environ['TEST_PROVISION_LOG']).write_text(json.dumps({"
+            "'argv': sys.argv[1:], 'body': body, 'cwd': str(pathlib.Path.cwd())}))\n"
+            "if os.environ.get('TEST_FAIL_PROVISION'):\n"
+            "    print('PROVISION ERROR: requested failure', file=sys.stderr)\n"
+            "    raise SystemExit(3)\n"
+            "branch = re.search(r'- Branch: `([^`]+)`', body).group(1)\n"
+            "json.dump({'branch': branch, 'path': '/tmp/project-worktree', 'head': '"
+            + BASE_COMMIT
+            + "', 'upstream': 'origin/' + branch}, sys.stdout)\n",
+            encoding="utf-8",
+        )
+        provisioner.chmod(0o755)
         bin_dir = self.root / "bin"
         bin_dir.mkdir()
         gh = bin_dir / "gh"
@@ -118,7 +144,8 @@ class PublishSpecIssueCliTests(unittest.TestCase):
         self.env["PATH"] = f"{bin_dir}{os.pathsep}{self.env['PATH']}"
         self.env["TEST_GH_LOG"] = str(self.log_file)
         self.env["TEST_VIEW_BODY"] = str(self.body_file)
-        self.env["RALPH_PLAN_SKILL_DIR"] = str(RALPH_SKILL_DIR)
+        self.env["RALPH_PLAN_SKILL_DIR"] = str(self.skill_dir)
+        self.env["TEST_PROVISION_LOG"] = str(self.provision_log)
 
     def publish(self) -> subprocess.CompletedProcess[str]:
         return subprocess.run(
@@ -163,7 +190,12 @@ class PublishSpecIssueCliTests(unittest.TestCase):
         self.assertNotIn("--label", calls[0])
         self.assertEqual(["--add-label", "ready-for-agent"], calls[2][-2:])
         self.assertEqual([str(self.repo.resolve())] * 3, self.call_cwds())
-        self.assertEqual(42, json.loads(result.stdout)["number"])
+        output = json.loads(result.stdout)
+        self.assertEqual(42, output["number"])
+        self.assertEqual("/tmp/project-worktree", output["workspace"]["path"])
+        provision = json.loads(self.provision_log.read_text(encoding="utf-8"))
+        self.assertEqual(str(self.repo.resolve()), provision["cwd"])
+        self.assertIn("## Git", provision["body"])
 
     def test_invalid_contract_stops_before_creating_issue(self) -> None:
         self.body_file.write_text(f"{spec_body()}\n\n{spec_body()}", encoding="utf-8")
@@ -172,6 +204,7 @@ class PublishSpecIssueCliTests(unittest.TestCase):
 
         self.assertEqual(3, result.returncode, result.stdout + result.stderr)
         self.assertEqual([], self.calls())
+        self.assertFalse(self.provision_log.exists())
 
     def test_missing_mermaid_gate_stops_before_creating_issue(self) -> None:
         body = spec_body()
@@ -183,6 +216,16 @@ class PublishSpecIssueCliTests(unittest.TestCase):
 
         self.assertEqual(3, result.returncode, result.stdout + result.stderr)
         self.assertIn("missing `## Mermaid Gate`", result.stderr)
+        self.assertEqual([], self.calls())
+        self.assertFalse(self.provision_log.exists())
+
+    def test_provision_failure_stops_before_creating_issue(self) -> None:
+        self.env["TEST_FAIL_PROVISION"] = "1"
+
+        result = self.publish()
+
+        self.assertEqual(3, result.returncode, result.stdout + result.stderr)
+        self.assertIn("requested failure", result.stderr)
         self.assertEqual([], self.calls())
 
     def test_failed_readback_validation_leaves_issue_without_ready_label(self) -> None:
