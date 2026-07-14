@@ -16,6 +16,17 @@ RALPH_SKILL_DIR = Path(__file__).resolve().parents[3] / "lqy-local" / "ralph-pla
 BASE_COMMIT = "02b192be4d60ed1f57f27231b7e1d0b31fb5eec2"
 
 
+class SkillWorkflowTests(unittest.TestCase):
+    def test_design_review_is_required_before_presentation_and_publication(self) -> None:
+        skill = (SKILL_DIR / "SKILL.md").read_text(encoding="utf-8")
+        review = skill.index("必须对完整 spec 草稿做一次设计终审")
+
+        for dependency in ("$codebase-design-lqy", "$gitnexus", "$simple"):
+            self.assertGreater(skill.index(dependency), review)
+        self.assertLess(review, skill.index("publish_spec_issue.py"))
+        self.assertIn("三项都要实际执行", skill)
+
+
 def spec_body() -> str:
     return textwrap.dedent(
         f"""

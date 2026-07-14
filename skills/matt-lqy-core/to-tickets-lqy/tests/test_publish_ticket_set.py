@@ -22,6 +22,18 @@ REAL_CONTRACT_VALIDATOR = (
 BASE_COMMIT = "02b192be4d60ed1f57f27231b7e1d0b31fb5eec2"
 
 
+class SkillWorkflowTests(unittest.TestCase):
+    def test_design_review_is_required_before_presentation_and_publication(self) -> None:
+        skill = (SKILL_DIR / "SKILL.md").read_text(encoding="utf-8")
+        review = skill.index("必须审核完整 Ticket 草稿")
+
+        for dependency in ("$codebase-design-lqy", "$gitnexus", "$simple"):
+            self.assertGreater(skill.index(dependency), review)
+        self.assertLess(review, skill.index("把提议拆分呈现为编号列表"))
+        self.assertLess(review, skill.index("publish_ticket_set.py"))
+        self.assertIn("三项都要实际执行", skill)
+
+
 def git_section(
     *,
     branch: str = "main",

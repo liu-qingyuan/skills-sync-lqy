@@ -6,3 +6,4 @@
 - LQY installable path: `skills/matt-lqy-core/to-tickets-lqy`
 - Policy: installable personal LQY layer, copied from the Chinese baseline and self-contained. Keep this file updated when upstream or zh baseline changes.
 - LQY extension: GitHub Ralph-ready Ticket sets require a Git-bound parent spec and use `publish_ticket_set.py` plus the repository-bound `ralph-plan-lqy` producer adapter for frozen parent/child contract validation, same-branch external blocker compatibility, typed workspace provision, publication-gate isolation, dependency rendering, whole-set readback, and label-last publication. Other tracker flows retain upstream behavior.
+- LQY extension: before presenting or publishing, review the complete Ticket set with `codebase-design-lqy`, GitNexus evidence, and `simple`, then apply the findings.
