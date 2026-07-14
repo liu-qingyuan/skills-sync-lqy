@@ -172,6 +172,10 @@ def main(argv: Sequence[str] | None = None) -> int:
     args = parse_args(sys.argv[1:] if argv is None else argv)
     try:
         target = gh_issue_view(args.issue_number)
+        if is_parent_spec_issue(target):
+            print(f"NOT READY #{target.number} {target.title}")
+            print("- target issue is a parent spec, not an implementation Ticket")
+            return EXIT_NOT_READY
         contract = parse_git_contract(target.body)
         attached_branch = current_branch()
         if contract.branch != attached_branch:
@@ -180,10 +184,6 @@ def main(argv: Sequence[str] | None = None) -> int:
             return EXIT_NOT_READY
         if not base_commit_is_ancestor(contract.base_commit):
             raise GitContractError(f"base commit `{contract.base_commit}` is not an ancestor of HEAD")
-        if is_parent_spec_issue(target):
-            print(f"NOT READY #{target.number} {target.title}")
-            print("- target issue is a parent spec, not an implementation Ticket")
-            return EXIT_NOT_READY
         blocker_parse = parse_blockers(target.body)
         if not blocker_parse.section_found:
             raise GitContractError("missing `## Blocked by` section")

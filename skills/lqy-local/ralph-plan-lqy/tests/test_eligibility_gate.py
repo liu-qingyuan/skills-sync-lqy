@@ -230,15 +230,46 @@ class EligibilityGateCliTests(unittest.TestCase):
         self.assertEqual(2, result.returncode, result.stdout + result.stderr)
         self.assertIn("blocked by open issues: #1", result.stdout)
 
-    def test_parent_spec_is_skipped_without_blocked_by(self) -> None:
-        body = ticket_body().replace(
-            "## Blocked by\n\nNone - can start immediately\n\n",
-            "",
+    def test_parent_spec_title_without_git_contract_is_skipped(self) -> None:
+        result = self.run_gate(
+            {
+                2: issue_fixture(
+                    title="Spec: Parent",
+                    body="## Problem Statement\n\nLegacy parent spec.",
+                )
+            }
         )
-        result = self.run_gate({2: issue_fixture(title="Spec: Parent", body=body)})
 
         self.assertEqual(2, result.returncode, result.stdout + result.stderr)
         self.assertIn("parent spec", result.stdout)
+
+    def test_parent_spec_body_without_git_contract_is_skipped(self) -> None:
+        body = textwrap.dedent(
+            """
+            ## Problem Statement
+
+            Legacy parent spec.
+
+            ## User Stories
+
+            - As a user, I need a result.
+
+            ## Implementation Decisions
+
+            Decide during ticketing.
+            """
+        ).strip()
+        result = self.run_gate({2: issue_fixture(title="Legacy parent", body=body)})
+
+        self.assertEqual(2, result.returncode, result.stdout + result.stderr)
+        self.assertIn("parent spec", result.stdout)
+
+    def test_concrete_ticket_without_git_contract_is_a_contract_error(self) -> None:
+        body = "## What to build\n\nTest ticket.\n\n## Blocked by\n\nNone - can start immediately"
+        result = self.run_gate({2: issue_fixture(body=body)})
+
+        self.assertEqual(3, result.returncode, result.stdout + result.stderr)
+        self.assertIn("missing `## Git` section", result.stderr)
 
     def test_malformed_git_contract_is_distinct_from_environment_error(self) -> None:
         malformed = ticket_body().replace("- Base branch: `origin/main`\n", "")

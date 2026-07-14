@@ -9,6 +9,12 @@ REPO_ROOT = SKILL_ROOT.parents[2]
 
 
 class InstallationDocsTests(unittest.TestCase):
+    def test_default_prompt_filters_parent_specs_before_the_gate(self) -> None:
+        prompt = (SKILL_ROOT / "templates" / "issue-backlog-prompt.md").read_text(encoding="utf-8")
+
+        self.assertIn('test("^\\\\s*Spec\\\\s*:"; "i")', prompt)
+        self.assertLess(prompt.index("--jq"), prompt.index("check_ready_issue_unblocked.py"))
+
     def test_branch_worker_contract_is_published(self) -> None:
         expected_fragments = {
             REPO_ROOT / "README.md": (

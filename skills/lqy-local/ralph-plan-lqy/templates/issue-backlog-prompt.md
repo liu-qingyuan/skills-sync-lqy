@@ -17,7 +17,7 @@ gh issue list \
   --label ready-for-agent \
   --state open \
   --json number,title,body \
-  --jq 'sort_by(.number)[] | {number,title,body}'
+  --jq 'sort_by(.number) | map(select(.title | test("^\\s*Spec\\s*:"; "i") | not))[] | {number,title,body}'
 ```
 
 只处理 open + `ready-for-agent` issues。完全忽略 assignees，不读取、不修改，也不用于领取。每个候选正文最后一个 `## Git` 必须格式完整；section 缺失、字段重复或格式损坏是持久错误，立即停止。
@@ -26,7 +26,7 @@ gh issue list \
 
 只挑选一个 issue。按 issue number 升序逐个检查；第一个通过 eligibility gate 的 issue 就领取。对每个候选先运行 `gh issue view <N> --comments`，读取完整正文和之前迭代留下的进度备注。
 
-父级 spec 不是实现任务。若候选 issue 标题以 `Spec:` 开头，或正文是 spec 模板，不要直接实现它。只有具体 Ticket 才能交给 `$implement-lqy`。
+父级 spec 不是实现任务。backlog 查询先过滤标题以 `Spec:` 开头的 issue；gate 还会跳过正文仍是 spec 模板的候选。只有具体 Ticket 才能交给 `$implement-lqy`。
 
 对每个候选 issue 运行：
 
