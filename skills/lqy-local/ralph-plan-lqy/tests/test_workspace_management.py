@@ -238,6 +238,7 @@ class WorkspaceProvisionerCliTests(GitRepoFixture):
 
         self.assertEqual(3, result.returncode, result.stdout + result.stderr)
         self.assertIn("is dirty", result.stderr)
+        self.assertIn("?? untracked.txt", result.stderr)
 
     def test_unexpected_target_head_is_rejected(self) -> None:
         (self.repo / "local.txt").write_text("local commit\n", encoding="utf-8")

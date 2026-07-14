@@ -70,6 +70,8 @@ gh issue view <N> --json body --jq .body \
 
 成功时输出包含 `path`、`branch`、`head` 和 `upstream` 的 JSON。退出码 `1` 表示 Git、I/O 或环境失败；退出码 `3` 表示 drift、dirty worktree、路径占用、意外 HEAD/upstream 或 Git 契约错误。provisioner 不执行 reset、rebase、force-push、覆盖或清理。
 
+dirty worktree 是 producer agent 的恢复任务，不是交给用户的手工前置条件。收到 dirty 错误后，先在错误指出的 exact worktree 中读取 `git status --short`、完整 diff、untracked files 和近期历史，判断每项改动的意图与完成度。能确认的当前工作由 agent 自行完成并运行相关验证，再按 coherent commits 提交并正常 push；重复 provision，直到 worktree clean。只有改动来源、目标或完成标准无法从代码、issue、对话和历史中确定时才询问用户。不得用 stash、reset、checkout、`git clean`、删除内容、临时 clone 或另建 worktree 绕过 dirty gate，也不得把明显的 secrets、generated artifacts 或本地运行状态硬提交进仓库。
+
 默认严格拒绝 base drift。只有 producer 已展示旧/新 SHA 和提交摘要，并且用户明确选择保留父 spec 记录的旧 SHA 时，才可重新运行并传入 `--allow-base-drift`；不要把该 flag 作为默认值。已前进的目标 branch 只有在 worktree clean、`Base commit` 是 HEAD 祖先、upstream 精确匹配且 remote HEAD 与本地 HEAD 同步时才可复用。未 push、分叉或错误 upstream 的 advanced HEAD 仍返回 `3`。
 
 默认 branch 复用已注册的主 worktree。未绑定的非主 branch 使用主 worktree 同级的 `<repo-name>-<branch-slug>`；已有 branch 只按 `git worktree list --porcelain` 的 exact branch 结果复用，不通过目录名猜测。

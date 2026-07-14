@@ -171,8 +171,9 @@ def validate_target(path: Path, contract: GitContract, remote: str) -> str:
     if branch != contract.branch:
         raise ProvisionError(f"worktree `{path}` is on `{branch}`, expected `{contract.branch}`")
     head = git(path, "rev-parse", "HEAD").stdout.strip()
-    if git(path, "status", "--porcelain").stdout:
-        raise ProvisionError(f"worktree `{path}` is dirty")
+    status = git(path, "status", "--porcelain").stdout.strip()
+    if status:
+        raise ProvisionError(f"worktree `{path}` is dirty:\n{status}")
     if head.lower() == contract.base_commit.lower():
         return head
 
