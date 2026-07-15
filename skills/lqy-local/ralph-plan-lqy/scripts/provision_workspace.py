@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import json
 import re
+import shutil
 import subprocess
 import sys
 from collections.abc import Sequence
@@ -12,6 +13,9 @@ from dataclasses import asdict, dataclass
 from pathlib import Path
 
 from git_contract import GitContract, GitContractError, parse_git_contract
+
+
+LOCAL_CONFIG_ALLOWLIST = (Path(".codex/config.toml"),)
 
 
 class ProvisionError(RuntimeError):
@@ -130,6 +134,52 @@ def local_branch_head(repo: Path, branch: str) -> str | None:
     return git(repo, "rev-parse", "--verify", f"{branch_ref}^{{commit}}").stdout.strip()
 
 
+def path_is_tracked(repo: Path, relative: Path) -> bool:
+    result = git(repo, "ls-files", "--error-unmatch", "--", relative.as_posix(), check=False)
+    if result.returncode == 0:
+        return True
+    if result.returncode == 1:
+        return False
+    detail = result.stderr.strip() or result.stdout.strip()
+    raise OSError(f"git ls-files failed: {detail}")
+
+
+def initialize_local_config(source: Path, target: Path) -> None:
+    if source == target:
+        return
+    for relative in LOCAL_CONFIG_ALLOWLIST:
+        source_file = source / relative
+        if not source_file.exists() and not source_file.is_symlink():
+            continue
+        if path_is_tracked(source, relative):
+            continue
+        if source_file.parent.is_symlink() or source_file.is_symlink() or not source_file.is_file():
+            raise ProvisionError(f"local config `{relative}` must be a regular file")
+
+        target_file = target / relative
+        if target_file.parent.exists() and (
+            target_file.parent.is_symlink() or not target_file.parent.is_dir()
+        ):
+            raise ProvisionError(f"target local config parent is not a directory: {target_file.parent}")
+        if target_file.exists() or target_file.is_symlink():
+            if target_file.is_symlink() or not target_file.is_file():
+                raise ProvisionError(f"target local config `{target_file}` must be a regular file")
+            if source_file.read_bytes() != target_file.read_bytes():
+                raise ProvisionError(f"target local config differs from source: {target_file}")
+            continue
+
+        ignored = git(target, "check-ignore", "--quiet", "--", relative.as_posix(), check=False)
+        if ignored.returncode == 1:
+            raise ProvisionError(
+                f"local config `{relative}` is not ignored in target worktree; track it or add an ignore rule"
+            )
+        if ignored.returncode != 0:
+            detail = ignored.stderr.strip() or ignored.stdout.strip()
+            raise OSError(f"git check-ignore failed: {detail}")
+        target_file.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(source_file, target_file)
+
+
 def select_or_create_worktree(repo: Path, contract: GitContract, default_branch: str) -> Path:
     worktrees = parse_worktrees(git(repo, "worktree", "list", "--porcelain").stdout)
     primary = worktrees[0]
@@ -245,6 +295,7 @@ def provision(repo: Path, contract: GitContract, *, allow_base_drift: bool = Fal
         allow_base_drift=allow_base_drift,
     )
     path = select_or_create_worktree(repo_root, contract, remote_default_branch(repo_root, remote))
+    initialize_local_config(repo_root, path)
     head = validate_target(path, contract, remote)
     upstream = ensure_upstream(path, contract, remote, head)
     return WorktreeResult(path=str(path), branch=contract.branch, head=head, upstream=upstream)

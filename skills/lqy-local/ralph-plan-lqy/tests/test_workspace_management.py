@@ -39,7 +39,7 @@ class GitRepoFixture(unittest.TestCase):
         run("git", "clone", str(self.remote), str(self.repo))
         run("git", "config", "user.name", "Test User", cwd=self.repo)
         run("git", "config", "user.email", "test@example.com", cwd=self.repo)
-        (self.repo / ".gitignore").write_text(".ralph/\n", encoding="utf-8")
+        (self.repo / ".gitignore").write_text(".ralph/\n.codex/\n", encoding="utf-8")
         run("git", "add", ".gitignore", cwd=self.repo)
         run("git", "commit", "-m", "initial", cwd=self.repo)
         run("git", "push", "-u", "origin", "main", cwd=self.repo)
@@ -138,6 +138,91 @@ class WorkspaceProvisionerCliTests(GitRepoFixture):
         ignored.write_text("{}\n", encoding="utf-8")
         self.assertIn("local-only/", run("git", "check-ignore", "-v", str(ignored), cwd=worktree))
         self.assertEqual("", run("git", "status", "--porcelain", cwd=worktree))
+
+    def test_ignored_project_codex_config_is_copied_to_new_worktree(self) -> None:
+        source_config = self.repo / ".codex" / "config.toml"
+        source_config.parent.mkdir()
+        source_config.write_text(
+            '[mcp_servers.xcode]\ncommand = "xcrun"\nargs = ["mcpbridge"]\n',
+            encoding="utf-8",
+        )
+
+        result = self.provision(branch="feature/codex-config")
+
+        self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+        worktree = Path(json.loads(result.stdout)["path"])
+        self.assertEqual(source_config.read_bytes(), (worktree / ".codex" / "config.toml").read_bytes())
+        self.assertEqual("", run("git", "status", "--porcelain", cwd=worktree))
+
+    def test_tracked_project_codex_config_uses_git_checkout(self) -> None:
+        source_config = self.repo / ".codex" / "config.toml"
+        source_config.parent.mkdir()
+        source_config.write_text('model = "gpt-5.6"\n', encoding="utf-8")
+        run("git", "add", "-f", ".codex/config.toml", cwd=self.repo)
+        run("git", "commit", "-m", "track project Codex config", cwd=self.repo)
+        run("git", "push", "origin", "main", cwd=self.repo)
+        self.base_commit = run("git", "rev-parse", "HEAD", cwd=self.repo)
+
+        result = self.provision(branch="feature/tracked-codex-config")
+
+        self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+        worktree = Path(json.loads(result.stdout)["path"])
+        self.assertEqual(source_config.read_bytes(), (worktree / ".codex" / "config.toml").read_bytes())
+        self.assertEqual("", run("git", "status", "--porcelain", cwd=worktree))
+
+    def test_different_target_codex_config_is_not_overwritten(self) -> None:
+        source_config = self.repo / ".codex" / "config.toml"
+        source_config.parent.mkdir()
+        source_config.write_text('model = "source"\n', encoding="utf-8")
+        worktree = self.root / "project-feature-config-conflict"
+        run(
+            "git",
+            "worktree",
+            "add",
+            "-b",
+            "feature/config-conflict",
+            str(worktree),
+            self.base_commit,
+            cwd=self.repo,
+        )
+        target_config = worktree / ".codex" / "config.toml"
+        target_config.parent.mkdir()
+        target_config.write_text('model = "target"\n', encoding="utf-8")
+
+        result = self.provision(branch="feature/config-conflict")
+
+        self.assertEqual(3, result.returncode, result.stdout + result.stderr)
+        self.assertIn("target local config differs from source", result.stderr)
+        self.assertEqual('model = "target"\n', target_config.read_text(encoding="utf-8"))
+
+    def test_unignored_local_codex_config_is_not_copied(self) -> None:
+        (self.repo / ".gitignore").write_text(".ralph/\n", encoding="utf-8")
+        run("git", "add", ".gitignore", cwd=self.repo)
+        run("git", "commit", "-m", "do not ignore project Codex config", cwd=self.repo)
+        run("git", "push", "origin", "main", cwd=self.repo)
+        self.base_commit = run("git", "rev-parse", "HEAD", cwd=self.repo)
+        source_config = self.repo / ".codex" / "config.toml"
+        source_config.parent.mkdir()
+        source_config.write_text('model = "local"\n', encoding="utf-8")
+
+        result = self.provision(branch="feature/unignored-config")
+
+        self.assertEqual(3, result.returncode, result.stdout + result.stderr)
+        self.assertIn("is not ignored in target worktree", result.stderr)
+        worktree = self.root / "project-feature-unignored-config"
+        self.assertFalse((worktree / ".codex" / "config.toml").exists())
+        self.assertEqual("", run("git", "status", "--porcelain", cwd=worktree))
+
+    def test_symlinked_codex_config_directory_is_rejected(self) -> None:
+        outside = self.root / "outside-codex"
+        outside.mkdir()
+        (outside / "config.toml").write_text('model = "outside"\n', encoding="utf-8")
+        (self.repo / ".codex").symlink_to(outside, target_is_directory=True)
+
+        result = self.provision(branch="feature/symlinked-config")
+
+        self.assertEqual(3, result.returncode, result.stdout + result.stderr)
+        self.assertIn("must be a regular file", result.stderr)
 
     def test_registered_branch_reuses_its_exact_worktree_path(self) -> None:
         custom_path = (self.root / "custom-location").resolve()

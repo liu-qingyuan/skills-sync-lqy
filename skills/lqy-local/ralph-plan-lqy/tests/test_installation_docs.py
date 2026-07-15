@@ -32,6 +32,7 @@ class InstallationDocsTests(unittest.TestCase):
                 "不使用 assignee claim",
                 "不自动清理 branch/worktree",
                 "Dirty recovery",
+                ".codex/config.toml",
             ),
             REPO_ROOT / "skills" / "matt-lqy-core" / "to-tickets-lqy" / "SKILL.md": (
                 "由 agent 完成可确认的改动",

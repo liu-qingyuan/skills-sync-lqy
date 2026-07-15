@@ -76,7 +76,9 @@ worktree dirty 时，producer agent 完成可确认的改动，验证并 commit/
 
 默认 branch 复用已注册的主 worktree。未绑定的非主 branch 使用主 worktree 同级的 `<repo-name>-<branch-slug>`；已有 branch 只按 `git worktree list --porcelain` 的 exact branch 结果复用，不通过目录名猜测。
 
-linked worktree 共享仓库 Git config、`.git/info/exclude` 和全局 excludes，tracked `.gitignore` 随 checkout 生效。provisioner 不复制 ignored 文件内容；项目若需要额外本地初始化，只运行仓库明确声明的 bootstrap 命令。
+linked worktree 共享仓库 Git config、`.git/info/exclude` 和全局 excludes，tracked `.gitignore` 随 checkout 生效。local-config allowlist 只包含 `.codex/config.toml`：tracked 文件由 Git checkout；源 worktree 中 ignored/untracked 的 regular file 会复制到目标的相同路径。目标未忽略该文件、已有不同内容或任一路径使用 symlink 时返回 `3`，不覆盖。其他 ignored 内容不复制。
+
+项目 `.codex/config.toml` 只在 trusted project 中加载。后续 Codex 必须从返回的 worktree 启动新会话并单独信任该路径；MCP 随新会话启动，`xcrun mcpbridge` 重新连接当前 Xcode。不要复制 trust、`MCP_XCODE_PID`、session ID 或其他临时绑定。
 
 ## Worker Lock
 
