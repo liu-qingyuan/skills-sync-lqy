@@ -1,49 +1,54 @@
 ---
 name: simple
-description: Simplify artifacts while preserving intent and required behavior. Use when the user asks to make something simpler, shorter, clearer, leaner, more efficient, less complex, or easier to understand across code, Markdown, docs, prompts, configs, flowcharts, Mermaid diagrams, architecture notes, plans, specs, or process descriptions.
+description: 在保留意图、必要行为和契约的前提下简化产物。用于用户要求简化、精简、缩短、理清、去重、降低复杂度、提高可读性，或让代码、Markdown、文档、提示词、配置、流程图、Mermaid 图、架构说明、计划、规格和流程更容易理解时。
 ---
 
 # simple
 
-Use `$simple` to reduce complexity without losing the user's intent. Apply it to code, Markdown, documentation, prompts, configs, flowcharts, Mermaid diagrams, plans, specs, and process descriptions.
+使用 `$simple` 降低产物的认知和结构复杂度，不以字数或行数最少为目标。保留用户真正需要的内容，删除不产生价值的复杂性。
 
-## Default output
+## 默认行为
 
-Keep the response short:
+- 用户要求直接修改时，完成修改并验证。
+- 用户只要求评审、分析或建议时，不改文件，只给出精简建议。
+- 修改前先确认现有风格、约束和可用的验证方式；按改动风险决定验证范围。
 
-- `Simplified`：the simplified version, patch, or concise recommendation.
-- `Kept`：what meaning/behavior/contract was preserved.
-- `Removed`：what complexity was deleted or merged.
-- `Validation`：tests/checks/manual review done or still needed.
+回复保持简短，按需使用以下部分：
 
-Omit sections that add no value. For direct edits, summarize changed files and validation evidence.
+- `简化结果`：简化后的版本、补丁或建议。
+- `保留`：保留的意图、行为或契约。
+- `删除或合并`：移除或合并的复杂性。
+- `验证`：已完成或仍需完成的检查。
 
+省略没有信息量的部分。直接修改时，只需概括改动文件和验证证据。
 
-## Progressive loading / Occam
+## 渐进加载与奥卡姆原则
 
-Keep `SKILL.md` as the small interface. Do not add references, scripts, assets, templates, diagrams, tools, abstractions, or process unless repeated use proves the detail is optional, reusable, and better loaded only for that artifact type.
+保持 `SKILL.md` 是一个小接口。只有在重复使用证明某项内容可复用、非核心且适合按需加载时，才增加 references、scripts、assets、模板、图、工具、抽象或流程。
 
-## Simplification rules
+## 简化规则
 
-- Preserve observable behavior, user intent, public contracts, required data, and safety constraints.
-- Delete redundancy first; merge shallow layers second; rename for clarity third; add abstraction last.
-- Prefer fewer concepts, fewer branches, fewer headings, fewer nodes, fewer options, and fewer special cases.
-- Replace vague or clever wording with direct, task-oriented language.
-- Keep one idea per paragraph/node/function when it improves reading; do not split into tiny fragments.
-- Prefer existing project style and tools over new dependencies, new frameworks, new registries, or new processes.
+- 保留可观察行为、用户意图、公开契约、必要数据和安全约束，除非用户明确授权改变它们。
+- 先区分必要复杂性与偶然复杂性，只删除后者。
+- 先删重复，再合并浅层，随后为清晰而重命名，最后才考虑新增抽象。
+- 优先减少概念、分支、标题、节点、选项和特例。
+- 使用直接、面向任务的表达，避免含糊、炫技和需要额外解释的压缩写法。
+- 在有助于阅读时让每个段落、节点或函数聚焦一个想法，但不要切成许多细碎片段。
+- 不用更少的行数换取更深的嵌套、更高的信息密度或更差的可调试性。
+- 优先沿用项目已有风格和工具，不轻易新增依赖、框架、注册表或流程。
 
-## Artifact-specific guidance
+## 按产物处理
 
-- Code：remove dead code, duplicate paths, needless wrappers, over-abstracted helpers, deep nesting, and speculative extension points; verify behavior with existing tests or focused smoke checks.
-- Markdown/docs：lead with the answer, remove repetition, collapse duplicate headings, keep only audience-needed context, and prefer examples over long explanation when useful.
-- Flowcharts/Mermaid：keep the main path visible, merge trivial nodes, remove decorative styling, split only when one diagram becomes unreadable, and validate syntax if possible.
-- Prompts/skills/plans：turn long procedures into purpose, defaults, output contract, boundaries, and stop rules.
-- Config/process：remove unused options, duplicate sources of truth, and manual steps that can be safely replaced by existing commands or conventions.
+- 代码：删除死代码、重复路径、无意义包装、过度抽象的 helper、深层嵌套和推测性扩展点；用现有测试或聚焦的 smoke check 验证行为。
+- Markdown/文档：先给结论，删除重复内容，合并同义标题，只保留受众需要的上下文；示例更清楚时，用示例代替长篇解释。
+- 流程图/Mermaid：突出主路径，合并琐碎节点，删除装饰性样式；仅在单图难以阅读时拆图，并尽量验证语法。
+- 提示词/skills/计划：把冗长步骤收敛为目标、默认行为、输出契约、边界和停止条件。
+- 配置/流程：删除未使用选项和重复事实来源；已有命令或约定能够安全替代时，移除手工步骤。
 
-## Stop rules
+## 停止条件
 
-Stop and report before changing public APIs, persisted formats, security/privacy behavior, business rules, external contracts, destructive operations, or broad architecture ownership. If simplification would hide necessary nuance, keep the nuance and explain why.
+如果简化会改变公开 API、持久化格式、安全或隐私行为、业务规则、外部契约、破坏性操作或大范围架构归属，而用户没有明确授权，停止修改并说明影响。如果简化会掩盖必要细节，保留这些细节并说明原因。
 
-## Maintenance validation
+## 验证
 
-After editing this skill, run `quick_validate.py`. A real `$simple ...` smoke test is stronger; if skipped, say so.
+根据产物选择最小但可信的验证：代码运行相关测试，文档检查结构、链接或渲染，Mermaid 检查语法，配置使用解析器、校验器或 dry run。修改此 skill 后运行 `quick_validate.py`；最好再做一次真实的 `$simple ...` smoke test，若跳过则说明。
