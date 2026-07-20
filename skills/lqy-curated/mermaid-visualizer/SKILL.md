@@ -1,276 +1,308 @@
 ---
 name: mermaid-visualizer
-description: Transform text content into professional Mermaid diagrams for presentations and documentation. Use when users ask to visualize concepts, create flowcharts, or make diagrams from text. Supports process flows, system architectures, comparisons, mindmaps, and more with built-in syntax error prevention.
+description: 将文本内容转换为适合演示和文档的专业 Mermaid 图。用于用户要求可视化概念、创建流程图或根据文本生成图表时。支持流程、系统架构、对比图、思维导图等，并内置常见语法错误防护。
 ---
 
-# Mermaid Visualizer
+# Mermaid 可视化
 
-## Overview
+## 概述
 
-Convert text content into clean, professional Mermaid diagrams optimized for presentations and documentation. Automatically handles common syntax pitfalls (list syntax conflicts, subgraph naming, spacing issues) to ensure diagrams render correctly in Obsidian, GitHub, and other Mermaid-compatible platforms.
+将文本内容转换为清晰、专业且适合演示和文档的 Mermaid 图。主动规避列表语法冲突、子图命名和空格等常见问题，确保图表能够在 Obsidian、GitHub 及其他兼容 Mermaid 的平台正确渲染。
 
-## Quick Start
+## 快速开始
 
-When creating a Mermaid diagram:
+创建 Mermaid 图时：
 
-1. **Analyze the content** - Identify key concepts, relationships, and flow
-2. **Choose diagram type** - Select the most appropriate visualization (see Diagram Types below)
-3. **Select configuration** - Determine layout, detail level, and styling
-4. **Generate diagram** - Create syntactically correct Mermaid code
-5. **Output in markdown** - Wrap in proper code fence with optional explanation
+1. **分析内容**：识别关键概念、关系和流程。
+2. **选择图表类型**：选择最适合的可视化方式，参见“图表类型”。
+3. **选择配置**：确定布局、细节层级和样式。
+4. **生成图表**：创建语法正确的 Mermaid 代码。
+5. **输出 Markdown**：使用正确的代码围栏，可按需附上简短说明。
 
-**Default assumptions:**
-- Vertical layout (TB) unless horizontal requested
-- Medium detail level (balanced between simplicity and information)
-- Professional color scheme with semantic colors
-- Obsidian/GitHub compatible syntax
+**默认设置：**
 
-## Diagram Types
+- 除非用户要求横向布局，否则使用纵向布局（TB）。
+- 使用标准细节层级，在简洁和信息量之间取得平衡。
+- 使用带语义色彩的专业配色。
+- 使用兼容 Obsidian 和 GitHub 的语法。
 
-### 1. Process Flow (graph TB/LR)
-**Best for:** Workflows, decision trees, sequential processes, AI agent architectures
+## 图表类型
 
-**Use when:** Content describes steps, stages, or a sequence of actions
+### 1. 流程图（graph TB/LR）
 
-**Key features:**
-- Swimlanes via subgraph for grouping related steps
-- Arrow labels for transitions
-- Feedback loops and branches
-- Color-coded stages
+**适合：** 工作流、决策树、顺序流程、AI agent 架构。
 
-**Configuration options:**
-- `layout`: "vertical" (TB), "horizontal" (LR)
-- `detail`: "simple" (core steps only), "standard" (with descriptions), "detailed" (with annotations)
-- `style`: "minimal", "professional", "colorful"
+**使用条件：** 内容描述步骤、阶段或一系列动作。
 
-### 2. Circular Flow (graph TD with circular layout)
-**Best for:** Cyclic processes, continuous improvement loops, agent feedback systems
+**主要特点：**
 
-**Use when:** Content emphasizes iteration, feedback, or circular relationships
+- 使用 subgraph 泳道对相关步骤分组。
+- 使用箭头标签说明转换关系。
+- 支持反馈回路和分支。
+- 按阶段使用不同颜色。
 
-**Key features:**
-- Central hub with radiating elements
-- Curved feedback arrows
-- Clear cycle indicators
+**配置选项：**
 
-### 3. Comparison Diagram (graph TB with parallel paths)
-**Best for:** Before/after comparisons, A vs B analysis, traditional vs modern systems
+- `layout`：`vertical`（TB）、`horizontal`（LR）。
+- `detail`：`simple`（仅核心步骤）、`standard`（包含说明）、`detailed`（包含注释）。
+- `style`：`minimal`、`professional`、`colorful`。
 
-**Use when:** Content contrasts two or more approaches or systems
+### 2. 循环流程图（带循环布局的 graph TD）
 
-**Key features:**
-- Side-by-side layout
-- Central comparison node
-- Clear differentiation via color/style
+**适合：** 循环流程、持续改进闭环、agent 反馈系统。
 
-### 4. Mindmap
-**Best for:** Hierarchical concepts, knowledge organization, topic breakdowns
+**使用条件：** 内容强调迭代、反馈或循环关系。
 
-**Use when:** Content is hierarchical with clear parent-child relationships
+**主要特点：**
 
-**Key features:**
-- Radial tree structure
-- Multiple levels of nesting
-- Clean visual hierarchy
+- 中心节点与放射状元素。
+- 弯曲的反馈箭头。
+- 清晰的循环标识。
 
-### 5. Sequence Diagram
-**Best for:** Interactions between components, API calls, message flows
+### 3. 对比图（带并行路径的 graph TB）
 
-**Use when:** Content involves communication between actors/systems over time
+**适合：** 前后对比、A 与 B 分析、传统系统与现代系统对比。
 
-**Key features:**
-- Timeline-based layout
-- Clear actor separation
-- Activation boxes for processes
+**使用条件：** 内容比较两个或多个方案或系统。
 
-### 6. State Diagram
-**Best for:** System states, status transitions, lifecycle stages
+**主要特点：**
 
-**Use when:** Content describes states and transitions between them
+- 并排布局。
+- 中央对比节点。
+- 使用颜色或样式清楚区分各方。
 
-**Key features:**
-- Clear state nodes
-- Labeled transitions
-- Start and end states
+### 4. 思维导图（mindmap）
 
-## Critical Syntax Rules
+**适合：** 分层概念、知识组织、主题拆解。
 
-**Always follow these rules to prevent parsing errors:**
+**使用条件：** 内容具有清晰的父子层级。
 
-### Rule 1: Avoid List Syntax Conflicts
-```
-❌ WRONG: [1. Perception]       → Triggers "Unsupported markdown: list"
-✅ RIGHT: [1.Perception]         → Remove space after period
-✅ RIGHT: [① Perception]         → Use circled numbers (①②③④⑤⑥⑦⑧⑨⑩)
-✅ RIGHT: [(1) Perception]       → Use parentheses
-✅ RIGHT: [Step 1: Perception]   → Use "Step" prefix
-```
+**主要特点：**
 
-### Rule 2: Subgraph Naming
-```
-❌ WRONG: subgraph AI Agent Core  → Space in name without quotes
-✅ RIGHT: subgraph agent["AI Agent Core"]  → Use ID with display name
-✅ RIGHT: subgraph agent          → Use simple ID only
-```
+- 放射状树形结构。
+- 支持多层嵌套。
+- 清晰的视觉层级。
 
-### Rule 3: Node References
-```
-❌ WRONG: Title --> AI Agent Core  → Reference display name directly
-✅ RIGHT: Title --> agent          → Reference subgraph ID
-```
+### 5. 时序图（sequence diagram）
 
-### Rule 4: Special Characters in Node Text
-```
-✅ Use quotes for text with spaces: ["Text with spaces"]
-✅ Escape or avoid: quotation marks → use 『』instead
-✅ Escape or avoid: parentheses → use 「」instead
-✅ Line breaks in circle nodes only: ((Text<br/>Break))
+**适合：** 组件交互、API 调用、消息流。
+
+**使用条件：** 内容涉及参与者或系统随时间发生的通信。
+
+**主要特点：**
+
+- 基于时间顺序的布局。
+- 清晰分隔参与者。
+- 使用激活框表示处理过程。
+
+### 6. 状态图（state diagram）
+
+**适合：** 系统状态、状态转换、生命周期阶段。
+
+**使用条件：** 内容描述状态及其转换。
+
+**主要特点：**
+
+- 清晰的状态节点。
+- 带标签的转换。
+- 明确的开始和结束状态。
+
+## 关键语法规则
+
+**始终遵守以下规则，避免解析错误：**
+
+### 规则 1：避免列表语法冲突
+
+```text
+❌ 错误：[1. Perception]       → 会触发 "Unsupported markdown: list"
+✅ 正确：[1.Perception]        → 删除句点后的空格
+✅ 正确：[① Perception]        → 使用带圈数字（①②③④⑤⑥⑦⑧⑨⑩）
+✅ 正确：[(1) Perception]      → 使用括号
+✅ 正确：[Step 1: Perception]  → 添加 "Step" 前缀
 ```
 
-### Rule 5: Arrow Types
-- `-->` solid arrow
-- `-.->` dashed arrow (for supporting systems, optional paths)
-- `==>` thick arrow (for emphasis)
-- `~~~` invisible link (for layout only)
+### 规则 2：子图命名
 
-For complete syntax reference and edge cases, see [references/syntax-rules.md](references/syntax-rules.md)
-
-## Configuration Options
-
-All diagrams accept these parameters:
-
-**Layout:**
-- `direction`: "vertical" (TB), "horizontal" (LR), "right-to-left" (RL), "bottom-to-top" (BT)
-- `aspect`: "portrait" (default), "landscape" (wide), "square"
-
-**Detail Level:**
-- `simple`: Core elements only, minimal labels
-- `standard`: Balanced detail with key descriptions (default)
-- `detailed`: Full annotations, explanations, and metadata
-- `presentation`: Optimized for slides (larger text, fewer details)
-
-**Style:**
-- `minimal`: Monochrome, clean lines
-- `professional`: Semantic colors, clear hierarchy (default)
-- `colorful`: Vibrant colors, high contrast
-- `academic`: Formal styling for papers/documentation
-
-**Additional Options:**
-- `show_legend`: true/false - Include color/symbol legend
-- `numbered`: true/false - Add sequence numbers to steps
-- `title`: string - Add diagram title
-
-## Example Usage Patterns
-
-**Pattern 1: Basic request**
-```
-User: "Visualize the software development lifecycle"
-Response: [Analyze → Choose graph TB → Generate with standard detail]
+```text
+❌ 错误：subgraph AI Agent Core          → 含空格的名称没有引号
+✅ 正确：subgraph agent["AI Agent Core"] → 使用 ID 和显示名称
+✅ 正确：subgraph agent                  → 只使用简单 ID
 ```
 
-**Pattern 2: With configuration**
-```
-User: "Create a horizontal flowchart of our sales process with lots of detail"
-Response: [Analyze → Choose graph LR → Generate with detailed level]
-```
+### 规则 3：节点引用
 
-**Pattern 3: Comparison**
-```
-User: "Compare traditional AI vs AI agents"
-Response: [Analyze → Choose comparison layout → Generate with contrasting styles]
+```text
+❌ 错误：Title --> AI Agent Core  → 直接引用显示名称
+✅ 正确：Title --> agent          → 引用子图 ID
 ```
 
-## Workflow
+### 规则 4：节点文本中的特殊字符
 
-1. **Understand the content**
-   - Identify main concepts, entities, and relationships
-   - Determine hierarchy or sequence
-   - Note any comparisons or contrasts
+```text
+✅ 含空格的文本使用引号：["Text with spaces"]
+✅ 转义或避免英文引号，可改用『』
+✅ 转义或避免英文括号，可改用「」
+✅ 仅在圆形节点中使用换行：((Text<br/>Break))
+```
 
-2. **Select diagram type**
-   - Match content structure to diagram type
-   - Consider user's presentation context
-   - Default to process flow if ambiguous
+### 规则 5：箭头类型
 
-3. **Choose configuration**
-   - Apply user-specified options
-   - Use sensible defaults for unspecified options
-   - Optimize for readability
+- `-->`：实线箭头。
+- `-.->`：虚线箭头，用于支持系统或可选路径。
+- `==>`：粗箭头，用于强调。
+- `~~~`：不可见连接，仅用于控制布局。
 
-4. **Generate Mermaid code**
-   - Follow all syntax rules strictly
-   - Use semantic naming (descriptive IDs)
-   - Apply consistent styling
-   - Test for common errors:
-     * No "number. space" patterns in node text
-     * All subgraphs use ID["display name"] format
-     * All node references use IDs not display names
+完整语法和边界情况参见 [references/syntax-rules.md](references/syntax-rules.md)。
 
-5. **Output with context**
-   - Wrap in ```mermaid code fence
-   - Add brief explanation of diagram structure
-   - Mention rendering compatibility (Obsidian, GitHub, etc.)
-   - Offer to adjust or create variations
+## 配置选项
 
-## Color Scheme Defaults
+所有图表均接受以下参数：
 
-Standard professional palette:
-- Green (#d3f9d8/#2f9e44): Input, perception, start states
-- Red (#ffe3e3/#c92a2a): Planning, decision points
-- Purple (#e5dbff/#5f3dc4): Processing, reasoning
-- Orange (#ffe8cc/#d9480f): Actions, tool usage
-- Cyan (#c5f6fa/#0c8599): Output, execution, results
-- Yellow (#fff4e6/#e67700): Storage, memory, data
-- Pink (#f3d9fa/#862e9c): Learning, optimization
-- Blue (#e7f5ff/#1971c2): Metadata, definitions, titles
-- Gray (#f8f9fa/#868e96): Neutral elements, traditional systems
+**布局：**
 
-## Common Patterns
+- `direction`：`vertical`（TB）、`horizontal`（LR）、`right-to-left`（RL）、`bottom-to-top`（BT）。
+- `aspect`：`portrait`（默认）、`landscape`（宽屏）、`square`。
 
-### Swimlane Pattern (Grouping)
+**细节层级：**
+
+- `simple`：仅核心元素和最少标签。
+- `standard`：包含关键说明的均衡细节，默认值。
+- `detailed`：完整注释、解释和元数据。
+- `presentation`：针对幻灯片优化，文字更大、细节更少。
+
+**样式：**
+
+- `minimal`：单色、简洁线条。
+- `professional`：语义色彩和清晰层级，默认值。
+- `colorful`：鲜明色彩和高对比度。
+- `academic`：适合论文和正式文档。
+
+**其他选项：**
+
+- `show_legend`：`true`/`false`，是否显示颜色或符号图例。
+- `numbered`：`true`/`false`，是否为步骤添加序号。
+- `title`：字符串，图表标题。
+
+## 使用示例
+
+**示例 1：基本请求**
+
+```text
+用户："可视化软件开发生命周期"
+处理：分析 → 选择 graph TB → 使用标准细节生成
+```
+
+**示例 2：指定配置**
+
+```text
+用户："创建一个详细展示销售流程的横向流程图"
+处理：分析 → 选择 graph LR → 使用详细层级生成
+```
+
+**示例 3：对比**
+
+```text
+用户："比较传统 AI 和 AI agents"
+处理：分析 → 选择对比布局 → 使用对比样式生成
+```
+
+## 工作流
+
+1. **理解内容**
+   - 识别主要概念、实体和关系。
+   - 判断内容是层级结构还是顺序结构。
+   - 标记其中的比较和对照关系。
+
+2. **选择图表类型**
+   - 将内容结构匹配到图表类型。
+   - 考虑用户的展示场景。
+   - 无法判断时默认使用流程图。
+
+3. **选择配置**
+   - 应用用户指定的选项。
+   - 对未指定的选项使用合理默认值。
+   - 优先保证可读性。
+
+4. **生成 Mermaid 代码**
+   - 严格遵守所有语法规则。
+   - 使用具有语义的描述性 ID。
+   - 使用一致的样式。
+   - 检查常见错误：
+     - 节点文本中不得出现“数字 + 句点 + 空格”模式。
+     - 所有子图使用 `ID["显示名称"]` 格式。
+     - 所有节点引用使用 ID，不使用显示名称。
+
+5. **结合上下文输出**
+   - 使用 `mermaid` 代码围栏。
+   - 简要说明图表结构。
+   - 说明与 Obsidian、GitHub 等平台的兼容性。
+   - 可提出调整或创建变体，但不要加入无关说明。
+
+## 默认配色
+
+标准专业配色：
+
+- 绿色（#d3f9d8/#2f9e44）：输入、感知、开始状态。
+- 红色（#ffe3e3/#c92a2a）：规划、决策点。
+- 紫色（#e5dbff/#5f3dc4）：处理、推理。
+- 橙色（#ffe8cc/#d9480f）：动作、工具使用。
+- 青色（#c5f6fa/#0c8599）：输出、执行、结果。
+- 黄色（#fff4e6/#e67700）：存储、记忆、数据。
+- 粉色（#f3d9fa/#862e9c）：学习、优化。
+- 蓝色（#e7f5ff/#1971c2）：元数据、定义、标题。
+- 灰色（#f8f9fa/#868e96）：中性元素、传统系统。
+
+## 常用模式
+
+### 泳道模式（分组）
+
 ```mermaid
 graph TB
-    subgraph core["Core Process"]
+    subgraph core["核心流程"]
         A --> B --> C
     end
-    subgraph support["Supporting Systems"]
+    subgraph support["支持系统"]
         D
         E
     end
     core -.-> support
 ```
 
-### Feedback Loop Pattern
+### 反馈回路模式
+
 ```mermaid
 graph TB
-    A[Start] --> B[Process]
-    B --> C[End]
-    C -.->|Feedback| A
+    A[开始] --> B[处理]
+    B --> C[结束]
+    C -.->|反馈| A
 ```
 
-### Hub and Spoke Pattern
+### 中心辐射模式
+
 ```mermaid
 graph TB
-    Central[Hub]
-    A[Spoke 1] --> Central
-    B[Spoke 2] --> Central
-    C[Spoke 3] --> Central
+    Central[中心]
+    A[分支 1] --> Central
+    B[分支 2] --> Central
+    C[分支 3] --> Central
 ```
 
-## Quality Checklist
+## 质量检查清单
 
-Before outputting, verify:
-- [ ] No "number. space" patterns in any node text
-- [ ] All subgraphs use proper ID syntax
-- [ ] All arrows use correct syntax (-->, -.->)
-- [ ] Colors applied consistently
-- [ ] Layout direction specified
-- [ ] Style declarations present
-- [ ] No ambiguous node references
-- [ ] Compatible with Obsidian/GitHub renderers
-- [ ] **No Emoji** in any node text - use text labels or color coding instead
+输出前确认：
 
-## References
+- [ ] 节点文本中没有“数字 + 句点 + 空格”模式。
+- [ ] 所有子图均使用正确的 ID 语法。
+- [ ] 所有箭头均使用正确语法（`-->`、`-.->`）。
+- [ ] 颜色应用一致。
+- [ ] 已指定布局方向。
+- [ ] 已提供所需的样式声明。
+- [ ] 没有含糊的节点引用。
+- [ ] 与 Obsidian 和 GitHub 渲染器兼容。
+- [ ] 节点文本中不使用 Emoji，改用文字标签或颜色编码。
 
-For detailed syntax rules and troubleshooting, see:
-- [references/syntax-rules.md](references/syntax-rules.md) - Complete syntax reference and error prevention
+## 参考资料
+
+详细语法规则和排错方法参见：
+
+- [references/syntax-rules.md](references/syntax-rules.md)：完整语法参考和错误预防。
