@@ -86,6 +86,7 @@ Display Text A --> Display Text B  ❌ 不能使用显示文本
 ### 基本节点类型
 
 ```mermaid
+flowchart TB
 %% 矩形（默认）
 A[矩形文本]
 
