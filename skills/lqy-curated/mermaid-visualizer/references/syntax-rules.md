@@ -1,518 +1,174 @@
-# Mermaid 语法规则参考
+# Mermaid 语法参考
 
-本文档汇总 Mermaid 图的语法规则和错误预防方法。遇到语法错误或需要详细语法信息时读取此文件。
+需要选择具体语法或排查渲染问题时，按相关章节读取。
 
-## 目录
+## 图表声明
 
-1. [关键错误预防](#关键错误预防)
-2. [节点语法](#节点语法)
-3. [子图语法](#子图语法)
-4. [箭头和连接类型](#箭头和连接类型)
-5. [样式和颜色](#样式和颜色)
-6. [布局和方向](#布局和方向)
-7. [高级模式](#高级模式)
-8. [故障排查](#故障排查)
-
-## 关键错误预防
-
-### 列表语法冲突（最常见错误）
-
-**问题：** Mermaid 解析器会把“数字 + 句点 + 空格”识别为 Markdown 有序列表。
-
-**错误信息：** `Parse error: Unsupported markdown: list`
-
-**解决方法：**
-
-```text
-❌ [1. Perception]
-❌ [2. Planning]
-❌ [3. Reasoning]
-
-✅ [1.Perception]           # 删除空格
-✅ [① Perception]           # 使用带圈数字
-✅ [(1) Perception]         # 使用括号
-✅ [Step 1: Perception]     # 使用前缀
-✅ [Step 1 - Perception]    # 使用连字符
-✅ [Perception]             # 删除编号
-```
-
-**带圈数字参考：**
-
-```text
-① ② ③ ④ ⑤ ⑥ ⑦ ⑧ ⑨ ⑩ ⑪ ⑫ ⑬ ⑭ ⑮ ⑯ ⑰ ⑱ ⑲ ⑳
-```
-
-### 子图命名规则
-
-**规则：** 名称包含空格时，使用 ID + 显示名称格式。
-
-```text
-❌ subgraph Core Process
-     A --> B
-   end
-
-✅ subgraph core["Core Process"]
-     A --> B
-   end
-
-✅ subgraph core_process
-     A --> B
-   end
-```
-
-**引用子图：**
-
-```text
-❌ Title --> Core Process      # 不能引用显示名称
-✅ Title --> core              # 必须引用 ID
-```
-
-### 节点引用规则
-
-**规则：** 始终通过 ID 引用节点，不要引用显示文本。
-
-```text
-# 定义节点
-A[Display Text A]
-B["Display Text B"]
-
-# 引用节点
-A --> B                            ✅ 使用节点 ID
-Display Text A --> Display Text B  ❌ 不能使用显示文本
-```
-
-## 节点语法
-
-### 基本节点类型
+每个 Mermaid 代码块必须先声明图表类型。流程图使用：
 
 ```mermaid
 flowchart TB
-%% 矩形（默认）
-A[矩形文本]
-
-%% 圆角矩形
-B(圆角文本)
-
-%% 体育场形状
-C([体育场文本])
-
-%% 圆形
-D((圆形<br/>文本))
-
-%% 非对称形状
-E>右箭头]
-
-%% 菱形（决策）
-F{是否继续？}
-
-%% 六边形
-G{{六边形}}
-
-%% 平行四边形
-H[/平行四边形/]
-
-%% 数据库
-I[(数据库)]
-
-%% 梯形
-J[/梯形\]
+    A[开始] --> B[结束]
 ```
 
-### 节点文本规则
+常用方向：
 
-**换行：**
+| 方向 | 含义 |
+| --- | --- |
+| `TB` 或 `TD` | 从上到下 |
+| `BT` | 从下到上 |
+| `LR` | 从左到右 |
+| `RL` | 从右到左 |
 
-- `<br/>` 仅在圆形节点中有效，例如 `((Text<br/>Break))`。
-- 其他节点应使用单独的注释节点，或保持文本简短。
-
-**特殊字符：**
-
-- 空格：需要时使用引号，例如 `["Text with spaces"]`。
-- 引号：改用『』或避免使用。
-- 括号：改用「」或避免使用。
-- 冒号：通常安全，出现问题时避免使用。
-- 连字符和破折号：可以安全使用。
-
-**长度建议：**
-
-- 节点文本保持在 50 个字符以内。
-- 较长内容可在圆形节点内换行，或拆成独立注释节点。
-- 文本过长时考虑拆分为多个节点。
-
-## 子图语法
-
-### 基本结构
+## 节点
 
 ```mermaid
-graph TB
-    %% 使用 ID 和显示名称的正确格式
-    subgraph id["显示名称"]
-        direction TB
-        A --> B
-    end
+flowchart TB
+    A[矩形]
+    B(圆角矩形)
+    C([体育场])
+    D((圆形))
+    E>非对称]
+    F{决策}
+    G{{六边形}}
+    H[/平行四边形/]
+    I[(数据库)]
+    J[/梯形\]
+```
 
-    %% 只使用不含空格的简单 ID
-    subgraph simple
-        C --> D
-    end
+- 使用稳定且简短的 ID，通过 ID 建立连接：`A --> B`。
+- 标签含空格或特殊字符时使用引号：`A["显示文本"]`。
+- 避免 `1. 步骤` 形式，它可能被识别为 Markdown 列表；改用 `步骤 1`、`(1) 步骤` 或 `1.步骤`。
+- 标签保持简短；内容太多时拆分节点，不依赖复杂换行。
 
-    %% 在子图内设置方向
-    subgraph horiz["横向"]
+## 子图
+
+名称含空格时，为子图提供独立 ID 和显示名称。优先连接子图内的具体节点。
+
+```mermaid
+flowchart TB
+    subgraph input["输入阶段"]
         direction LR
-        E --> F
-    end
-```
-
-### 嵌套子图
-
-```mermaid
-graph TB
-    subgraph outer["外层分组"]
-        direction TB
-
-        subgraph inner1["内层 1"]
-            A --> B
-        end
-
-        subgraph inner2["内层 2"]
-            C --> D
-        end
-
-        inner1 -.-> inner2
-    end
-```
-
-**限制：** 为保证可读性，嵌套层级最多保持在两层。
-
-### 连接子图
-
-```mermaid
-graph TB
-    subgraph g1["分组 1"]
-        A[节点 A]
+        A[接收] --> B[校验]
     end
 
-    subgraph g2["分组 2"]
-        B[节点 B]
-    end
-
-    %% 推荐连接具体节点
-    A --> B
-
-    %% 连接子图可辅助控制布局
-    g1 -.-> g2
-```
-
-## 箭头和连接类型
-
-### 基本箭头
-
-```text
-A --> B          # 实线箭头
-A -.-> B         # 虚线箭头
-A ==> B          # 粗箭头
-A ~~~ B          # 不可见连接，仅用于布局
-```
-
-### 箭头标签
-
-```mermaid
-graph LR
-    A -->|标签文本| B
-    A -.->|可选| C
-    A ==>|重要| D
-```
-
-### 多目标连接
-
-```mermaid
-graph LR
-    %% 一对多
-    A --> B & C & D
-
-    %% 多对一
-    E & F & G --> H
-
-    %% 链式连接
-    I --> J --> K --> L
-```
-
-### 双向连接
-
-```text
-A <--> B         # 双向实线
-A <-.-> B        # 双向虚线
-```
-
-## 样式和颜色
-
-### 行内样式
-
-```text
-style NodeID fill:#color,stroke:#color,stroke-width:2px
-```
-
-### 颜色格式
-
-- 十六进制颜色：`#ff0000` 或 `#f00`。
-- RGB：`rgb(255,0,0)`。
-- 颜色名称：`red`、`blue` 等，支持范围有限。
-
-### 常用样式模式
-
-```mermaid
-graph LR
-    A[专业]
-    B[强调]
-    C[次要]
-    D[标题]
-
-    %% 专业外观
-    style A fill:#d3f9d8,stroke:#2f9e44,stroke-width:2px
-
-    %% 强调
-    style B fill:#ffe3e3,stroke:#c92a2a,stroke-width:3px
-
-    %% 弱化或次要
-    style C fill:#f8f9fa,stroke:#dee2e6,stroke-width:1px
-
-    %% 标题
-    style D fill:#1971c2,stroke:#1971c2,stroke-width:3px,color:#ffffff
-```
-
-### 设置多个节点的样式
-
-```text
-style A,B,C fill:#d3f9d8,stroke:#2f9e44,stroke-width:2px
-```
-
-## 布局和方向
-
-### 方向代码
-
-```text
-graph TB    # 从上到下（纵向）
-graph BT    # 从下到上
-graph LR    # 从左到右（横向）
-graph RL    # 从右到左
-graph TD    # 从上到下，与 TB 相同
-```
-
-### 布局控制建议
-
-1. **纵向布局（TB/BT）：** 适合顺序流程和层级结构。
-2. **横向布局（LR/RL）：** 适合时间线和宽屏展示。
-3. **混合方向：** 在不同子图中分别设置方向。
-
-```mermaid
-graph TB
-    subgraph vertical["纵向流程"]
-        direction TB
-        A --> B --> C
-    end
-
-    subgraph horizontal["横向流程"]
-        direction LR
-        D --> E --> F
-    end
-```
-
-## 高级模式
-
-### 反馈回路模式
-
-```mermaid
-graph TB
-    A[开始] --> B[处理]
-    B --> C[输出]
-    C -.->|反馈| A
-
-    style A fill:#d3f9d8,stroke:#2f9e44,stroke-width:2px
-    style B fill:#e5dbff,stroke:#5f3dc4,stroke-width:2px
-    style C fill:#c5f6fa,stroke:#0c8599,stroke-width:2px
-```
-
-### 泳道模式
-
-```mermaid
-graph TB
-    subgraph lane1["泳道 1"]
-        A[步骤 1] --> B[步骤 2]
-    end
-
-    subgraph lane2["泳道 2"]
-        C[步骤 3] --> D[步骤 4]
+    subgraph output["输出阶段"]
+        C[处理] --> D[返回]
     end
 
     B --> C
 ```
 
-### 中心辐射模式
+避免超过两层嵌套；层级更深时拆图通常更清楚。
+
+## 连接
+
+```text
+A --> B          实线箭头
+A -.-> B         虚线箭头
+A ==> B          粗箭头
+A <--> B         双向实线
+A ~~~ B          不可见连接，仅用于布局
+```
+
+标签、链式连接和多目标连接：
 
 ```mermaid
-graph TB
-    Hub[中心节点]
-
-    A[分支 1] --> Hub
-    B[分支 2] --> Hub
-    C[分支 3] --> Hub
-    Hub --> D[输出]
+flowchart LR
+    A -->|成功| B --> C
+    A -.->|可选| D
+    C --> E & F
 ```
 
-### 决策树
+## 样式
+
+只在样式能表达含义时使用，并保持同一语义使用同一颜色。重复样式使用 `classDef`：
 
 ```mermaid
-graph TB
-    Start[开始] --> Decision{决策点？}
-    Decision -->|选项 A| PathA[路径 A]
-    Decision -->|选项 B| PathB[路径 B]
-    Decision -->|选项 C| PathC[路径 C]
+flowchart LR
+    A[开始] --> B{检查}
+    B -->|通过| C[完成]
+    B -->|失败| D[修正]
 
-    PathA --> End[结束]
-    PathB --> End
-    PathC --> End
+    classDef success fill:#d3f9d8,stroke:#2f9e44,stroke-width:2px
+    classDef warning fill:#fff4e6,stroke:#e67700,stroke-width:2px
+    class A,C success
+    class B,D warning
 ```
 
-### 对比布局
+单个节点可使用：
+
+```text
+style A fill:#d3f9d8,stroke:#2f9e44,stroke-width:2px
+```
+
+## 常用模式
+
+反馈回路：
 
 ```mermaid
-graph TB
-    Title[对比]
+flowchart TB
+    A[输入] --> B[处理] --> C[输出]
+    C -.->|反馈| A
+```
 
-    subgraph left["系统 A"]
-        A1[特性 1]
-        A2[特性 2]
-        A3[特性 3]
+并行分组：
+
+```mermaid
+flowchart TB
+    Start[开始]
+
+    subgraph left["方案 A"]
+        A1[步骤 A1] --> A2[步骤 A2]
     end
 
-    subgraph right["系统 B"]
-        B1[特性 1]
-        B2[特性 2]
-        B3[特性 3]
+    subgraph right["方案 B"]
+        B1[步骤 B1] --> B2[步骤 B2]
     end
 
-    Title --> left
-    Title --> right
-
-    subgraph compare["主要差异"]
-        Diff[差异摘要]
-    end
-
-    left --> compare
-    right --> compare
+    Start --> A1
+    Start --> B1
 ```
 
-## 故障排查
+## 其他图表骨架
 
-### 常见错误及解决方法
+时序图：
 
-#### 错误：`Parse error on line X: Expecting 'SEMI', 'NEWLINE', 'EOF'`
-
-**原因：**
-
-1. 子图名称包含空格，但没有使用 ID 格式。
-2. 节点引用使用了显示文本而不是 ID。
-3. 节点文本包含无效特殊字符。
-
-**解决方法：**
-
-- 使用 `subgraph id["Display Name"]` 格式。
-- 只通过 ID 引用节点。
-- 为包含特殊字符的节点文本添加引号。
-
-#### 错误：`Unsupported markdown: list`
-
-**原因：** 节点文本使用了“数字 + 句点 + 空格”模式。
-
-**解决方法：** 删除空格，或使用 `①`、`(1)`、`Step 1:` 等替代格式。
-
-#### 错误：`Parse error: unexpected character`
-
-**原因：**
-
-1. 特殊字符没有转义。
-2. 引号使用不当。
-3. Mermaid 语法无效。
-
-**解决方法：**
-
-- 替换问题字符，例如引号改为『』、括号改为「」。
-- 使用正确的节点定义语法。
-- 检查箭头语法。
-
-#### 图表没有正确渲染
-
-**原因：**
-
-1. 缺少样式声明。
-2. 方向设置错误。
-3. 连接无效。
-
-**解决方法：**
-
-- 确认所有样式声明均使用有效语法。
-- 确认在 graph 声明或 subgraph 内设置了方向。
-- 确认所有节点 ID 均先定义再引用。
-
-### 验证检查清单
-
-完成图表前确认：
-
-- [ ] 节点文本中没有“数字 + 句点 + 空格”模式。
-- [ ] 名称含空格的子图均使用正确的 ID 语法。
-- [ ] 所有节点引用使用 ID，不使用显示文本。
-- [ ] 所有箭头均使用有效语法（`-->`、`-.->`）。
-- [ ] 所有样式声明均符合语法。
-- [ ] 已明确设置方向。
-- [ ] 节点文本中没有未转义的特殊字符。
-- [ ] 所有连接均引用已定义的节点。
-
-### 平台注意事项
-
-**Obsidian：**
-
-- 可能使用较旧的 Mermaid 版本，解析更严格。
-- 对 `<br/>` 的支持有限，优先只在圆形节点中使用。
-- 完成前测试图表。
-
-**GitHub：**
-
-- Mermaid 支持较好。
-- 能够渲染大多数现代语法。
-- 渲染结果可能与 Obsidian 略有差异。
-
-**Mermaid Live Editor：**
-
-- 使用较新的解析器。
-- 适合测试新语法。
-- 可能支持 Obsidian 或 GitHub 尚未支持的功能。
-
-## 快速参考
-
-### 安全编号方式
-
-```text
-✅ 1.Text  ①Text  (1)Text  Step 1:Text
-❌ 1. Text
+```mermaid
+sequenceDiagram
+    participant U as 用户
+    participant S as 服务
+    U->>S: 请求
+    S-->>U: 响应
 ```
 
-### 安全子图语法
+状态图：
 
-```text
-✅ subgraph id["Name"]  subgraph simple_name
-❌ subgraph Name With Spaces
+```mermaid
+stateDiagram-v2
+    [*] --> Idle
+    Idle --> Running: 开始
+    Running --> Idle: 完成
 ```
 
-### 安全节点引用
+思维导图：
 
-```text
-✅ NodeID --> AnotherID
-❌ "Display Text" --> "Other Text"
+```mermaid
+mindmap
+    root((主题))
+        分支 A
+            子项 A1
+        分支 B
 ```
 
-### 安全特殊字符
+## 排错
 
-```text
-✅ 使用『』代替引号，使用「」代替括号
-❌ 未转义的英文引号，以及容易引发歧义的英文括号
-```
+| 现象 | 常见原因 | 处理 |
+| --- | --- | --- |
+| `No diagram type detected` | 缺少图表声明 | 在首行添加 `flowchart TB` 等声明 |
+| `Unsupported markdown: list` | 标签包含 `数字 + 句点 + 空格` | 改用 `步骤 1`、`(1)` 或删除空格 |
+| 子图解析失败 | 直接把含空格名称当作 ID | 使用 `subgraph id["显示名称"]` |
+| 节点或连接解析失败 | 引用了显示文本，或标签含歧义字符 | 连接节点 ID，并为标签加引号 |
+| 不同平台渲染结果不同 | Mermaid 版本不同 | 使用目标平台支持的基础语法并在该平台验证 |
+
+输出前确认代码块有图表声明、所有连接引用已定义的 ID，并实际解析 Mermaid 代码。
