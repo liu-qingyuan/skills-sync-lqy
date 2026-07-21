@@ -15,6 +15,20 @@ class InstallationDocsTests(unittest.TestCase):
         self.assertIn('test("^\\\\s*Spec\\\\s*:"; "i")', prompt)
         self.assertLess(prompt.index("--jq"), prompt.index("check_ready_issue_unblocked.py"))
 
+    def test_pi_command_uses_one_run_project_trust(self) -> None:
+        skill = (SKILL_ROOT / "SKILL.md").read_text(encoding="utf-8")
+        pi_section = skill.split("### Pi", 1)[1].split("## 参数说明", 1)[0]
+        pi_command = pi_section.split("```bash", 1)[1].split("```", 1)[0]
+
+        self.assertIn("--agent pi", pi_command)
+        self.assertIn("--approve", pi_command)
+        self.assertIn("    -- \\\n    --approve", pi_command)
+        self.assertLess(pi_command.index("--agent pi"), pi_command.index("--approve"))
+        self.assertNotIn("--no-allow-all", pi_command)
+        self.assertNotIn("--dangerously-bypass-approvals-and-sandbox", pi_command)
+        self.assertIn("不是 sandbox 或工具权限开关", pi_section)
+        self.assertIn("<codex|claude-code|pi>", skill)
+
     def test_branch_worker_contract_is_published(self) -> None:
         expected_fragments = {
             REPO_ROOT / "README.md": (

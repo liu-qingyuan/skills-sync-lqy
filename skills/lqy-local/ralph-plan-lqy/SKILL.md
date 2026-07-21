@@ -1,6 +1,6 @@
 ---
 name: ralph-plan-lqy
-description: "规划 Open Ralph GitHub issue backlog 串行循环：Codex 默认、branch-aware eligibility gate、per-worktree lock、本地 commit。Use for `$ralph-plan`, `$ralph`, AFK coding loops, or clearing GitHub issue backlogs."
+description: "规划 Open Ralph GitHub issue backlog 串行循环：Codex 默认，支持 Claude Code/Pi，包含 branch-aware eligibility gate、per-worktree lock、本地 commit。Use for `$ralph-plan`, `$ralph`, AFK coding loops, or clearing GitHub issue backlogs."
 ---
 
 # Ralph Plan
@@ -102,9 +102,11 @@ runner 取得 `.ralph/worker.lock` 的 OS file lock，并把 lock FD 传给 Ralp
 
 只有仓库需要特殊标签或额外安全规则时，才复制到 `.ralph/prompts/issue-backlog.md` 再修改。
 
-## Codex 主命令
+## Agent 主命令
 
-默认用 Codex。必须同时保留 `--no-allow-all` 和 `--dangerously-bypass-approvals-and-sandbox`。
+### Codex（默认）
+
+默认使用 Codex。必须同时保留 `--no-allow-all` 和 `--dangerously-bypass-approvals-and-sandbox`。
 
 ```bash
 cd <repo-root>
@@ -123,12 +125,36 @@ python3 ~/.agents/skills/ralph-plan-lqy/scripts/run_locked_ralph.py \
     --dangerously-bypass-approvals-and-sandbox
 ```
 
-用户点名 Claude Code 时，把 `--agent codex` 改成 `--agent claude-code`，并移除 `--` 后面的 Codex 专属参数和 `--no-allow-all`。除非用户点名，否则省略 `--model`。
+用户点名 Claude Code 时，把 `--agent codex` 改成 `--agent claude-code`，并移除 `--` 后面的 Codex 专属参数和 `--no-allow-all`。
+
+### Pi
+
+用户点名 Pi 时使用以下独立命令。Pi 的非交互模式不会显示 project trust 提示；为让每轮加载当前 worktree 的项目级 settings、resources、packages、extensions 和 `.agents/skills`，必须通过 Ralph 的 agent 参数分隔符传入 `--approve`。
+
+```bash
+cd <repo-root>
+python3 ~/.agents/skills/ralph-plan-lqy/scripts/run_locked_ralph.py \
+  --worktree . \
+  -- \
+  ralph \
+    --agent pi \
+    --completion-promise "<ralph-finished-no-ready-issues/>" \
+    --max-iterations 20 \
+    --last-activity-timeout 15m \
+    --no-commit \
+    --prompt-file ~/.agents/skills/ralph-plan-lqy/templates/issue-backlog-prompt.md \
+    -- \
+    --approve
+```
+
+`--approve` 只批准本轮加载项目级资源；它不是 sandbox 或工具权限开关，Pi 仍以启动用户的权限运行。只对已确认可信的 worktree 使用该命令。除非用户明确点名，否则所有 agent 都省略 `--model`。
 
 ## 参数说明
 
-- `--no-allow-all`：防止 Ralph 给 Codex 注入 `--full-auto`。
-- `--dangerously-bypass-approvals-and-sandbox`：必须传给 Codex。
+- `--no-allow-all`：仅用于 Codex，防止 Ralph 注入 `--full-auto`。
+- `--dangerously-bypass-approvals-and-sandbox`：仅用于 Codex，必须传入。
+- `--approve`：仅用于 Pi，通过最后的 `--` 传给 Pi，显式批准本轮 project trust。
+- Ralph 的 `--allow-all` / `--no-allow-all` 不会为 Pi 添加参数，也不改变 Pi 的工具权限。
 - `--max-iterations`、`--last-activity-timeout` 可按本轮预算调整。
 - `run_locked_ralph.py --worktree .`：阻止同一 worktree 的多个 Ralph 同时修改代码和本地状态。
 
@@ -139,7 +165,7 @@ python3 ~/.agents/skills/ralph-plan-lqy/scripts/run_locked_ralph.py \
 <prompt 文件路径；如使用默认模板，说明直接引用>
 
 ## Agent
-<codex|claude-code> —— <一句话理由>
+<codex|claude-code|pi> —— <一句话理由>
 
 ## 主命令
 ```bash
