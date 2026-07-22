@@ -1,4 +1,4 @@
 interface:
   display_name: "Ralph Plan LQY"
-  short_description: "Plan a branch-aware Ralph loop with a worktree lock."
-  default_prompt: "Use $ralph-plan-lqy to create a branch-aware Open Ralph issue-backlog command with the Git contract, eligibility gate, per-worktree lock, prompt path, and monitoring notes."
+  short_description: "Plan or run a locked Ralph loop with a Pi worker."
+  default_prompt: "Use $ralph-plan-lqy to plan or, when explicitly requested, start a branch-aware Open Ralph issue-backlog loop. Default to a Pi worker through the run_ralph tool when available; otherwise use the locked Pi CLI."

@@ -13,33 +13,59 @@ class InstallationDocsTests(unittest.TestCase):
         prompt = (SKILL_ROOT / "templates" / "issue-backlog-prompt.md").read_text(encoding="utf-8")
 
         self.assertIn('test("^\\\\s*Spec\\\\s*:"; "i")', prompt)
+        self.assertIn("禁止调用 `run_ralph` 或 CLI 启动嵌套 Ralph", prompt)
         self.assertLess(prompt.index("--jq"), prompt.index("check_ready_issue_unblocked.py"))
 
-    def test_pi_command_uses_one_run_project_trust(self) -> None:
+    def test_run_ralph_is_the_default_execution_path(self) -> None:
         skill = (SKILL_ROOT / "SKILL.md").read_text(encoding="utf-8")
-        pi_section = skill.split("### Pi", 1)[1].split("## 参数说明", 1)[0]
+        frontmatter = skill.split("---", 2)[1]
+        tool_section = skill.split("## 默认执行：Pi `run_ralph` 工具", 1)[1].split("## 手动 CLI 回退", 1)[0]
+        fallback_section = skill.split("## 手动 CLI 回退", 1)[1]
+
+        self.assertIn("Pi worker 默认", frontmatter)
+        self.assertIn("`PI_RUN_RALPH_WORKER=1`", skill)
+        self.assertIn("禁止再调用工具或 CLI 启动嵌套 Ralph", skill)
+        self.assertIn("直接调用 `run_ralph`", tool_section)
+        self.assertIn("子 iteration 中工具缺失不是 CLI 回退条件", tool_section)
+        self.assertIn("只在用户明确要求执行时调用", tool_section)
+        self.assertIn("工具返回 `failed`、`lock_busy` 或 `cancelled`", tool_section)
+        self.assertIn("`PI_RUN_RALPH_WORKER` 不为 `1`", fallback_section)
+        self.assertIn("只有用户明确点名 Codex worker 时", fallback_section)
+        self.assertNotIn("Codex（默认）", skill)
+        self.assertLess(
+            skill.index("## 默认执行：Pi `run_ralph` 工具"),
+            skill.index("## 手动 CLI 回退"),
+        )
+        self.assertIn("<run_ralph tool|locked Pi CLI|locked Codex/Claude Code CLI>", skill)
+
+    def test_pi_fallback_command_uses_one_run_project_trust(self) -> None:
+        skill = (SKILL_ROOT / "SKILL.md").read_text(encoding="utf-8")
+        pi_section = skill.split("### Pi（默认回退）", 1)[1].split("### Codex", 1)[0]
         pi_command = pi_section.split("```bash", 1)[1].split("```", 1)[0]
 
         self.assertIn("--agent pi", pi_command)
         self.assertIn("--approve", pi_command)
+        self.assertIn("--no-questions", pi_command)
         self.assertIn("    -- \\\n    --approve", pi_command)
         self.assertLess(pi_command.index("--agent pi"), pi_command.index("--approve"))
         self.assertNotIn("--no-allow-all", pi_command)
         self.assertNotIn("--dangerously-bypass-approvals-and-sandbox", pi_command)
         self.assertIn("不是 sandbox 或工具权限开关", pi_section)
-        self.assertIn("<codex|claude-code|pi>", skill)
 
     def test_branch_worker_contract_is_published(self) -> None:
         expected_fragments = {
             REPO_ROOT / "README.md": (
                 "## Git-bound Ralph 工作流",
+                "Pi worker 是默认选择",
+                "`run_ralph` 工具",
                 "完全忽略 assignees",
                 "PR 不进入 Ralph issue backlog",
                 "不会自动合并、删除 branch 或清理 worktree",
             ),
             SKILL_ROOT / "agents" / "openai.yaml": (
                 "branch-aware",
-                "worktree lock",
+                "Pi worker",
+                "run_ralph",
             ),
             SKILL_ROOT / "LOCALIZATION.md": (
                 "端到端验证",
@@ -47,6 +73,8 @@ class InstallationDocsTests(unittest.TestCase):
                 "不自动清理 branch/worktree",
                 "Dirty recovery",
                 ".codex/config.toml",
+                "Pi worker 默认",
+                "`run_ralph`",
             ),
             REPO_ROOT / "skills" / "matt-lqy-core" / "to-tickets-lqy" / "SKILL.md": (
                 "由 agent 完成可确认的改动",
