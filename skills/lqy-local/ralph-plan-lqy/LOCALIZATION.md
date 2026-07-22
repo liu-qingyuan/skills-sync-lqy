@@ -13,5 +13,5 @@
 - Worker lock：`scripts/run_locked_ralph.py`，在 Ralph 生命周期内持有每个 worktree 的 `.ralph/worker.lock`
 - 端到端验证：`tests/test_branch_workflow_e2e.py` 使用临时 bare remote、两个真实 worktrees 和 `gh` stub 验证 branch-local selection、锁隔离、`.ralph/`/dirty state 隔离、commits/upstream pushes、completion 与契约错误
 - Backlog policy：完全忽略 assignees，不使用 assignee claim；PR 不进入 Ralph issue backlog；完成后不自动清理 branch/worktree
-- Agent policy：Pi worker 默认；当前 Pi 会话提供 `run_ralph` 时优先直接调用，工具不可用时回退到 locked Pi CLI；Codex/Claude Code 仅在用户明确点名时使用。`PI_RUN_RALPH_WORKER=1` 标记子 Pi iteration 并禁止嵌套 Ralph。Pi iteration 通过 agent 参数分隔符传入 `--approve`，该 flag 只确认 project trust，不提供 sandbox 或工具权限
+- Agent policy：Pi + `run_ralph` 默认；仅明确请求才执行，无工具时回退 locked Pi CLI；`PI_RUN_RALPH_WORKER=1` 禁止嵌套循环；`--approve` 只确认 project trust
 - Policy: self-contained；上游 CLI flag 变化时同步更新参数说明
