@@ -23,7 +23,8 @@ class InstallationDocsTests(unittest.TestCase):
 
         self.assertIn("Pi worker 默认", frontmatter)
         self.assertIn("templates/issue-backlog-prompt.md", skill)
-        self.assertIn("只有用户明确要求", skill)
+        self.assertIn("直接调用即启动", skill)
+        self.assertIn("明确要求只规划或不运行时除外", skill)
         self.assertIn("`PI_RUN_RALPH_WORKER=1`", skill)
         self.assertIn("有 `run_ralph` 工具时直接调用", default_section)
         self.assertIn("不要自动启动 CLI 重试", default_section)
@@ -47,7 +48,7 @@ class InstallationDocsTests(unittest.TestCase):
         expected_fragments = {
             REPO_ROOT / "README.md": (
                 "## Git-bound Ralph 工作流",
-                "Pi worker 是默认选择",
+                "直接调用 `$ralph-plan-lqy` 即以 Pi 启动",
                 "`run_ralph` 工具",
                 "完全忽略 assignees",
                 "PR 不进入 Ralph issue backlog",
@@ -64,7 +65,7 @@ class InstallationDocsTests(unittest.TestCase):
                 "不自动清理 branch/worktree",
                 "Dirty recovery",
                 ".codex/config.toml",
-                "Pi + `run_ralph` 默认",
+                "直接调用即用 Pi + `run_ralph` 执行",
             ),
             REPO_ROOT / "skills" / "matt-lqy-core" / "to-tickets-lqy" / "SKILL.md": (
                 "由 agent 完成可确认的改动",

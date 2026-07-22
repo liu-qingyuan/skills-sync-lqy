@@ -9,7 +9,7 @@ description: "规划或启动 Open Ralph GitHub issue backlog：Pi worker 默认
 
 ## 边界
 
-- 只有用户明确要求“启动”“运行”“清空 backlog”，或使用 `/skill:ralph-plan-lqy run` 时才执行；其他请求只返回计划。
+- 直接调用即启动；明确要求只规划或不运行时除外。
 - `PI_RUN_RALPH_WORKER=1` 表示当前进程已是 Ralph iteration；禁止再次调用工具或 CLI。
 - 只运行当前 Pi 会话所在的 Git worktree。
 - 非 Pi worker 仅在用户明确指定时使用。
