@@ -264,9 +264,9 @@ def check_matt_body_clean(errors: list[str]) -> None:
             if pattern in body:
                 fail(errors, f"localization maintenance text leaked into {rel(skill_md)}: {pattern}")
 
-        suffix = "-lqy" if "/matt-lqy-" in rel(skill_md) else "-zh"
         for command in ENGLISH_COMMANDS:
-            if command in body and f"{command}{suffix}" not in body:
+            command_token = rf"(?<![\w./-]){re.escape(command)}(?![\w./-])"
+            if re.search(command_token, body):
                 fail(errors, f"possible English command reference in {rel(skill_md)}: {command}")
 
     for md in sorted(SKILLS.glob("matt-lqy-*/*-lqy/**/*.md")) + sorted(ZH_BASELINE.glob("matt-zh-*/*-zh/**/*.md")):
