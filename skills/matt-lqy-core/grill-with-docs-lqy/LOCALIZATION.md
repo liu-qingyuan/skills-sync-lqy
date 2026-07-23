@@ -5,3 +5,4 @@
 - Chinese baseline path: `baselines/matt-zh/matt-zh-core/grill-with-docs-zh`
 - LQY installable path: `skills/matt-lqy-core/grill-with-docs-lqy`
 - Policy: installable personal LQY layer, copied from the Chinese baseline and self-contained. Keep this file updated when upstream or zh baseline changes.
+- LQY policy: after agreement, return control to the user and recommend `$to-spec-lqy`; never implement or start the next skill automatically.
