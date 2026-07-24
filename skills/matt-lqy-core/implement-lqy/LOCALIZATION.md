@@ -5,3 +5,4 @@
 - Chinese baseline path: `baselines/matt-zh/matt-zh-core/implement-zh`
 - LQY installable path: `skills/matt-lqy-core/implement-lqy`
 - Policy: installable personal LQY layer, copied from the Chinese baseline and self-contained. Keep this file updated when upstream or zh baseline changes.
+- LQY policy: cap each Ticket at one broad dual-axis review and one focused closure, then stop; oversized work ships a green increment and returns for re-splitting.

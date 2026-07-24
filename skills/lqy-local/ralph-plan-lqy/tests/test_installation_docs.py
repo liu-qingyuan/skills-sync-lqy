@@ -8,6 +8,11 @@ SKILL_ROOT = Path(__file__).resolve().parents[1]
 REPO_ROOT = SKILL_ROOT.parents[2]
 
 
+def lqy_skill_file(name: str) -> Path:
+    source = REPO_ROOT / "skills" / "matt-lqy-core" / name / "SKILL.md"
+    return source if source.exists() else SKILL_ROOT.parent / name / "SKILL.md"
+
+
 class InstallationDocsTests(unittest.TestCase):
     def test_default_prompt_filters_parent_specs_before_the_gate(self) -> None:
         prompt = (SKILL_ROOT / "templates" / "issue-backlog-prompt.md").read_text(encoding="utf-8")
@@ -45,6 +50,9 @@ class InstallationDocsTests(unittest.TestCase):
         self.assertIn("不提供 sandbox", fallback_section)
 
     def test_branch_worker_contract_is_published(self) -> None:
+        if not (REPO_ROOT / "README.md").exists():
+            self.skipTest("requires the source checkout")
+
         expected_fragments = {
             REPO_ROOT / "README.md": (
                 "## Git-bound Ralph 工作流",
@@ -93,6 +101,35 @@ class InstallationDocsTests(unittest.TestCase):
             for fragment in fragments:
                 with self.subTest(path=path, fragment=fragment):
                     self.assertIn(fragment, text)
+
+    def test_review_budget_is_consistent_across_workflow(self) -> None:
+        prompt = (SKILL_ROOT / "templates" / "issue-backlog-prompt.md").read_text(encoding="utf-8")
+        implement = lqy_skill_file("implement-lqy").read_text(encoding="utf-8")
+        review_path = lqy_skill_file("code-review-lqy")
+        review = review_path.read_text(encoding="utf-8")
+
+        for text in (prompt, implement, review):
+            with self.subTest(document=text[:80]):
+                self.assertIn("broad", text.lower())
+                self.assertIn("focused closure", text.lower())
+                self.assertIn("4", text)
+                self.assertIn("第三轮", text)
+                self.assertIn("GitNexus", text)
+
+        for text in (prompt, review):
+            self.assertIn("max_turns: 6", text)
+            self.assertIn("max_turns: 3", text)
+
+        self.assertIn("resume 原来的 agents", review)
+        self.assertIn("失败调用也计入", review)
+        self.assertIn("替代 reviewer", review)
+        self.assertIn("不得重扫完整 diff", review)
+        self.assertIn("optional hardening", review)
+        self.assertNotIn("Fowler", review)
+        self.assertFalse((review_path.parent / "references" / "fowler-smells.md").exists())
+        self.assertIn("超出一个新上下文", implement)
+        self.assertIn("ready-for-agent` 替换为 `needs-triage", prompt)
+        self.assertIn("不要用更多 reviewer", prompt)
 
 
 if __name__ == "__main__":

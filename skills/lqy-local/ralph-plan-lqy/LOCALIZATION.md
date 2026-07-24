@@ -14,4 +14,5 @@
 - 端到端验证：`tests/test_branch_workflow_e2e.py` 使用临时 bare remote、两个真实 worktrees 和 `gh` stub 验证 branch-local selection、锁隔离、`.ralph/`/dirty state 隔离、commits/upstream pushes、completion 与契约错误
 - Backlog policy：完全忽略 assignees，不使用 assignee claim；PR 不进入 Ralph issue backlog；完成后不自动清理 branch/worktree
 - Agent policy：直接调用即用 Pi + `run_ralph` 执行，明确要求规划时除外；无工具时回退 locked Pi CLI；`PI_RUN_RALPH_WORKER=1` 禁止嵌套循环
+- Review budget：每个 Ticket 最多一次双轴 broad review 和一次复用原 agents 的 focused closure，共 4 次 review Agent 调用；oversized work 提交绿色增量后退回 `needs-triage`
 - Policy: self-contained；上游 CLI flag 变化时同步更新参数说明
