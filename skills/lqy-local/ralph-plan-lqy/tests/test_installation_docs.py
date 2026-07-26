@@ -17,7 +17,14 @@ class InstallationDocsTests(unittest.TestCase):
     def test_default_prompt_filters_parent_specs_before_the_gate(self) -> None:
         prompt = (SKILL_ROOT / "templates" / "issue-backlog-prompt.md").read_text(encoding="utf-8")
 
+        backlog_section = prompt.split("# Backlog", 1)[1].split("# 任务选择", 1)[0]
+        backlog_command = backlog_section.split("```bash", 1)[1].split("```", 1)[0]
+
         self.assertIn('test("^\\\\s*Spec\\\\s*:"; "i")', prompt)
+        self.assertIn("--limit 1000", backlog_command)
+        self.assertIn("--json number,title", backlog_command)
+        self.assertIn("{number,title}", backlog_command)
+        self.assertNotIn("body", backlog_command)
         self.assertIn("禁止调用 `run_ralph` 或 CLI 启动嵌套 Ralph", prompt)
         self.assertLess(prompt.index("--jq"), prompt.index("check_ready_issue_unblocked.py"))
 

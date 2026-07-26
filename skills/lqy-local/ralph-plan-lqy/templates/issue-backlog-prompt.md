@@ -16,9 +16,12 @@
 gh issue list \
   --label ready-for-agent \
   --state open \
-  --json number,title,body \
-  --jq 'sort_by(.number) | map(select(.title | test("^\\s*Spec\\s*:"; "i") | not))[] | {number,title,body}'
+  --limit 1000 \
+  --json number,title \
+  --jq 'sort_by(.number) | map(select(.title | test("^\\s*Spec\\s*:"; "i") | not))[] | {number,title}'
 ```
+
+列表阶段只读取 compact 的 `number,title`，禁止在这里输出 `body` 或 comments；大正文会触发工具尾部截断并丢掉最小 issue numbers。每个候选的完整正文和评论在任务选择阶段逐票读取。
 
 只处理 open + `ready-for-agent` issues。完全忽略 assignees，不读取、不修改，也不用于领取。每个候选正文最后一个 `## Git` 必须格式完整；section 缺失、字段重复或格式损坏是持久错误，立即停止。
 
