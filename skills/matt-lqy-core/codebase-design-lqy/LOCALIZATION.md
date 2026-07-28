@@ -5,3 +5,4 @@
 - Chinese baseline path: `baselines/matt-zh/matt-zh-core/codebase-design-zh`
 - LQY installable path: `skills/matt-lqy-core/codebase-design-lqy`
 - Policy: installable personal LQY layer, copied from the Chinese baseline and self-contained. Keep this file updated when upstream or zh baseline changes.
+- LQY clarification: retain surface checks, expose every fact callers need for correct use, and hide only implementation mechanisms behind stable semantic coupling.
