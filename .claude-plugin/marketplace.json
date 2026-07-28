@@ -81,7 +81,7 @@
       "name": "LQY Local",
       "source": "./",
       "skills": [
-        "./skills/lqy-local/ai-slop-cleaner",
+        "./skills/lqy-local/clean",
         "./skills/lqy-local/simple",
         "./skills/lqy-local/gitnexus",
         "./skills/lqy-local/mermaid-gate-lqy",

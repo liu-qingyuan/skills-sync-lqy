@@ -32,7 +32,7 @@ $setup-matt-pocock-skills-lqy
 
 它会直接应用 LQY 默认值：GitHub Issues-only、五个标准 triage labels、单 context 领域文档、中文输出和根目录 `AGENTS.md`，不再逐项提问。需要自定义配置时使用 upstream `setup-matt-pocock-skills`。某些 agent 可能把同一个 skill 写成 `/setup-matt-pocock-skills-lqy`；在 Codex 里优先使用 `$setup-matt-pocock-skills-lqy`。
 
-如果只安装我的本地 skills，例如 `ai-slop-cleaner`、`simple`、`gitnexus`、`handoff-out`，通常安装后即可使用。
+如果只安装我的本地 skills，例如 `clean`、`simple`、`gitnexus`、`handoff-out`，通常安装后即可使用。
 
 安装后如果当前 Codex 会话没有自动加载新 skill，重启 Codex。
 
@@ -88,7 +88,7 @@ upstream/mattpocock/skills/ # Matt Pocock 官方英文上游镜像，只用于�
 
 ### Lqy Local
 
-- `ai-slop-cleaner`：清理 AI 生成的臃肿、重复、过度抽象或 fallback-like 代码，按回归测试优先、逐类 smell 处理。
+- `clean`：锁定行为与范围后，清理死代码、重复、脆弱回退、无意义包装和过度抽象，并参考 `$simple` 与 `$codebase-design-lqy` 选择最小完整修复。
 - `simple`：简化代码、文档、prompt、配置、计划或规格，同时保留意图和必要行为。
 - `gitnexus`：GitNexus 代码图谱工具路由与使用指南。
 - `mermaid-gate-lqy`：统一判断 Ticket/实现是否需要 Mermaid 设计图；需要时要求架构/调用关系图、时序图、状态图、类图各包含当前和目标两版。
