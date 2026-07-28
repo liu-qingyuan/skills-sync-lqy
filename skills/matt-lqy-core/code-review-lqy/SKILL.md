@@ -10,6 +10,8 @@ description: 从固定点（commit、branch、tag 或 merge-base）开始沿 Sta
 - **Standards**：直接违反仓库规则或引入可观察回归。
 - **Spec**：遗漏、错误实现或超出来源 issue / spec。
 
+不得增加第三审查轴或主动加载通用设计 smell checklist；架构问题只有在直接违反仓库 Standards 或来源 Spec，并有具体影响证据时才作为 finding。
+
 默认使用中文。issue tracker 配置见 `docs/agents/issue-tracker.md`；缺失时运行 `$setup-matt-pocock-skills-lqy`。
 
 ## 流程

@@ -115,17 +115,19 @@ class InstallationDocsTests(unittest.TestCase):
         review_path = lqy_skill_file("code-review-lqy")
         review = review_path.read_text(encoding="utf-8")
 
-        for text in (prompt, implement, review):
+        for text in (prompt, review):
             with self.subTest(document=text[:80]):
                 self.assertIn("broad", text.lower())
                 self.assertIn("focused closure", text.lower())
                 self.assertIn("4", text)
                 self.assertIn("第三轮", text)
                 self.assertIn("GitNexus", text)
+                self.assertIn("max_turns: 6", text)
+                self.assertIn("max_turns: 3", text)
 
-        for text in (prompt, review):
-            self.assertIn("max_turns: 6", text)
-            self.assertIn("max_turns: 3", text)
+        self.assertIn("$code-review-lqy", implement)
+        self.assertIn("唯一来源", implement)
+        self.assertNotIn("max_turns:", implement)
 
         self.assertIn("resume 原来的 agents", review)
         self.assertIn("失败调用也计入", review)

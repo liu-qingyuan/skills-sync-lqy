@@ -28,21 +28,6 @@ sed -n '1,220p' /path/to/your/project/AGENTS.md
 cp AGENTS.md /path/to/your/project/AGENTS.md
 ```
 
-## 配套 skills
-
-建议同时安装或同步：
-
-- `skills/lqy-local/pea/SKILL.md`：项目工程架构约束
-- `skills/lqy-local/tea/SKILL.md`：测试工程架构约束
-
-安装命令：
-
-```bash
-npx skills@latest add liu-qingyuan/skills-sync-lqy
-```
-
-然后在安装器里选择 `pea` 和 `tea`。
-
 ## AGENTS.md 模板
 
 ```markdown

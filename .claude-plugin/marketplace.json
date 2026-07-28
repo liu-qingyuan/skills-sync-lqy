@@ -83,8 +83,6 @@
       "skills": [
         "./skills/lqy-local/ai-slop-cleaner",
         "./skills/lqy-local/simple",
-        "./skills/lqy-local/pea",
-        "./skills/lqy-local/tea",
         "./skills/lqy-local/gitnexus",
         "./skills/lqy-local/mermaid-gate-lqy",
         "./skills/lqy-local/ralph-plan-lqy",

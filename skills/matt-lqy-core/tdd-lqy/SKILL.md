@@ -1,102 +1,49 @@
 ---
 name: tdd-lqy
-description: 测试驱动开发。用于用户想以 test-first 方式构建功能或修复 bug，提到 red-green-refactor，或需要集成测试时。
+description: 测试驱动开发与测试策略。用于 test-first 功能或 bug、red-green-refactor，或需要决定测试层级、mock 边界和 contract 覆盖时。
 ---
 
 # 测试驱动开发
 
-## 理念
+## 合同
 
-**核心原则**：测试应该通过公共接口验证行为，而不是实现细节。代码可以完全改变；测试不应该。
+- 通过公开 Interface 验证可观察行为；Implementation 可以重写，测试不应因此变化。
+- Feature 证明某个 abstraction 需要存在。在第一个 RED 前，确定满足当前需求的最小完整 Interface；每个 cycle 都通过该 Interface 增加行为，不要让单个测试长出 one-off public method、mode 或特殊分支。
+- 按风险选择最低足够测试层级；层级、mock 或 contract 边界不明确时，读取 [TEST-STRATEGY.md](TEST-STRATEGY.md)。
+- 读取项目 `CONTEXT.md` 和相关 ADR；优先从 spec、现有代码和测试确定合同，只有真实歧义才询问用户。
+- Module、Interface、Seam 或知识归属需要改变时，在第一个 RED 前使用 `$codebase-design-lqy`。
 
-**好的测试**是集成式的：它们通过公共 API 执行真实的代码路径。它们描述系统“做什么”，而不是“如何”做到这一点。一个好的测试读起来就像一个规范——“用户可以使用有效的购物车结帐”告诉您到底存在什么功能。这些测试能够在重构中幸存下来，因为它们不关心内部结构。
+测试示例见 [tests.md](tests.md)，mock 约束见 [mocking.md](mocking.md)。
 
-**糟糕的测试**与实施相关。他们模拟内部协作者、测试私有方法或通过外部手段进行验证（例如直接查询数据库而不是使用接口）。警告信号：重构时测试会中断，但行为并没有改变。如果您重命名内部函数并且测试失败，那么这些测试是在测试实现，而不是行为。
+## 循环
 
-有关示例，请参阅 [tests.md](tests.md)；有关模拟指南，请参阅 [mocking.md](mocking.md)。
+### 1. 选定行为
 
-## 反模式：horizontal slice
+确认当前测试命令、公开 Interface 和最高优先级行为。Bug fix 先通过公开表面复现已观察回归。不要预先写完所有测试。
 
-**不要先把所有测试写完，再一次性写所有实现。** 这是 horizontal slice：把 RED 理解成“批量写测试”，把 GREEN 理解成“批量补实现”。
+### 2. RED
 
-这样容易写出**低价值测试**：
+只写一个测试，并确认它因为缺少目标行为而失败，而不是环境、fixture 或拼写问题。
 
-- 批量写出来的测试往往验证 _imagined behavior_，而不是刚刚落地的 _actual behavior_
-- 容易测试 _shape_（数据结构、函数签名、mock 返回结构），而不是 user-visible behavior
-- 测试对真实行为变化不敏感：行为坏了测试还过，行为没坏测试却挂
-- 你会超出当前反馈范围，在还没理解实现之前就承诺一套测试结构
+### 3. GREEN
 
-**正确方法**：用 tracer bullet / vertical slice 推进。一个测试 → 一个最小实现 → 重复。每个测试都回应上一个 RED/GREEN cycle 中学到的东西。因为代码刚刚写出来，你更清楚哪些行为重要、应该从哪个 public interface 验证。
-```
-WRONG (horizontal):
-  RED:   test1, test2, test3, test4, test5
-  GREEN: impl1, impl2, impl3, impl4, impl5
+写满足当前合同的最小实现并运行聚焦测试。最小实现不等于 one-off patch；不得增加未来功能、推测性抽象或只服务当前测试的生产入口。
 
-RIGHT (vertical):
-  RED→GREEN: test1→impl1
-  RED→GREEN: test2→impl2
-  RED→GREEN: test3→impl3
-  ...
-```
-## 工作流
+### 4. REFACTOR
 
-### 1. 规划
+只在绿色时重构。新代码出现具体设计证据时，按需使用 `$codebase-design-lqy` 的设计审查；一次只做一个最小结构改动，并立即重跑测试。不要按代码长度、重复外观或测试便利机械拆 helper、class 或 value object。
 
-在探索代码库时，请阅读“CONTEXT.md”（如果存在），以便测试名称和界面词汇与项目的领域语言相匹配，并尊重您所接触的区域中的 ADR。
+### 5. 重复
 
-在编写任何代码之前：
+为下一个最重要行为重复 RED → GREEN → REFACTOR，直到当前验收完成。
 
-- [ ] 与用户确认需要进行哪些界面更改
-- [ ] 与用户确认要测试哪些行为（优先）
-- [ ] 识别深模块的机会（小接口，深度实现）——运行“/codebase-design-lqy”技能进行词汇和可测试性检查
-- [ ] 列出要测试的行为（不是实施步骤）
-- [ ] 获得用户对计划的批准
+## 反模式
 
-问：“公共界面应该是什么样子？哪些行为最需要测试？”
+不要先批量写测试再批量实现。这种 horizontal slice 会提前承诺 imagined behavior 和测试结构。使用 tracer bullet / vertical slice：一个行为、一个 RED/GREEN cycle、一次反馈。
 
-**您无法测试所有内容。** 与用户确认哪些行为最重要。将测试工作重点放在关键路径和复杂逻辑上，而不是每种可能的边缘情况。
+## 停止条件
 
-### 2. Tracer bullet
-
-编写一项测试来确认系统的一件事：
-```
-RED:   Write test for first behavior → test fails
-GREEN: Write minimal code to pass → test passes
-```
-这是你的 tracer bullet：证明这条路径端到端有效。
-
-### 3.增量循环
-
-对于每个剩余的行为：
-```
-RED:   Write next test → fails
-GREEN: Minimal code to pass → passes
-```
-规则：
-
-- 一次进行一项测试
-- 只有足够的代码来通过当前测试
-- 不要预期未来的测试
-- 让测试集中在可观察的行为上
-
-### 4.重构
-
-所有测试通过后，寻找[重构候选项](refactoring.md)：
-
-- [ ] 提取重复项
-- [ ] 模块加深（将复杂性置于简单界面背后）
-- [ ] 在自然的情况下应用 SOLID 原则
-- [ ] 考虑新代码揭示了现有代码的哪些内容
-- [ ] 在每个重构步骤后运行测试
-
-**永远不要在红色时重构。**首先转向绿色。
-
-## 每个周期的清单
-```
-[ ] Test describes behavior, not implementation
-[ ] Test uses public interface only
-[ ] Test would survive internal refactor
-[ ] Code is minimal for this test
-[ ] No speculative features added
-```
-
+- 测试通过公开 Interface 保护当前行为或合同。
+- 测试层级足以发现当前风险，没有扩大到所有边缘情况。
+- 生产代码没有测试专用入口或 speculative feature。
+- 聚焦测试与相关完整测试套件均已运行，或明确说明无法运行的原因。

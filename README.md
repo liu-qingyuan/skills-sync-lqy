@@ -32,7 +32,7 @@ $setup-matt-pocock-skills-lqy
 
 它会直接应用 LQY 默认值：GitHub Issues-only、五个标准 triage labels、单 context 领域文档、中文输出和根目录 `AGENTS.md`，不再逐项提问。需要自定义配置时使用 upstream `setup-matt-pocock-skills`。某些 agent 可能把同一个 skill 写成 `/setup-matt-pocock-skills-lqy`；在 Codex 里优先使用 `$setup-matt-pocock-skills-lqy`。
 
-如果只安装我的本地 skills，例如 `ai-slop-cleaner`、`simple`、`pea`、`tea`、`gitnexus`、`handoff-out`，通常安装后即可使用。
+如果只安装我的本地 skills，例如 `ai-slop-cleaner`、`simple`、`gitnexus`、`handoff-out`，通常安装后即可使用。
 
 安装后如果当前 Codex 会话没有自动加载新 skill，重启 Codex。
 
@@ -90,8 +90,6 @@ upstream/mattpocock/skills/ # Matt Pocock 官方英文上游镜像，只用于�
 
 - `ai-slop-cleaner`：清理 AI 生成的臃肿、重复、过度抽象或 fallback-like 代码，按回归测试优先、逐类 smell 处理。
 - `simple`：简化代码、文档、prompt、配置、计划或规格，同时保留意图和必要行为。
-- `pea`：Project Engineering Architect；判断模块边界、接口、seam、adapter、contract、依赖方向、重构和质量门禁。
-- `tea`：Testing Engineering Architect；判断测试分层、contract test、E2E 边界、回归保护和 CI 质量门禁。
 - `gitnexus`：GitNexus 代码图谱工具路由与使用指南。
 - `mermaid-gate-lqy`：统一判断 Ticket/实现是否需要 Mermaid 设计图；需要时要求架构/调用关系图、时序图、状态图、类图各包含当前和目标两版。
 - `ralph-plan-lqy`：规划或启动 Open Ralph + GitHub issue backlog 循环，Pi worker 默认；Pi 会话优先使用 `run_ralph` 工具，内置 blocker gate，并只处理 `ready-for-agent` issue。

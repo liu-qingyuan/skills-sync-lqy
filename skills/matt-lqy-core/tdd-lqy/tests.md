@@ -1,57 +1,16 @@
-# 好的和坏的测试
+# 测试判断
 
-## 良好的测试
+## 好的测试
 
-**集成式**：通过真实接口进行测试，而不是内部部件的模拟。
-```typescript
-// GOOD: Tests observable behavior
-test("user can checkout with valid cart", async () => {
-  const cart = createCart();
-  cart.add(product);
-  const result = await checkout(cart, paymentMethod);
-  expect(result.status).toBe("confirmed");
-});
-```
-特点：
-
-- 测试用户/呼叫者关心的行为
-- 仅使用公共 API
-- 经受内部重构
-- 描述什么，而不是如何
-- 每次测试一个逻辑断言
+- 通过当前公开 Interface 验证调用方可观察的行为或合同。
+- 使用能证明风险的最低足够层级，并运行真实的目标代码路径。
+- 在不改变行为时允许 Implementation、私有 helper 和内部协作完全重构。
+- 名称表达业务行为或回归条件，而不是内部调用步骤。
 
 ## 糟糕的测试
 
-**实施细节测试**：与内部结构耦合。
-```typescript
-// BAD: Tests implementation details
-test("checkout calls paymentService.process", async () => {
-  const mockPayment = jest.mock(paymentService);
-  await checkout(cart, payment);
-  expect(mockPayment.process).toHaveBeenCalledWith(cart.total);
-});
-```
-危险信号：
+- 测试私有方法、mock 调用次数、临时数据 shape 或内部执行顺序。
+- 生产行为未变时，仅因内部重命名或重组而失败。
+- 为 imagined behavior 批量承诺测试结构。
 
-- 嘲笑内部合作者
-- 测试私有方法
-- 断言调用计数/订单
-- 在不改变行为的情况下重构时测试中断
-- 测试名称描述的是“如何”而不是“是什么”
-- 通过外部手段而不是接口进行验证
-```typescript
-// BAD: Bypasses interface to verify
-test("createUser saves to database", async () => {
-  await createUser({ name: "Alice" });
-  const row = await db.query("SELECT * FROM users WHERE name = ?", ["Alice"]);
-  expect(row).toBeDefined();
-});
-
-// GOOD: Verifies through interface
-test("createUser makes user retrievable", async () => {
-  const user = await createUser({ name: "Alice" });
-  const retrieved = await getUser(user.id);
-  expect(retrieved.name).toBe("Alice");
-});
-```
-
+业务行为测试优先通过业务 Interface 观察结果。Adapter、contract 或 storage integration test 可以直接检查对应协议、schema 或真实存储状态；这不是绕过 Interface，因为该边界本身就是测试目标。

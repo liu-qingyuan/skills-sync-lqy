@@ -5,13 +5,11 @@ description: 根据 spec 或一组 issues 实现一项工作。
 
 实施用户指定的一个 Ticket。父 spec 仍需拆分时，先使用 `$to-tickets-lqy` 或要求用户指定子 Ticket。
 
-实现前满足当前 Ticket 的 `$mermaid-gate-lqy`；尽可能在商定接缝处使用 `$tdd-lqy`。实现中运行聚焦测试，完成后运行相关完整测试套件。
+实现前满足当前 Ticket 的 `$mermaid-gate-lqy`。Ticket 改变 Module、Interface、Seam 或知识归属时，先使用 `$codebase-design-lqy`；否则不要为了流程加载完整设计审查。尽可能在商定接缝处使用 `$tdd-lqy`。实现中运行聚焦测试，完成后运行相关完整测试套件。
 
 ## Review
 
-按 `$code-review-lqy` 执行一次 broad 双轴 review（2 agents）；reviewer 不使用 GitNexus。只修复有证据的 `Critical` / `High` findings，而且必须使用满足原验收的最小改动；`Medium`、`Low`、heuristic 和 optional hardening 写成 follow-up。
-
-有 blocking findings 时，最多进行一次 focused closure，只 resume 原来的 2 agents。每个 Ticket 最多 4 次 review Agent 调用，失败也计入；closure 后禁止第三轮 reviewer 或重扫完整 diff。blocking findings 关闭且门禁通过后立即 commit/push/close。
+完成验证后，读取并完整执行 `$code-review-lqy`。fixed point、双轴 reviewer、blocking 标准、focused closure、调用预算和停止规则均以该 skill 为唯一来源；review 与门禁通过后继续完成 Ticket。
 
 ## Oversized Stop
 
