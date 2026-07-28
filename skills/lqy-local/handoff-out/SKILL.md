@@ -9,8 +9,7 @@ description: Generate a compact copy-paste handoff prompt for another AI or fres
 
 ## 默认输出
 
-1. `可复制 prompt`：一个 fenced Markdown code block，直接对接手 AI 说话。
-2. `这个 handoff 写了什么`：一句话或极短 bullets，说明包含了哪些信息。
+只输出一个 fenced Markdown code block，直接对接手 AI 说话。
 
 ## Prompt 规则
 
