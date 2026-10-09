@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import re
 import shutil
 import subprocess
 import sys
@@ -68,6 +69,47 @@ class SkillContractTests(unittest.TestCase):
         self.assertIn("CONTEXT.md", domain)  # existing projects retain their one configured source
         self.assertIn("GLOSSARY.md", domain)
         self.assertIn("同一份", domain)
+
+
+class BaselineTranslationContractTests(unittest.TestCase):
+    def test_baseline_preserves_source_invocation_contract(self) -> None:
+        for profile in sorted((ROOT / "baselines" / "matt-zh").glob("*/*/LOCALIZATION.md")):
+            match = re.search(r"Upstream path: `([^`]+)`", profile.read_text())
+            self.assertIsNotNone(match, str(profile))
+            source = frontmatter(ROOT / match.group(1) / "SKILL.md")
+            translated = frontmatter(profile.parent / "SKILL.md")
+            with self.subTest(skill=profile.parent.name):
+                self.assertEqual(translated.get("disable-model-invocation", False), source.get("disable-model-invocation", False))
+                if "argument-hint" in source:
+                    self.assertIsInstance(translated.get("argument-hint"), str)
+                    self.assertTrue(translated["argument-hint"].strip())
+
+    def test_tracker_baseline_contains_updated_machine_commands(self) -> None:
+        setup = ROOT / "baselines/matt-zh/matt-zh-core/setup-matt-pocock-skills-zh"
+        github = (setup / "issue-tracker-github.md").read_text()
+        self.assertIn("gh issue view <number> --json number,title,body,labels,comments", github)
+        self.assertIn("gh issue create --parent <parent>", github)
+        self.assertIn("gh issue edit <parent> --add-sub-issue <child>", github)
+        self.assertIn("gh api --paginate", github)
+        gitlab = (setup / "issue-tracker-gitlab.md").read_text()
+        self.assertIn("glab issue list -O json", gitlab)
+        self.assertIn("projects/:id/issues/<child-iid>/links", gitlab)
+        local = (setup / "issue-tracker-local.md").read_text()
+        self.assertIn(".scratch/<feature-slug>/spec.md", local)
+        self.assertNotIn(".scratch/<feature-slug>/PRD.md", local)
+
+    def test_report_template_preserves_upstream_code_and_css_tokens(self) -> None:
+        source = (ROOT / "upstream/mattpocock/skills/engineering/improve-codebase-architecture/HTML-REPORT.md").read_text()
+        code_blocks = re.findall(r"```[^\n]*\n(.*?)```", source, re.DOTALL)
+        for path in (
+            ROOT / "baselines/matt-zh/matt-zh-core/improve-codebase-architecture-zh/HTML-REPORT.md",
+            CORE / "improve-codebase-architecture-lqy/HTML-REPORT.md",
+        ):
+            with self.subTest(path=str(path)):
+                translated = path.read_text()
+                self.assertEqual(re.findall(r"```[^\n]*\n(.*?)```", translated, re.DOTALL), code_blocks)
+                self.assertIn("text-xs uppercase tracking-wider", translated)
+                self.assertNotIn("track-wider", translated)
 
 
 class RepositoryCheckCliTests(unittest.TestCase):

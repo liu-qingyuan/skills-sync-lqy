@@ -1,12 +1,12 @@
 # issue tracker：GitLab
 
-此仓库的issue 和 PRD 作为 GitLab 问题存在。使用 [`glab`](https://gitlab.com/gitlab-org/cli) CLI 进行所有操作。
+此仓库的 issue 和 spec 存放在 GitLab Issues 中。使用 [`glab`](https://gitlab.com/gitlab-org/cli) CLI 进行所有操作。
 
 ## 惯例
 
 - **创建问题**：`glab issue create --title "..." --description "..."`。使用 heredoc 进行多行描述。通过 `--description -` 打开编辑器。
 - **阅读问题**：`glab issue view <number> --comments`。使用 `-F json` 获得机器可读的输出。
-- **列出问题**：`glab issue list -F json`，带有适当的 `--label` 过滤器。
+- **列出问题**：`glab issue list -O json`，带有适当的 `--label` 过滤器。
 - **对问题发表评论**：`glab issue note <number> --message "..."`。GitLab 将评论称为 notes。
 - **应用/删除标签**：`glab issue update <number> --label "..."` / `glab issue update <number> --unlabel "..."`。多个标签可以用逗号分隔或通过重复标志来分隔。
 - **关闭**：`glab issue close <number>`。`glab issue close` 不接受结束评论，因此首先使用 `glab issue note <number> --message "..."` 发布解释，然后关闭。
@@ -41,6 +41,6 @@
 - **Map**：一个带 `wayfinder:map` 标签的 issue，正文保存 Notes / Decisions-so-far / Fog。使用 `glab issue create --label wayfinder:map`。（在支持 native epics 的 GitLab tier 上，也可以用 epic 保存 map；带标签的 issue 到处都能用。）
 - **Child Ticket**：description 顶部带 `Part of #<map>` 的 issue，并带 `wayfinder:<type>` labels（`research`/`prototype`/`grilling`/`task`）。被 claim 后，把 Ticket assign 给驱动它的 dev。
 - **Blocking**：GitLab 原生 blocking link，是 canonical 且 UI 可见的表示。通过 `/blocked_by #<n>` quick action 添加，把它作为 note 发布：`glab issue note <child> --message "/blocked_by #<blocker>"`。原生 blocking links 是 Premium/Ultimate 功能；free tier 或不可用时，回退到 description 顶部的 `Blocked by: #<n>, #<n>` 行。每个 blocker 都关闭后，Ticket 才 unblocked。
-- **Frontier query**：`glab issue list -F json` scope 到 map 的 children，丢掉有 open blocker 的项（指向 open issue 的 native `blocked_by` link，可通过 `glab api projects/:id/issues/:iid/links` 查看；或 `Blocked by` 行里的 open issue）或已有 assignee 的项；map 顺序里的第一个胜出。
+- **Frontier query**：`glab issue list -O json` scope 到 map 的 children，丢掉有 open blocker 的项（指向 open issue 的 native `blocked_by` link，可通过 `glab api projects/:id/issues/<child-iid>/links` 查看；或 `Blocked by` 行里的 open issue）或已有 assignee 的项；map 顺序里的第一个胜出。
 - **Claim**：`glab issue update <n> --assignee @me`，这是该会话的第一个 write。
 - **Resolve**：`glab issue note <n> --message "<answer>"`，然后 `glab issue close <n>`，再向 map 的 Decisions-so-far 追加 context pointer（gist + link）。

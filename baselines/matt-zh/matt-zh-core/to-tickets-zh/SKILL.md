@@ -1,5 +1,6 @@
 ---
 name: to-tickets-zh
+disable-model-invocation: true
 description: 把计划、spec 或当前对话拆成一组 tracer-bullet Ticket；每个 Ticket 声明 blocking edges，并发布到已配置 tracker。
 ---
 

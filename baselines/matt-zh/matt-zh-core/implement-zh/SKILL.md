@@ -1,5 +1,6 @@
 ---
 name: implement-zh
+disable-model-invocation: true
 description: 根据 spec 或一组 Ticket 实现一项工作。
 ---
 

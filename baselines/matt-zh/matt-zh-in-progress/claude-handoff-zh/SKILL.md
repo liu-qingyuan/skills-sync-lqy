@@ -1,5 +1,7 @@
 ---
 name: claude-handoff-zh
+disable-model-invocation: true
+argument-hint: 下一个会话将用于什么？
 description: 把当前对话交接给一个新的后台 agent，让它立即接手继续工作。
 ---
 

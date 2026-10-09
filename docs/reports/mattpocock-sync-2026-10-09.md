@@ -1,5 +1,7 @@
 # Ralph-first 上游适配交付
 
+**补充更正：** 首轮提交 `6d16f00` 的中文基线仍有遗漏，不能用数量、来源 SHA 或 metadata 校验通过证明正文已完整同步。下方首轮验证保留为当时快照；文末记录后续补齐和新验证。Ralph-first 定制与安装脚本保护不变。
+
 目标来源：`49dd158d1076134a641b33efb035946536778336`（v1.3.1 + main 修复）。用户已确认：Ralph 为实施标准，展示隐藏凭据不改变原始数据，旧个人 skills 保留，不安装 chief-of-staff。
 
 审计最初固定到 `b0618bc…`；实施期间又复查了 2026-10-09 的两项提交：retro 始终加载写作纪律的范围说明，以及未安装 Wizard 的模板修复。新 HEAD 仅用于 mirror / baseline 的忠实源和 reviewed 记录，不引入额外安装流程。
@@ -124,7 +126,7 @@ classDiagram
 
 ### 已交付
 
-- 英文 mirror 与中文 baseline 各 46：38 个 active 对齐审阅 SHA，8 个 legacy 保留旧 SHA。英文 active 的 103 个源文件和全部 frozen 源文件均逐字节核对；无多余旧文件。4 个 baseline 脚本与英文来源字节一致，未执行 Wizard。
+- 英文 mirror 与中文 baseline 各 46：38 个 active 对齐审阅 SHA，8 个 legacy 保留旧 SHA。英文 active 的 103 个源文件和全部 frozen 源文件均逐字节核对；无多余旧文件。baseline 中 3 个 shell 脚本/模板和 1 份 CJS 配置与英文来源字节一致，未执行 Wizard。
 - 原有 50 个安装名全部保留，仅新增 `pr-lqy`、`retro-lqy`、`writing-for-agents-lqy`，总数 53；未安装 chief-of-staff、implement-spec、wizard 或 TS setup。
 - 吸收展示副本隐藏凭据、已尝试 mutation 的落地证据、Ticket fetch/title、显式补缺失标签、Teach 路径/quiz、frontier 依赖意识、架构热点和 Wayfinder 标签隔离。Ralph 单 Ticket / Git / blocker / review / green-only refactor 合同保留。
 - 本仓库 `CONTEXT.md` 与 domain-format 改为 GLOSSARY；现用消费者、setup 模板及校验同步。旧项目继续使用原有权威文档，不自动迁移或双写。
@@ -166,3 +168,19 @@ classDiagram
 测试证明文件合同、原生加载/metadata、隔离 CLI 和现有 workflow 行为；不是一次完整的真实模型驱动 Ralph 验收，不声称 Pi prompt 测试等同 Codex 隐式调用端到端测试。调查报告保留实施前快照。本轮不升级 Pi/Codex/plugins，不安装安全依赖或认证流程。
 
 Pi 使用 `/reload` 或新会话重新发现；Codex 新会话加载。已经进入当前会话的旧正文不会因磁盘复制自动从上下文移除。
+
+## 后续中文基线补齐
+
+迟到的同步报告指出翻译未完成，复核确认首轮“全部完成”的说法过早。按实际源差异补齐，不把英文标点调整当作必须重译的语义变化；`codebase-design`、DEEPENING、ADR 格式及三项 writing beta 的既有正文已包含相关语义。
+
+- 恢复 15 个 active baseline 的 `disable-model-invocation` 与 4 个中文 `argument-hint`。
+- 补上 Teach 的 workspace / skill-template 路径区分和正确答案位置变化；修订四份格式说明中的全角 Markdown 标题、状态字面量及误译。
+- 更新 GitHub 完整 JSON 读取、sub-issue 命令和外部 PR API；更新 GitLab `-O json` / `<child-iid>`；本地模板使用 `spec.md`、每 Ticket 单文件和原样 `Status:`。
+- 移除 to-spec / code-review 的旧 PRD 提示；缺 setup 配置时提示用户显式调用，而不是自动执行 setup。
+- 修订 HTML 报告说明中的旧误译，恢复 `tracking-wider` 与源代码示例。LQY 同名文件此前仅有 skill 后缀差异，没有独立定制，因此同步修正并保留 `-lqy` 引用。
+
+新维护测试先捕获调用字段/命令遗漏，再捕获 HTML 示例差异，均已 RED → GREEN。当前维护 **13**、Ralph **66**、三个 publishers **6 / 21 / 9**，合计 **115** 通过；维护 CLI 和安装发现仍为 **53 / 38 / 46 / 46**，非安装层未泄漏。当前英文 **103 active / 9 frozen 源文件**及上述 **4 shell/config 文件**再次逐字节通过，8 个 frozen baseline 未修改。裸 `python` 不可用，既有回归用现成 `python3` 完成，未更改系统环境。
+
+实际安装只更新 `improve-codebase-architecture-lqy/HTML-REPORT.md`，更新前核对无安装独立修改并备份到 `~/.cache/skills-sync-lqy/install-backups/2026-10-09-baseline-completion-zwry4tfn/`。全局 2244 个非缓存文件前后比较，变化仅此一份文档；三份受保护的安装定制与原 `clean` 的字节/哈希再次通过。仓库 Ralph / publisher 运行代码、个人策略和其它安装副本不变。
+
+另做了一次只读基线语义抽核，定位并核实 spec 旧提示与 HTML 类名问题；它不是逐句翻译证明，也不是新一轮 Standards / Spec review。首轮四次双轴 review 记录不作为后续改动已经复审的证据。没有启动 Ralph、schedule 或 GitHub 写操作。

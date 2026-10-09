@@ -1,5 +1,6 @@
 ---
 name: writing-shape-zh
+disable-model-invocation: true
 description: 写作 exploit：把原始材料逐段塑造成一篇文章。
 ---
 

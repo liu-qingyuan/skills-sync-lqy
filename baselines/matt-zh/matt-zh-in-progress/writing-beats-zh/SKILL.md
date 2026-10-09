@@ -1,5 +1,6 @@
 ---
 name: writing-beats-zh
+disable-model-invocation: true
 description: 写作 exploit：把原始材料组织成一段段 beat 的旅程，并在每个 beat 使用术语前先把术语落地。
 ---
 

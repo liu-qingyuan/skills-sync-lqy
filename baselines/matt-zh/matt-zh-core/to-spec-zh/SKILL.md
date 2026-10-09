@@ -1,11 +1,12 @@
 ---
 name: to-spec-zh
+disable-model-invocation: true
 description: 把当前对话上下文整理成 spec 并发布到项目 issue tracker；不重新访谈，只综合已有讨论。
 ---
 
-该 skill 会基于当前对话上下文和对代码库的理解产出一份 spec（你也可能把这种文档称为 PRD）。不要重新访谈用户，只综合你已经知道的信息。
+该 skill 会基于当前对话上下文和对代码库的理解产出一份 spec。不要重新访谈用户，只综合你已经知道的信息。
 
-issue tracker 和 triage 标签词汇表应该已经提供；如果没有，请运行 `/setup-matt-pocock-skills-zh`。
+issue tracker 和 triage 标签词汇表应该已经提供；如果没有，请告诉用户运行 `/setup-matt-pocock-skills-zh`。
 
 ## 流程
 

@@ -1,5 +1,6 @@
 ---
 name: triage-zh
+disable-model-invocation: true
 description: 通过 triage role 状态机处理 issues 和外部 PR：分类、验证、必要时追问，并写出可交给 agent 的 brief。
 ---
 

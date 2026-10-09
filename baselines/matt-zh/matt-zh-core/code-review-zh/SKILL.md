@@ -6,11 +6,11 @@ description: 从固定点（commit、branch、tag 或 merge-base）开始沿两�
 对 `HEAD` 和用户提供的固定点之间的 diff 做两轴审查：
 
 - **Standards** — 代码是否符合此仓库记录的 coding standards？
-- **Spec** — 代码是否忠实实现了来源 issue / PRD / spec？
+- **Spec** — 代码是否忠实实现了来源 issue / spec？
 
 两个轴都作为**并行 sub-agent**运行，避免彼此污染上下文；然后此 skill 聚合它们的发现。
 
-issue tracker 应该已经提供；如果缺少 `docs/agents/issue-tracker.md`，请运行 `/setup-matt-pocock-skills-zh`。
+issue tracker 应该已经提供；如果没有，请告诉用户运行 `/setup-matt-pocock-skills-zh`。
 
 ## 流程
 
@@ -28,7 +28,7 @@ issue tracker 应该已经提供；如果缺少 `docs/agents/issue-tracker.md`�
 
 1. commit message 中的 issue 引用（`#123`、`Closes #45`、GitLab `!67` 等）— 通过 `docs/agents/issue-tracker.md` 中的工作流获取。
 2. 用户作为参数传入的路径。
-3. `docs/`、`specs/` 或 `.scratch/` 下与 branch 名称或 feature 匹配的 PRD/spec 文件。
+3. `docs/`、`specs/` 或 `.scratch/` 下与 branch 名称或 feature 匹配的 spec 文件。
 4. 如果什么都没找到，询问用户 spec 在哪里。如果用户说没有，**Spec** sub-agent 跳过并报告 `no spec available`。
 
 ### 3. 识别 standards 来源

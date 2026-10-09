@@ -1,5 +1,7 @@
 ---
 name: loop-me-zh
+disable-model-invocation: true
+argument-hint: 指定要设计的工作流，或留空让我寻找一个
 description: 在当前 workspace 中追问我想构建的工作流规格。
 ---
 

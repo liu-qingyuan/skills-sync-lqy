@@ -1,5 +1,6 @@
 ---
 name: improve-codebase-architecture-zh
+disable-model-invocation: true
 description: 扫描代码库中的 deepening 机会，生成可视化 HTML 报告，然后围绕用户选择的机会继续追问和推进。
 ---
 

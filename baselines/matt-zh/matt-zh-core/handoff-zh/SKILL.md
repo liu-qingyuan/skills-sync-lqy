@@ -1,5 +1,7 @@
 ---
 name: handoff-zh
+disable-model-invocation: true
+argument-hint: 下一个会话将用于什么？
 description: 把当前对话压缩成交接文档，方便另一个 agent 继续。
 ---
 

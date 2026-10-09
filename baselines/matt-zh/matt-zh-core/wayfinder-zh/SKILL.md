@@ -1,5 +1,6 @@
 ---
 name: wayfinder-zh
+disable-model-invocation: true
 description: 为超过一个 Agent 会话容量的大块工作做规划：在 Issue tracker 上维护决策 Ticket 的共享地图，逐个解决，直到通向目的地的路径清晰。
 ---
 

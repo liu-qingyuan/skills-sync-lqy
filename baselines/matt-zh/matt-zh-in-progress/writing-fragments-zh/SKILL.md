@@ -1,5 +1,6 @@
 ---
 name: writing-fragments-zh
+disable-model-invocation: true
 description: 写作 explore：挖掘原始 fragments，暂不强加结构。
 ---
 

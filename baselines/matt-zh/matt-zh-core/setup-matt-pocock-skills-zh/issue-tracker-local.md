@@ -1,13 +1,13 @@
 # issue tracker：本地 Markdown
 
-此仓库的issue 和 PRD 以Markdown 文件形式存在于“.scratch/”中。
+此仓库的 issue 和 spec 以 Markdown 文件形式存放在 `.scratch/` 中。
 
 ## 惯例
 
 - 每个目录一个功能：`.scratch/<feature-slug>/`
-- PRD 是 `.scratch/<feature-slug>/PRD.md`
-- 实现问题是`.scratch/<feature-slug>/issues/<NN>-<slug>.md`，从`01`开始编号
-- triage 状态记录为每个 issue 文件顶部附近的“状态：”行（有关 role 字符串，请参阅 `triage-labels.md`）
+- spec 是 `.scratch/<feature-slug>/spec.md`
+- 每个实现 Ticket 单独存放在 `.scratch/<feature-slug>/issues/<NN>-<slug>.md` 中，从 `01` 开始编号；不要把所有 Ticket 合并成一个文件
+- triage 状态记录为每个 issue 文件顶部附近的 `Status:` 行（有关 role 字符串，请参阅 `triage-labels.md`）
 - 评论和对话历史记录附加到文件底部的“## Comments”标题下
 
 ## 当技能说“发布到 issue tracker”时
