@@ -183,4 +183,4 @@ Pi 使用 `/reload` 或新会话重新发现；Codex 新会话加载。已经进
 
 实际安装只更新 `improve-codebase-architecture-lqy/HTML-REPORT.md`，更新前核对无安装独立修改并备份到 `~/.cache/skills-sync-lqy/install-backups/2026-10-09-baseline-completion-zwry4tfn/`。全局 2244 个非缓存文件前后比较，变化仅此一份文档；三份受保护的安装定制与原 `clean` 的字节/哈希再次通过。仓库 Ralph / publisher 运行代码、个人策略和其它安装副本不变。
 
-另做了一次只读基线语义抽核，定位并核实 spec 旧提示与 HTML 类名问题；它不是逐句翻译证明，也不是新一轮 Standards / Spec review。首轮四次双轴 review 记录不作为后续改动已经复审的证据。没有启动 Ralph、schedule 或 GitHub 写操作。
+另做了一次只读基线语义抽核，定位并核实 spec 旧提示与 HTML 类名问题；它不是逐句翻译证明，也不是新一轮 Standards / Spec review。首轮四次双轴 review 记录不作为后续改动已经复审的证据。没有启动 Ralph、schedule，也没有写入 GitHub Issues 或标签；仓库提交与推送按授权执行。
