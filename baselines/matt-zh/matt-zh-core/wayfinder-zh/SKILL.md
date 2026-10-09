@@ -1,9 +1,9 @@
 ---
 name: wayfinder-zh
-description: 为超过一个 agent 会话容量的大块工作做规划：在 issue tracker 上维护共享 map，逐个解决调查 Ticket，直到通向 destination 的路径清晰。
+description: 为超过一个 Agent 会话容量的大块工作做规划：在 Issue tracker 上维护决策 Ticket 的共享地图，逐个解决，直到通向目的地的路径清晰。
 ---
 
-一个松散想法出现了：它太大，无法塞进一个 agent 会话，而且被迷雾包住。从这里到 **destination** 的路还看不清。Wayfinding 的目标是找到那条路，而不是直接冲向 destination。这个 skill 会把路线绘制成仓库 issue tracker 上的一张**共享 map**，然后一次处理一个 Ticket，直到路线清晰。
+一个松散想法出现了：它太大，无法塞进一个 agent 会话，而且被迷雾包住。从这里到 **destination** 的路还看不清。Wayfinding 的目标是找到那条路，而不是直接冲向 destination。这个 Skill 会把路线绘制成仓库 Issue tracker 上的一张**共享 map**，然后一次处理一个**决策 Ticket**（它解决一个决策问题，而不是交付物切片），直到路线清晰。
 
 每个 effort 的 destination 都不同，给它命名是绘图的第一个动作，因为它塑造每一个 Ticket。它可能是一份可交接并迭代的 spec、一个规划前必须锁定的决策，或一个就地完成的变化（例如数据结构迁移）。这张 map 不绑定领域：工程工作、课程内容，任何符合形状的工作都可以。
 
@@ -61,7 +61,7 @@ map 是**索引**，不是存储。它列出已做决策，并指向保存细节
 <this ticket resolves 的决策或调查>
 ```
 
-每个 Ticket 带一个 `wayfinder:<type>` 标签，值为 `research`、`prototype`、`grilling`、`task` 之一（见 [Ticket Types](#ticket-types)）。
+每个 Ticket 带一个 `wayfinder:<type>` 标签，值为 `research`、`prototype`、`grilling`、`task` 之一（见 [Ticket Types](#ticket-types)）。map 和其 Ticket **只**使用 `wayfinder:` 标签，不加 `ready-for-agent` 等 triage 标签：它们是决策，不是实现工作。
 
 会话在做任何工作前，先通过把 Ticket assign 给驱动这张 map 的 dev 来 **claim** 它，这样并发会话会跳过它。assignee 本身就是 claim：一个开放且未分配的 Ticket 是 unclaimed。
 
@@ -73,9 +73,9 @@ Blocking 使用 tracker 的**原生**依赖关系，这很重要，因为它会�
 
 每个 Ticket 要么是 **HITL**（human in the loop，由能代表自己发言的人参与完成），要么是 **AFK**（agent 独自驱动）。HITL Ticket 只能通过实时交流解决；agent 不能替人回答人的那一边（一个自己回答自己问题的 grilling agent 已经坏了）。
 
-- **Research** (AFK)：阅读文档、第三方 API，或知识库等本地资源。创建 Markdown summary 作为 linked asset。需要当前 working directory 之外的知识时使用。
-- **Prototype** (HITL)：通过制作便宜、粗糙、具体的 artifact 来提高讨论保真度，例如 outline、rough take、stub，或通过 `/prototype-zh` 创建 UI/logic code。把 prototype 作为 asset 链接。关键问题是“它应该看起来如何”或“它应该如何表现”时使用。
-- **Grilling** (HITL)：通过 `/grilling-zh` 和 `/domain-modeling-zh` skills 进行对话，一次一个问题。默认类型。
+- **Research** (AFK)：阅读文档、第三方 API 或知识库等本地资源，查明阻碍决策的事实。由调用 Skill 工具并指定 `research-zh` 的 subagent 解决。需要当前工作目录外的知识时使用。
+- **Prototype** (HITL)：调用 Skill 工具并指定 `prototype-zh`，制作廉价、粗略但具体的产物（大纲、初稿、桩、UI/逻辑代码），提升讨论的具体程度。将原型作为产物链接。关键问题是“它应该看起来如何”或“它应该如何表现”时使用。
+- **Grilling** (HITL)：对话，默认类型。始终调用 Skill 工具两次，分别指定 `grilling-zh` 和 `domain-modeling-zh`。
 - **Task** (HITL or AFK)：在做出**决策**前必须完成的手工工作；本身没有要决定、prototype 或 research 的内容，但讨论被它阻塞。例如注册服务以便评估 API、配置访问权限、迁移数据以便观察其形状。这是唯一一种“做事”而不是“做决策”的类型；它只有在 unblock 一个决策时才值得存在，而不是因为它交付 destination。agent 能独自驱动时就 AFK；否则给人一份精确 checklist。工作完成时 resolve；答案记录完成了什么，以及后续 Ticket 依赖的事实（credential 位置、新 URL、row count 等）。
 
 ## Fog of war
@@ -101,17 +101,18 @@ out-of-scope work 永远不会毕业；frontier 会停在 destination。因此�
 
 ## Invocation
 
-两种模式。无论哪种，**每个会话最多 resolve 一个 Ticket。**
+两种模式。无论哪种，**每个会话最多解决一个 Ticket**，研究 Ticket 除外。
 
 ### Chart the map
 
 用户带着松散想法调用。
 
-1. **Name the destination.** 运行 `/grilling-zh` 和 `/domain-modeling-zh` 会话，钉住这张 map 正在寻找路线通向什么：spec、decision 或 change。destination 固定 scope，所以它先确定。
+1. **Name the destination.** 调用 Skill 工具两次，分别指定 `grilling-zh` 和 `domain-modeling-zh`，，钉住这张 map 正在寻找路线通向什么：spec、decision 或 change。destination 固定 scope，所以它先确定。
 2. **Map the frontier.** 再次 grilling，但这次 **breadth-first**：横向展开整个空间，而不是在某一条线深挖，浮现开放决策和现在可行动的第一步。**如果这没有浮现 fog**，说明通往 destination 的路已经清楚，整个旅程小到一个会话能处理；你不需要 map。停止并询问用户想如何继续。
 3. **Create the map**（标签 `wayfinder:map`）：填好 Destination 和 Notes，Decisions-so-far 为空，把 fog 草绘到 **Not yet specified**。
-4. **Create the tickets you can specify now**，作为 map 的 child issues；然后在**第二遍**连接 blocking edges（issues 需要先有 id 才能互相引用）。连接会把它们分成 frontier 和 blocked；所有还不能说明的内容都留在 fog，即 **Not yet specified** section。
-5. 停止。charting the map 是一个会话的工作；不要同时 resolve Ticket。
+4. **Create the tickets you can specify now**，作为 map 的 child issues；然后在**第二遍**连接 blocking edges（issues 需要先有 id 才能互相引用）。同一遍写交叉引用时要填入真实 id，不要用 `#<n>` 占位，它可能自动链接到无关 Issue。连接会把它们分成前沿与受阻项；暂不能说明的内容留在 **Not yet specified**。
+5. **启动研究 subagent。** 对每个刚创建的 `research` Ticket，并行启动调用 Skill 工具并指定 `research-zh` 的 subagent；将发现记在可丢弃的 `research/<name>` 分支，Ticket 中保留上下文指针。推送分支，但不要建 PR；此分支不会合并。
+6. 停止：绘图占一个会话，不亲自解决 Ticket。
 
 ### Work through the map
 
@@ -119,7 +120,7 @@ out-of-scope work 永远不会毕业；frontier 会停在 destination。因此�
 
 1. 加载 **map**：低分辨率视图，不是每个 Ticket body。
 2. 选择 Ticket。如果用户点名了一个，就使用它。否则按顺序拿第一个 frontier Ticket。**Claim it**：任何工作前先 assign 给自己。
-3. Resolve it：**按需 zoom**。只在需要时获取相关或已关闭 Ticket 的完整 body；调用 `## Notes` block 指定的 skills。不确定时，使用 `/grilling-zh` 和 `/domain-modeling-zh`。
+3. 按 `wayfinder:<type>` 标签所指类型解决 Ticket（见 [Ticket Types](#ticket-types)）。读取标签，不能只读正文：正文不标明类型。**按需深入**：只在需要时获取相关或已关闭 Ticket 的完整正文；调用 `## Notes` 指定的 Skill。不确定时，调用 Skill 工具两次，分别指定 `grilling-zh` 和 `domain-modeling-zh`。
 4. 记录 resolution：把答案作为 **resolution comment** 发布，**close** issue，并向 map 的 Decisions-so-far 追加一个 context pointer。
 5. 添加新浮现的 Ticket（先创建再连接）；让答案已经变得可说明的 fog 毕业，毕业后从 **Not yet specified** 中清掉，让它只作为新 Ticket 存在。如果答案揭示某个 Ticket（当前或另一个）位于 destination 之外，把它判定为 out of scope，而不是沿路线 resolve。如果该决策让 map 的其他部分失效，更新或删除那些 Ticket。
 

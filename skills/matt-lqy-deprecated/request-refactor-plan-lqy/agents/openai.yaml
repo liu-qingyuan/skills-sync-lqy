@@ -1,0 +1,7 @@
+interface:
+  display_name: request-refactor-plan-lqy
+  short_description: 通过用户访谈创建包含小提交步骤的详细重构计划，然后作为 GitHub issue 提交。用于用户想规划重构、创建重构 RFC
+    或
+  default_prompt: 使用 $request-refactor-plan-lqy 完成本次任务；先读取 SKILL.md，遵守现有范围与合同。
+policy:
+  allow_implicit_invocation: false

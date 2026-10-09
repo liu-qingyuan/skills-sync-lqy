@@ -1,0 +1,5 @@
+interface:
+  display_name: "幕僚长"
+  short_description: "在单次会话中协调 subagent 追求长期目标"
+policy:
+  allow_implicit_invocation: false

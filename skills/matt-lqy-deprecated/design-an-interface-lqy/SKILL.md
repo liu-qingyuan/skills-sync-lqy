@@ -1,5 +1,6 @@
 ---
 name: design-an-interface-lqy
+disable-model-invocation: true
 description: 为模块生成多个差异很大的接口设计，并使用并行 sub-agents。用于用户想设计 API、探索接口选项、比较模块形状或提到 design
   it twice 时。
 ---

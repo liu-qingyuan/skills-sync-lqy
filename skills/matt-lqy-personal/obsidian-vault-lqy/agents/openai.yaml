@@ -1,0 +1,6 @@
+interface:
+  display_name: obsidian-vault-lqy
+  short_description: 在 Obsidian vault 中搜索、创建和管理带 wikilinks 与索引笔记的 notes。用于用户想查找、创建或整理
+  default_prompt: 使用 $obsidian-vault-lqy 完成本次任务；先读取 SKILL.md，遵守现有范围与合同。
+policy:
+  allow_implicit_invocation: false

@@ -1,0 +1,7 @@
+interface:
+  display_name: design-an-interface-lqy
+  short_description: 为模块生成多个差异很大的接口设计，并使用并行 sub-agents。用于用户想设计 API、探索接口选项、比较模块形状或提到
+    d
+  default_prompt: 使用 $design-an-interface-lqy 完成本次任务；先读取 SKILL.md，遵守现有范围与合同。
+policy:
+  allow_implicit_invocation: false

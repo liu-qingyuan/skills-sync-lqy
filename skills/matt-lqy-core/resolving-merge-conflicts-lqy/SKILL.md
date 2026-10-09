@@ -1,5 +1,6 @@
 ---
 name: resolving-merge-conflicts-lqy
+disable-model-invocation: true
 description: 用于解决正在进行中的 git merge 或 rebase 冲突。
 ---
 

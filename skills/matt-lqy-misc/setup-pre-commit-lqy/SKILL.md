@@ -1,5 +1,6 @@
 ---
 name: setup-pre-commit-lqy
+disable-model-invocation: true
 description: 在当前仓库设置 Husky pre-commit hooks，包括 lint-staged（Prettier）、类型检查和测试。用于用户想添加
   pre-commit hooks 或提交前格式化/类型检查/测试时。
 ---

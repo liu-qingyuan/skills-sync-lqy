@@ -1,0 +1,6 @@
+interface:
+  display_name: domain-modeling-lqy
+  short_description: 主动打磨领域术语和模型，维护项目的 GLOSSARY.md 或相关 ADR。用于讨论概念、澄清业务边界或修改领域文档；仅阅读术语
+  default_prompt: 使用 $domain-modeling-lqy 完成本次任务；先读取 SKILL.md，遵守现有范围与合同。
+policy:
+  allow_implicit_invocation: true

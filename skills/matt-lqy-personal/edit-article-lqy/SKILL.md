@@ -1,5 +1,6 @@
 ---
 name: edit-article-lqy
+disable-model-invocation: true
 description: 编辑和改进文章：重组章节、提升清晰度、压缩表达。用于用户想编辑、修改或改进文章草稿时。
 ---
 

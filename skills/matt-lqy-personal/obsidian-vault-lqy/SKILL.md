@@ -1,5 +1,6 @@
 ---
 name: obsidian-vault-lqy
+disable-model-invocation: true
 description: 在 Obsidian vault 中搜索、创建和管理带 wikilinks 与索引笔记的 notes。用于用户想查找、创建或整理 Obsidian
   笔记时。
 ---

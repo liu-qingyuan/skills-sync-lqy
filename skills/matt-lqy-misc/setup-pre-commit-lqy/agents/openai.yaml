@@ -1,0 +1,6 @@
+interface:
+  display_name: setup-pre-commit-lqy
+  short_description: 在当前仓库设置 Husky pre-commit hooks，包括 lint-staged（Prettier）、类型检查和测试。
+  default_prompt: 使用 $setup-pre-commit-lqy 完成本次任务；先读取 SKILL.md，遵守现有范围与合同。
+policy:
+  allow_implicit_invocation: false

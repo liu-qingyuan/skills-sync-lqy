@@ -1,0 +1,5 @@
+interface:
+  display_name: "等一下，什么意思"
+  short_description: "补上缺失背景，简明地重新解释"
+policy:
+  allow_implicit_invocation: false

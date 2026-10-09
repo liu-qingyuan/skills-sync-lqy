@@ -1,0 +1,6 @@
+interface:
+  display_name: grilling-lqy
+  short_description: 持续追问计划、决策或想法：区分可查证事实与用户决策，按依赖 frontier 澄清，达成共识后才行动。
+  default_prompt: 使用 $grilling-lqy 完成本次任务；先读取 SKILL.md，遵守现有范围与合同。
+policy:
+  allow_implicit_invocation: true

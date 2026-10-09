@@ -1,0 +1,5 @@
+interface:
+  display_name: "生成问卷"
+  short_description: "提前将待回答的问题整理成文档"
+policy:
+  allow_implicit_invocation: false

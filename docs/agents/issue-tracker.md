@@ -19,6 +19,8 @@ issue 标题、正文、评论和完成摘要默认使用中文。labels、命�
 
 ## Triage 请求入口
 
+只有用户显式运行 setup 时，才补齐配置中缺失的固定标签；不删除、重命名或覆盖已有标签，不顺手标记 issues 或启动 Ralph。
+
 **PR 作为请求入口：否。** 外部 PR 不进入 issue triage 状态机，也不进入 Ralph issue backlog。PR 继续使用正常 review 流程。
 
 ## Ralph-ready issue 契约
@@ -70,10 +72,10 @@ issue 标题、正文、评论和完成摘要默认使用中文。labels、命�
 
 ## Wayfinding operations
 
-由 `wayfinder-lqy` 使用。Wayfinder 的 map、claim 和 frontier 是独立工作流，不改变 Ralph branch worker 的领取规则。
+由 `wayfinder-lqy` 使用。Wayfinder 的 map、claim 和 frontier 是独立工作流，不改变 Ralph branch worker 的领取规则。map 和 Decision tickets 只用 wayfinder 标签，不带 `ready-for-agent` 或其它 triage 状态；取得真实 issue ids 后再交叉引用，不能留下 `#<n>` 占位。路线明确后由 to-spec / to-tickets 发布独立实施契约。
 
 - **Map**：带 `wayfinder:map` 标签的 issue，正文保存 Notes、Decisions-so-far 和 Fog。
-- **Child Ticket**：优先使用 GitHub sub-issue；不可用时，在 map body 使用 task list，并在 child body 引用 map。
+- **Child Ticket**：创建 map 取得 id 后，使用当前 gh 支持的 `gh issue create --parent <map-id>`；不可用时，在 map body 用真实 child ids 的 task list，并在 child body 引用 map。
 - **Blocking**：优先使用 GitHub 原生 issue dependencies；不可用时回退到正文 blocker 表达。
 - **Claim**：Wayfinder 可以把 child Ticket assign 给驱动它的 dev。Ralph backlog 不使用 assignee claim。
 - **Resolve**：评论结果、关闭 child，并在 map 的 Decisions-so-far 中追加 context pointer。

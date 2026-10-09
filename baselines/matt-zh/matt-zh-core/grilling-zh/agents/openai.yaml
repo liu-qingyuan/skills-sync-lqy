@@ -1,0 +1,3 @@
+interface:
+  display_name: "追问"
+  short_description: "逐轮提问以压力测试思路"

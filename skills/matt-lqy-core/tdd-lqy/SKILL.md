@@ -10,7 +10,7 @@ description: 测试驱动开发与测试策略。用于 test-first 功能或 bug
 - 通过公开 Interface 验证可观察行为；Implementation 可以重写，测试不应因此变化。
 - Feature 证明某个 abstraction 需要存在。在第一个 RED 前，确定满足当前需求的最小完整 Interface；每个 cycle 都通过该 Interface 增加行为，不要让单个测试长出 one-off public method、mode 或特殊分支。
 - 按风险选择最低足够测试层级；层级、mock 或 contract 边界不明确时，读取 [TEST-STRATEGY.md](TEST-STRATEGY.md)。
-- 读取项目 `CONTEXT.md` 和相关 ADR；优先从 spec、现有代码和测试确定合同，只有真实歧义才询问用户。
+- 读取项目指定的领域术语表（新项目默认 `GLOSSARY.md`）和相关 ADR；优先从 spec、现有代码和测试确定合同，只有真实歧义才询问用户。
 - Module、Interface、Seam 或知识归属需要改变时，在第一个 RED 前使用 `$codebase-design-lqy`。
 
 测试示例见 [tests.md](tests.md)，mock 约束见 [mocking.md](mocking.md)。
@@ -19,7 +19,7 @@ description: 测试驱动开发与测试策略。用于 test-first 功能或 bug
 
 ### 1. 选定行为
 
-确认当前测试命令、公开 Interface 和最高优先级行为。Bug fix 先通过公开表面复现已观察回归。不要预先写完所有测试。
+确认当前测试命令、公开 Interface 和最高优先级行为。沿用 spec 已确认的 Seam；提出新 Seam 时用一行说明它能发现什么、会漏什么，只有真实歧义才请求确认。Bug fix 先通过公开表面复现已观察回归。不要预先写完所有测试。
 
 ### 2. RED
 

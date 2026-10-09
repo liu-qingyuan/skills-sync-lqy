@@ -1,5 +1,6 @@
 ---
 name: to-tickets-lqy
+disable-model-invocation: true
 description: 把计划、spec 或当前对话拆成一组 tracer-bullet Ticket；每个 Ticket 声明 blocking edges，并发布到已配置 tracker。
 ---
 
@@ -7,7 +8,7 @@ description: 把计划、spec 或当前对话拆成一组 tracer-bullet Ticket�
 
 把计划、spec 或对话拆成一组 **Ticket**：tracer-bullet vertical slice，每个 Ticket 都声明哪些其他 Ticket 会 **block** 它。
 
-issue tracker 和 triage 标签词汇表应该已经提供；如果没有，请运行 `$setup-matt-pocock-skills-lqy`。
+issue tracker 和 triage 标签词汇表应该已经提供；如果没有，提示用户显式运行 `$setup-matt-pocock-skills-lqy`。
 
 issue 标题、正文、评论和完成摘要默认使用中文。labels、命令、路径、代码标识符、配置键和错误原文保留原 token。
 
@@ -194,5 +195,5 @@ issue tracker 上 parent issue 的引用（如果来源是已有 issue；否则�
 
 无论哪种形式，都避免写具体文件路径或代码片段；它们很快会过时。例外：如果 prototype 产出的片段比散文更精确地编码了决策（状态机、reducer、schema、type shape），可以内联并简短说明它来自 prototype。只保留决策密集的部分，不要放工作 demo，只放重要部分。
 
-用 `/implement-lqy` 一次处理 frontier 上的一个 Ticket；Ticket 之间清空上下文。
+Ralph 是批量实施标准：用户明确启动后，由 worker 一次处理 frontier 上一个 Ticket，并加载 `implement-lqy` 的 SKILL.md。单 Ticket 可直接交给 implement；不因发布 Tickets 自动启动循环。
 </content>

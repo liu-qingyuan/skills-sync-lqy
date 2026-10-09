@@ -48,4 +48,4 @@ GitHub issues；外部 PR 不作为 triage 请求入口。见 `docs/agents/issue
 
 ### Domain docs
 
-单上下文：根目录 `CONTEXT.md`，ADR 按需放在 `docs/adr/`。见 `docs/agents/domain.md`。
+单上下文：根目录 `GLOSSARY.md`，ADR 按需放在 `docs/adr/`。见 `docs/agents/domain.md`。

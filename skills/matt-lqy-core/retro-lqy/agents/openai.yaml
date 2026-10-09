@@ -1,0 +1,6 @@
+interface:
+  display_name: retro-lqy
+  short_description: 人工触发的会话复盘：从实际 Pi / Codex 会话提出导航、检查、规则和工具改进建议，不自动修改项目。
+  default_prompt: 使用 $retro-lqy 完成本次任务；先读取 SKILL.md，遵守现有范围与合同。
+policy:
+  allow_implicit_invocation: false

@@ -1,0 +1,6 @@
+interface:
+  display_name: triage-lqy
+  short_description: 通过 triage role 状态机处理 GitHub issues：验证请求、必要时追问，保留 Ralph Git 契约并发布
+  default_prompt: 使用 $triage-lqy 完成本次任务；先读取 SKILL.md，遵守现有范围与合同。
+policy:
+  allow_implicit_invocation: false

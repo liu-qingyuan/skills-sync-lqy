@@ -1,0 +1,6 @@
+interface:
+  display_name: setup-matt-pocock-skills-lqy
+  short_description: 使用固定 LQY 默认值配置当前 GitHub 仓库的 issue tracker、triage labels 和领域文档。首次
+  default_prompt: 使用 $setup-matt-pocock-skills-lqy 完成本次任务；先读取 SKILL.md，遵守现有范围与合同。
+policy:
+  allow_implicit_invocation: false

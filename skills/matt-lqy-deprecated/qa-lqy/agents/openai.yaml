@@ -1,0 +1,6 @@
+interface:
+  display_name: qa-lqy
+  short_description: 交互式 QA 会话：用户用对话方式报告 bug 或问题，agent 创建 GitHub issues，并在后台探索代码库获得上下
+  default_prompt: 使用 $qa-lqy 完成本次任务；先读取 SKILL.md，遵守现有范围与合同。
+policy:
+  allow_implicit_invocation: false

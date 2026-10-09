@@ -58,33 +58,27 @@ issue tracker 和 triage 标签词汇表应该已经提供；如果没有，请�
 
 发布批准后的 Ticket。**如何发布**取决于 `/setup-matt-pocock-skills-zh` 配置的 tracker；Ticket 内容相同，只有 blocking edges 的表达形式不同：
 
-- **本地文件** → 在仓库根目录写一个 `tickets.md`，所有 Ticket 按依赖顺序排列（blocker 在前），每个 Ticket 的 `Blocked by` 列出它依赖的标题。使用下面的文件模板。
-- **真实 issue tracker（GitHub、Linear 等）** → 每个 Ticket 发布为一个 issue，按依赖顺序创建（blocker 在前），这样每个 Ticket 的 blocking edges 可以引用真实标识符。平台有原生 blocking / sub-issue 关系时使用原生能力；否则在每个 Ticket 的 `Blocked by` 中列出 blocking issues。除非另有说明，应用 `ready-for-agent` triage 标签；这些 Ticket 按构造就是 agent-grabbable。
+- **本地文件** → 在 `.scratch/<feature-slug>/issues/<NN>-<slug>.md` 下为每个 Ticket 写一个独立文件，依赖顺序编号（blocker 在前，从 `01` 起）。每个文件的 `Blocked by` 列出依赖 Ticket 的编号和标题。使用下方单 Ticket 模板；每文件一个 Ticket，不合并成单一文件。
+- **真实 issue tracker（GitHub、Linear 等）** → 每个 Ticket 发布为一个 issue，按依赖顺序创建（blocker 在前），让 blocking edges 引用真实标识符。平台有原生 blocking 关系时使用原生能力；否则在每个 Ticket 的 `Blocked by` 中列出 blocking issues。如果来源是已有 issue，则依照 tracker 文档中的操作，将各 Ticket 设为其 sub-issue。除非另有说明，应用 `ready-for-agent` triage 标签；这些 Ticket 按构造就是 Agent 可领取的。
+
+处理**前沿**：阻塞项都已完成的任意 Ticket。纯线性链从上到下。
 
 不要关闭或修改任何 parent issue。
 
-<tickets-file-template>
+<local-ticket-template>
 
-# Tickets: <short name of the work>
+# <NN>: <Ticket 标题>
 
-一句话总结这些 Ticket 要构建什么。如有来源 spec，引用它。
+**What to build:** 从用户视角描述该 Ticket 打通的端到端行为，不是逐层实现列表。
 
-Work the **frontier**：任何 blocker 全部完成的 Ticket。对纯线性链条来说，就是从上到下。
+**Blocked by:** 阻塞它的 Ticket 编号/标题，或 `None (can start immediately)`。
 
-## <Ticket title>
+**Status:** ready-for-agent
 
-**What to build:** 从用户视角描述该 Ticket 打通的端到端行为；不要写逐层实现列表。
+- [ ] 验收条件 1
+- [ ] 验收条件 2
 
-**Blocked by:** gate 该 Ticket 的其他 Ticket 标题，或 `None — can start immediately`。
-
-- [ ] Acceptance criterion 1
-- [ ] Acceptance criterion 2
-
-## <Ticket title>
-
-...
-
-</tickets-file-template>
+</local-ticket-template>
 
 <issue-template>
 
@@ -103,11 +97,8 @@ issue tracker 上 parent issue 的引用（如果来源是已有 issue；否则�
 
 ## Blocked by
 
-- 每个 blocking Ticket 的引用，或 `None — can start immediately`。
+- 每个 blocking Ticket 的引用，或 `None (can start immediately)`。若已设置原生 blocking edges，则省略整个章节。
 
 </issue-template>
 
 无论哪种形式，都避免写具体文件路径或代码片段；它们很快会过时。例外：如果 prototype 产出的片段比散文更精确地编码了决策（状态机、reducer、schema、type shape），可以内联并简短说明它来自 prototype。只保留决策密集的部分，不要放工作 demo，只放重要部分。
-
-用 `/implement-zh` 一次处理 frontier 上的一个 Ticket；Ticket 之间清空上下文。
-</content>

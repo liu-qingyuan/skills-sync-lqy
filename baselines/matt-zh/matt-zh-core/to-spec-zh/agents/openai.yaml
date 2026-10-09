@@ -1,0 +1,5 @@
+interface:
+  display_name: "生成 Spec"
+  short_description: "将对话整理为 spec"
+policy:
+  allow_implicit_invocation: false

@@ -1,13 +1,14 @@
 ---
 name: triage-lqy
-description: 通过 triage role 状态机处理 issues 和外部 PR：分类、验证、必要时追问，并写出可交给 agent 的 brief。
+disable-model-invocation: true
+description: 通过 triage role 状态机处理 GitHub issues：验证请求、必要时追问，保留 Ralph Git 契约并发布 agent-ready brief；PR 不作为请求入口。
 ---
 
 # Triage
 
 通过一套小型 triage role 状态机，把项目 issue tracker 上的 issue 往前推进。
 
-如果此仓库把外部 PR 也当作请求入口（见 issue tracker 配置），triage 也覆盖这些 PR：**PR 是附带代码的 issue**。它们使用相同的 role、状态和状态机，下文会标出 PR 的少量差异。裸 `#42` 应按 tracker 配置解析为 issue 或 PR。
+LQY 使用 GitHub Issues-only。裸编号先确认是 issue；若为 PR，停止此 triage 并提示使用正常 review，不应用 triage 标签、不发布到 Ralph backlog。
 
 triage 期间发布到 issue tracker 的每条评论或 issue **必须**以下面免责声明开头：
 
@@ -35,11 +36,9 @@ triage 期间发布到 issue tracker 的每条评论或 issue **必须**以下�
 - `ready-for-human` — 需要人类实施
 - `wontfix` — 不会处理
 
-对于 PR，同样的状态要针对附带代码来理解：`ready-for-agent` 表示已经附上 brief，agent 应基于 diff 继续推进；`ready-for-human` 表示它已准备好由人类合并。
-
 每个 triage 过的 issue 都应该恰好有一个类别 role 和一个状态 role。如果状态 role 冲突，先标出冲突并询问维护者，不要继续操作。
 
-这些是规范 role 名称；issue tracker 中实际使用的标签字符串可能不同。映射应该已经提供；如果没有，请运行 `$setup-matt-pocock-skills-lqy`。
+这些是规范 role 名称；issue tracker 中实际使用的标签字符串可能不同。映射应该已经提供；如果没有，提示用户显式运行 `$setup-matt-pocock-skills-lqy`。
 
 状态转换：未打标签的 issue 通常先进入 `needs-triage`；之后移动到 `needs-info`、`ready-for-agent`、`ready-for-human` 或 `wontfix`。报告者回复后，`needs-info` 回到 `needs-triage`。维护者可以随时覆盖；如果转换看起来不寻常，先标出并询问。
 
@@ -48,7 +47,7 @@ triage 期间发布到 issue tracker 的每条评论或 issue **必须**以下�
 维护者调用 `/triage-lqy` 并用自然语言描述目标。解释请求并行动。例如：
 
 - “告诉我有哪些需要我注意”
-- “看一下 #42”（issue 或 PR）
+- “看一下 #42”（GitHub issue；若解析为 PR 则停止）
 - “把 #42 移到 ready-for-agent”
 - “有什么 ready-for-agent 的 issue 吗？”
 
@@ -60,22 +59,20 @@ triage 期间发布到 issue tracker 的每条评论或 issue **必须**以下�
 2. **`needs-triage`** — 正在评估。
 3. **自上次 triage notes 之后报告者有活动的 `needs-info`** — 需要重新评估。
 
-当 PR 在范围内时，把外部 PR 放进这些分组，并给每一行标记 `[PR]` 或 `[issue]`。发现阶段只显示**外部** PR（谁算外部由 tracker 配置定义）；协作者正在进行的 PR 不是 triage 工作。这个过滤只用于发现；明确指定的 PR 无论作者是谁都要 triage。
-
 显示每组数量和每个条目的一行摘要，让维护者选择。
 
-## Triage 一个具体 issue 或 PR
+## Triage 一个具体 issue
 
-1. **收集上下文。** 阅读完整 issue 或 PR（正文、评论、标签、作者、日期；PR 还要读 diff）。解析之前的 triage notes，避免重复追问已解决的问题。用项目领域术语表探索代码库，并尊重相关 ADR。针对代码库做两项检查：(a) **冗余** — 按领域概念（不只是请求措辞）搜索请求行为是否已有实现，并报告查看位置。如果已存在，则这是“已实现”的 `wontfix`（见步骤 5）。(b) **先前拒绝** — 读取 `.out-of-scope/*.md`，展示任何类似请求。
+1. **收集上下文。** 阅读完整 issue（正文、评论、标签、作者、日期）。解析之前的 triage notes，避免重复追问已解决的问题。用项目领域术语表探索代码库，并尊重相关 ADR。针对代码库做两项检查：(a) **冗余** — 按领域概念（不只是请求措辞）搜索请求行为是否已有实现，并报告查看位置。如果已存在，则这是“已实现”的 `wontfix`（见步骤 5）。(b) **先前拒绝** — 读取 `.out-of-scope/*.md`，展示任何类似请求。
 
 2. **推荐。** 告诉维护者你推荐的类别和状态，并给出理由；同时提供与请求相关的简短代码库摘要，包括它是否已实现。等待指示。
 
-3. **验证声明。** 在任何追问之前，先检查声明是否成立。对于 bug，按报告者步骤复现。对于 PR，确认 diff 确实完成了它声称的事：checkout、运行相关测试或命令。报告结果：已确认（附代码路径）、复现失败，或细节不足（强烈的 `needs-info` 信号）。已确认的验证会让 agent brief 更有力。
+3. **验证声明。** 在任何追问之前，先检查声明是否成立。对于 bug，按报告者步骤复现。报告结果：已确认（附代码路径）、复现失败，或细节不足（强烈的 `needs-info` 信号）。已确认的验证会让 agent brief 更有力。
 
-4. **追问（如果需要）。** 如果请求还需要打磨，请同时运行 `/grilling-lqy` 和 `/domain-modeling-lqy`：一次一个问题地把它打磨成形，锐化领域术语，并在决策落地时内联更新 `CONTEXT.md`/ADR。
+4. **追问（如果需要）。** 分别读取并执行 `grilling-lqy` 和 `domain-modeling-lqy` 的 `SKILL.md`，按用户提问节奏澄清 frontier；事实自己查，决策交给用户。确认后更新项目指定的同一份术语表（新项目默认 `GLOSSARY.md`）及必要 ADR，不自动更名旧 CONTEXT 或创建第二份文档。
 
 5. **应用结果：**
-   - `ready-for-agent` — 发布 agent brief 评论（见 [AGENT-BRIEF.md](AGENT-BRIEF.md)）。GitHub 普通 issue 必须继续执行下方的 Git-bound publication gate；PR 不执行该 gate。
+   - `ready-for-agent` — 发布 agent brief 评论（见 [AGENT-BRIEF.md](AGENT-BRIEF.md)）。必须继续执行下方的 Git-bound publication gate。
    - `ready-for-human` — 使用与 agent brief 相同的结构，但说明为什么不能委托给 agent（判断调用、外部访问、设计决策、手动测试）。
    - `needs-info` — 发布 triage notes（模板如下）。
    - `wontfix` — 关闭；评论取决于原因：
@@ -90,7 +87,7 @@ triage 期间发布到 issue tracker 的每条评论或 issue **必须**以下�
 
 ## GitHub Ralph-ready issue publication gate
 
-此分支只适用于进入 Ralph backlog 的**普通 GitHub issue**。PR 使用 GitHub 原生 head/base 和既有 PR triage 流程；不要向 PR 正文添加 `## Git`，不要为 PR provision Ralph worktree，也不要调用此 publisher。
+此分支只适用于进入 Ralph backlog 的**普通 GitHub issue**。PR 使用 GitHub 原生 head/base 和正常 review 流程，不属于 triage；不要向 PR 正文添加 `## Git`，不要为 PR provision Ralph worktree，也不要调用此 publisher。
 
 1. 把完整 agent brief 写入临时 Markdown 文件。文件必须以 triage AI 免责声明开头，并包含 `## Agent Brief`。
 2. 从 issue tracker 配置确认目标是 GitHub issue，并确认当前 request 不是 PR。
@@ -132,4 +129,4 @@ Ralph issue publication 完全忽略 assignees：不读取、不修改，也不�
 
 ## 恢复上一个会话
 
-如果 issue 或 PR 上有先前的 triage notes，先阅读它们，检查报告者是否回答了悬而未决的问题，并在继续前给出更新后的情况。不要再次追问已解决的问题。
+如果 issue 上有先前的 triage notes，先阅读它们，检查报告者是否回答了悬而未决的问题，并在继续前给出更新后的情况。不要再次追问已解决的问题。

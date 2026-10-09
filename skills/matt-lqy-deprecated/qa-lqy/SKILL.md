@@ -1,5 +1,6 @@
 ---
 name: qa-lqy
+disable-model-invocation: true
 description: 交互式 QA 会话：用户用对话方式报告 bug 或问题，agent 创建 GitHub issues，并在后台探索代码库获得上下文和领域语言。
 ---
 

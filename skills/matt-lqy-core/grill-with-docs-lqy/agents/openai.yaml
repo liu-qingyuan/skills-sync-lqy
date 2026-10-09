@@ -1,0 +1,6 @@
+interface:
+  display_name: grill-with-docs-lqy
+  short_description: 通过连续追问打磨计划或设计，并在过程中创建或更新 ADR、术语表等文档。
+  default_prompt: 使用 $grill-with-docs-lqy 完成本次任务；先读取 SKILL.md，遵守现有范围与合同。
+policy:
+  allow_implicit_invocation: false

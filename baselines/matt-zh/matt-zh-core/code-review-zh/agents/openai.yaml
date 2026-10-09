@@ -1,0 +1,3 @@
+interface:
+  display_name: "代码 review"
+  short_description: "按标准和 spec 两轴审查 diff"

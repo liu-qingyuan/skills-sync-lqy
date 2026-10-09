@@ -1,75 +1,97 @@
 ---
 name: ask-matt-zh
-description: 询问当前情境应该使用哪个 skill 或工作流。这是本仓库 skills 的中文路由器。用于用户不确定该用哪个 Matt Pocock 工作流，或想让 AI 帮忙选择 grill、triage、to-spec、tdd、handoff 等流程时。
+description: 询问当前情况适合哪个 Skill 或流程；本仓库 Skill 的路由入口。
+disable-model-invocation: true
 ---
 
-# Ask Matt
+# 问 Matt
 
-你不需要记住每个 skill，所以来问。
+不必记住所有 Skill，直接问。
 
-**flow** 是穿过多个 skills 的路径。大多数路径沿一条**主流程**前进，并有两个**入口**并入它。其他内容要么是独立 skill，要么是运行在底下的 vocabulary layer。
+说明某个 Skill 做什么或建议跳过步骤前，先读它的 `SKILL.md`：这里的摘要仅用于定位。
 
-## 主流程：idea → ship
+**流程**是穿过一组 Skill 的路径。多数路径沿同一**主流程**前进，两条**入口支线**汇入它；其余是独立工具或底层共享词汇。
 
-大多数工作会走这条路线：你有一个想法，并希望把它构建出来。
+## 主流程：想法 → 交付
 
-1. **`/grill-with-docs-zh`** — 通过追问 sharpen idea。当你**有代码库**时从这里开始：它是有状态的，会把学到的东西保留在 `CONTEXT.md` 和 ADR 中。（没有代码库？用 `/grill-me-zh`，见 Standalone。两者都运行同一个 `/grilling-zh` primitive；`grill-with-docs-zh` 是留下记录的版本。）
-2. **分支 — 能否在对话中解决每个问题？** 如果某个问题需要可运行答案（state、business logic、必须看到的 UI），就通过 **`/handoff-zh`** 在两个方向上桥接，绕到 prototype：
-   - **`/handoff-zh`** 导出，然后打开一个指向该文件的新会话；
-   - **`/prototype-zh`** 用一次性代码回答问题；
-   - **`/handoff-zh`** 带回你学到的内容，并从原始 idea 线程引用它。
-3. **分支 — 这是 multi-session build 吗？**
-   - **是** → **`/to-spec-zh`**（把线程变成 spec），然后 **`/to-tickets-zh`** 把它拆成 tracer-bullet Ticket，每个 Ticket 声明自己的 **blocking edges**。本地 tracker 上，这是按顺序手动处理的 `tickets.md`；真实 tracker 上，edges 会变成原生 blocking links，因此 blocker 完成后任何可领取 Ticket 都可以被抓取。每个 Ticket 启动一次 **`/implement-zh`**，并且**在 Ticket 之间清空上下文**。
-   - **否** → 在同一个上下文窗口里直接 **`/implement-zh`**。
+多数工作的路线：你有一个想法，希望把它构建出来。
 
-无论哪条路，**`/implement-zh`** 都通过内部驱动 **`/tdd-zh`** 构建每个 issue：一次一个 red-green slice。结束时运行 **`/code-review-zh`**，对 diff 做 Standards + Spec 双轴 review，然后 commit。只想 test-first 构建一个具体行为而不需要完整 spec 时，直接使用 **`/tdd-zh`**；想针对固定点审查 branch 或 PR 时，直接使用 **`/code-review-zh`**。
+1. **`/grill-with-docs-zh`** 通过访谈打磨想法。只要**身处工作目录**，就从这里开始：它会把学到的东西记入 `GLOSSARY.md` 和 ADR。没有工作目录时改用 `/grill-me-zh`（见独立工具）。两者都运行 `/grilling-zh`，但前者留下书面记录；有仓库可记录时它更合适。
+2. **分支：能靠对话解决所有问题吗？**如果某个问题需要可运行的答案（状态、业务逻辑、必须亲眼看到的 UI），借助双向 **`/handoff-zh`** 转入原型（原型在独立目录，这正是 handoff 的适用情形；见“阶段边界”）：
+   - 使用 **`/handoff-zh`** 输出，再用其文件打开新会话；
+   - 用 **`/prototype-zh`** 以临时代码回答问题；
+   - 再用 **`/handoff-zh`** 带回发现，在原讨论中引用它。
+3. **分支：这项构建要跨多个会话吗？**
+   - **要** → **`/to-spec-zh`** 将对话整理成 spec，再用 **`/to-tickets-zh`** 拆成 tracer-bullet Ticket，每个声明阻塞关系。之后有两种执行方式：
+     - 每个 Ticket 用一次 **`/implement-zh`**，中间用 **`/clear`** 清空上下文。本地 tracker 的每个 Ticket 是 `.scratch/<feature>/issues/` 中的独立文件，人工按依赖顺序处理；真实 tracker 用原生阻塞关系，阻塞项完成的 Ticket 即可领取。每个 Ticket 自成一体，因此上一项的上下文可以丢弃。
+     - 用 **`/implement-spec-zh`** 一次处理整个 spec：将 Ticket 看成**任务图**，在可执行的**前沿**上并行派发实现 subagent，最后汇总到一个**集成分支**。如果更愿意协调构建而非逐项亲自驱动，选这个方式。
+   - **不要** → 在当前上下文直接运行 **`/implement-zh`**。
 
-### Context hygiene
+   两种方式都借助 **`/tdd-zh`** 开发（逐个红绿切片），并以 **`/code-review-zh`** 对 diff 做 Standards + Spec 两轴审查。`/implement-zh` 为每个 Ticket 运行二者；`/implement-spec-zh` 的实现 subagent 各自执行 TDD，最后对集成分支整体 review 一次。如果只想测试先行实现具体行为，直接用 **`/tdd-zh`**；若要从固定点 review 分支或 PR，直接用 **`/code-review-zh`**。
 
-步骤 1-3 保持在**一个不间断的上下文窗口**中：不要在 `/to-tickets-zh` 前 compact 或清空。这样 grilling、spec 和 Ticket 都建立在同一组思考上。每个 `/implement-zh` 再从 Ticket 开始 fresh。
+   工作提交为 PR 时，**`/pr-zh`** 整理正文：用最小视觉元素展示变化、给出前后对比证据、判断是单向门还是双向门。它允许模型自行调用，因此 Agent 撰写 PR 时会主动使用。
 
-限制是 **[smart zone](https://www.aihero.dev/ai-coding-dictionary/smart-zone)**：也就是模型仍能敏锐推理的窗口（顶级模型约 120k token）。如果会话在 `/to-tickets-zh` 前接近这个限制，不要继续硬推；用 `/handoff-zh` 在新线程继续。
+4. **`/retro-zh`** 闭环。构建后（尤其是不顺利时），回看会话，提出改善 Agent **环境**而非代码的建议：导航指针、自动检查、`/code-review-zh` 执行的编码标准、引导文件、工具。机械错误变为确定性检查；判断问题变为编码标准。下一次构建从更好的环境开始。
 
-## 入口
+### 上下文卫生
 
-这些起始情况会产生工作，然后并入主流程。
+步骤 1–3 保持**连续的上下文窗口**（`/to-tickets-zh` 前不要 compact 或 clear），让追问、spec 与 Ticket 使用同一份思路。每项 `/implement-zh` 从对应 Ticket 开启新上下文。复盘当前会话应在清空前运行 `/retro-zh`；清空后则向它提供原会话日志。
 
-- **Bug 和请求堆积** → **`/triage-zh`**。它让 issues 穿过 triage roles，并产出 agent-ready issues，之后由 **`/implement-zh`** 接手。
+边界是[高效上下文区](https://www.aihero.dev/ai-coding-dictionary/smart-zone)：模型仍能敏锐推理的窗口（当前先进模型约 150k Token）。若在 `/to-tickets-zh` 前接近边界，不要勉强继续；在最近的阶段边界 `/compact` 后继续（见“阶段边界”）。
 
-  triage 只适用于**不是你创建的** issues：bug reports、incoming feature requests、任何原始输入。`/to-tickets-zh` 产出的 Ticket 已经是 ready-for-agent，因此**不要 triage 它们**。
+## 入口支线
 
-- **Something's broken** → **`/diagnosing-bugs-zh`**。用于难处理的问题：初看解决不了的 bug、间歇性 flake、在两个 known-good states 之间混入的 regression。它在拥有一个会因为_这个_ bug 已经变红的 tight feedback loop 之前拒绝理论化，然后用 regression test 修复。post-mortem 如果发现真正问题是没有好 seam 锁住 bug，它会交给 **`/improve-codebase-architecture-zh`**。
+从某种初始状况生成工作，并汇入主流程。
 
-- **巨大而模糊的 effort：greenfield 项目或大型 feature build，大到一个会话装不下** → **`/wayfinder-zh`**。当从当前状态到 destination 的路还看不见时，它在 issue tracker 上绘制一张共享 map，一次解决一个调查 Ticket，产出**决策，而不是交付物**，直到迷雾被推开、路线清楚。然后它并入主流程的 **`/to-spec-zh`**（如果最后发现足够小，也可以直接到 **`/implement-zh`**）。`/grill-with-docs-zh` 用来 sharpen 一个会话能装下的 idea；wayfinder 用来处理装不下的 idea。
+- **Bug 和请求堆积** → **`/triage-zh`**。它推动 Issue 经过 triage 角色，生成供 Agent 领取的 Issue，之后由 **`/implement-zh`** 处理。
 
-## Codebase health
+  Triage 只处理**不是你自己创建**的原始 Issue：Bug 报告、外部功能请求等。`/to-tickets-zh` 生成的 Ticket 已可供 Agent 领取，**无需再 triage**。
 
-不是 feature work，而是维护。
+- **出现故障** → **`/diagnosing-bugs-zh`**。用于一眼无法定位的 bug、偶发失败、在两个已知正常状态之间出现的回归。它先建立**紧凑反馈循环**（一个能对*这个* bug 报红灯的命令），再做假设，并以回归测试修复。修复后在同一会话用 **`/retro-zh`** 追问如何预防；若真正的问题是缺少适当接缝，则交给 **`/improve-codebase-architecture-zh`**。
 
-- **`/improve-codebase-architecture-zh`** — 有空时运行，让代码库持续适合 agent 操作。它会发现**模块加深机会**；选中一个会_产生一个 idea_，再带入主流程的 `/grill-with-docs-zh`。它负责调查候选项；**`/codebase-design-zh`**（见下）负责设计被选中的那个。
+- **庞大而模糊的工作：绿地项目或大功能，超过单次会话容量** → **`/wayfinder-zh`**，这里认知负担最高的流程。当通往目的地的路线还看不见时，它在 Issue tracker 上绘制**决策 Ticket**的共享地图，一次解决一项，产出**决策而非交付物**，直到路线清楚。`/grill-with-docs-zh` 处理能放入一个会话的想法；wayfinder 更慢、更复杂，只用于真正太大的工作，绝不用于范围清晰的功能。
 
-## Vocabulary underneath
+  地图厘清后，**交接而非直接构建**：回到主流程的 **`/to-spec-zh`**，把链接中的决策汇总成可构建计划，再按常规执行 `/to-tickets-zh` 和 `/implement-zh`。直接从地图跳到 `/implement-zh` 会遗漏链接里的细节；只有工作确实变得足够小时才能跳过 spec。
 
-两个 model-invoked references 运行在其他 skills 下面，分别是自身 vocabulary 的 single source of truth。当问题出在**词**而不是流程时，可以直接调用它们；也可以让上面的 skills 拉取它们。
+## 代码库健康
 
-- **`/domain-modeling-zh`** — sharpen 项目的 domain language：挑战模糊术语，解决 overloaded word（例如 “account” 同时承担三种含义），把难以逆转的决策记录为 ADR。它是 `/grill-with-docs-zh` 用来保持 `CONTEXT.md` 干净 glossary 的主动 discipline。
-- **`/codebase-design-zh`** — deep-module vocabulary（module、interface、depth、seam、adapter、leverage、locality），用于设计模块的形状：用小 interface 在干净 seam 后隐藏大量行为。`/tdd-zh` 和 `/improve-codebase-architecture-zh` 都使用这套语言。
+不是功能开发，而是维护。
 
-## Crossing sessions
+- **`/improve-codebase-architecture-zh`** 在空闲时调查使代码库更适合 Agent 工作的机会，发现**加深模块的机会**。选择一个候选会*产生一个想法*，可带入主流程的 `/grill-with-docs-zh`。前者做调查，后面的 **`/codebase-design-zh`** 提供设计候选时需要的工具和词汇。
 
-- **`/handoff-zh`** — 当 thread 已满，或你需要分支出去（例如进入 `/prototype-zh` 会话）时，把对话压缩成 markdown 文件。不要原地继续；**打开新会话并引用该文件**来携带上下文。它是在上下文窗口之间双向移动的桥。想要**新会话**但需要**保留当前对话**时使用。
-- **`/compact`**（built-in）— 留在**同一个对话**里，让较早 turns 被 summary。适合在阶段之间有意中断、且不介意丢失逐字历史时使用。不要在阶段中途 compact；agent 可能丢失方向。`/handoff-zh` 是 fork；`/compact` 是 continue。
+## 底层词汇
 
-## Standalone
+两个可由模型调用的参考 Skill，各自是其领域词汇的单一事实来源。当问题在于**措辞**而非流程时，可直接使用；也可以由上层 Skill 按需调用。
 
-完全在主流程之外。
+- **`/domain-modeling-zh`**：打磨项目*领域*语言，质疑模糊或多义术语（例如 account 同时指三种事物），用 ADR 记录难以逆转的决定。这是 `/grill-with-docs-zh` 保持 `GLOSSARY.md` 为清晰术语表的主动工作。
+- **`/codebase-design-zh`**：用于设计模块*结构*的深模块词汇（模块、接口、深度、接缝、适配器、杠杆、局部性）：在干净接缝上的小接口背后隐藏大量行为。`/tdd-zh` 与 `/improve-codebase-architecture-zh` 都使用这些词汇。
 
-- **`/grill-me-zh`** — 和 `/grill-with-docs-zh` 一样的追问，但用于你**没有代码库**的时候。无状态：不在本地保存内容，也不构建 `CONTEXT.md`。用于 sharpen 任何不属于仓库的 plan 或 design。
-- **`/prototype-zh`** — 一个小型一次性程序，用来回答一个 design question：这个 state model 是否合理，或者 UI 应该长什么样。它从一开始就是 throwaway：保留答案，删除代码。它是主流程第 2 步里的 detour，但任何纸面上难以解决的设计问题都可以用它。
-- **`/research-zh`** — 把阅读工作交给**后台 agent**：它针对 **primary sources** 调查一个问题，然后在仓库里留下带引用的 Markdown 文件。你可以在它阅读时继续工作。它产出的文件要带入 `/grill-with-docs-zh` 的主流程；research feeding thinking，不替代 thinking。
-- **`/teach-zh`** — 使用当前目录作为有状态 workspace，跨多个会话学习一个概念。
-- **`/writing-great-skills-zh`** — 写好和编辑好 skills 的参考。
+## 阶段边界
 
-## Precondition
+**阶段**是会话中的一段工作：追问、实现、QA。两阶段的**边界**有五个选项，这是本地图中最难判断的选择：
 
-**`/setup-matt-pocock-skills-zh`** — 第一次运行工程 flow 之前先运行它，配置其他 skills 假设的 issue tracker、triage labels 和 doc layout。自定义 issue tracker 也可以。
+- **继续**：留在原处，没有成本或损失。
+- **`/clear`**：当前上下文对下一步无关时清空窗口。
+- **`/handoff-zh`**：写可携带的 Markdown 文件。仅用于**新的 Agent 运行环境**、**新目录**、交给**同事**，或**阶段中途**分叉旁支任务；收益是可携带性。
+- **Subagent**：给独立上下文一个聚焦任务，并取回报告。
+- **`/compact`**：压缩当前上下文，以摘要开启新会话；这是决策树底部的**默认选项**，不是第一个选择。
+
+阅读 [PHASE-BOUNDARIES.md](PHASE-BOUNDARIES.md) 了解有序决策树：五个问题、各分支依据，以及为何第一手资料的损失使得**继续**必须先被排除。只在阶段**边界**决定；中途继续或把剩余工作拆给 subagent。
+
+## 独立工具
+
+不在主流程上：
+
+- **`/grill-me-zh`**：与 `/grill-with-docs-zh` 相同的持续追问，但**无状态**：不保存本地文件，也不生成 `GLOSSARY.md`。只在**不处于工作目录**时用它打磨计划、设计或文字；在工作目录中选择会留下书面记录的 `/grill-with-docs-zh`。
+- **`/grilling-zh`**：访谈原语，逐轮推进前沿；Agent 负责查事实，用户负责作决策。`/grill-me-zh` 与 `/grill-with-docs-zh` 是两种具名入口，`/triage-zh`、`/wayfinder-zh` 和 `/improve-codebase-architecture-zh` 也会内部使用。仅当想不加包装地访谈时直接调用。
+- **`/prototype-zh`**：用小型临时程序回答一个设计问题，例如状态模型是否合理、UI 应如何呈现。临时性约束代码写法，并非承诺删除产物：答案融入正式代码，原型则作为**第一手资料**留在从 main 分出的 `prototype/<name>` 分支，由实现 Issue 指向它。它是主流程步骤 2 的支线，也可用于其他无法纸上讨论清楚的问题。
+- **`/research-zh`**：委派**后台 Agent**从**第一手来源**调查问题，在仓库留一份带引用的 Markdown 文件。它做研究时继续其他工作；成果送入 `/grill-with-docs-zh` 帮助思考，而不是替代思考。
+- **`/to-questionnaire-zh`**：当关键知识不在你或代码库中，而在**其他人**手中时，起草问卷请其回答。这是 `/grill-me-zh` 的反向做法：访谈用户的**发送需求**（发给谁、需要什么），而不是代替接收者回答主题。反馈成为 `/grill-with-docs-zh` 或 `/to-spec-zh` 的材料。
+- **`/wizard-zh`**：用于只有**人**能执行的步骤，例如配置基础设施、凭据或 CI secret，操作陌生第三方控制台，执行一次性迁移或切换。它生成交互式 bash 脚本，逐个打开 URL、捕获值、写入 `.env` 与 GitHub secrets，避免每次重新向 Agent 解释流程。模型可主动调用，但若 Agent 自己能完成，就应该自己完成；仅在人确实必须参与时使用。
+- **`/wait-what-zh`**：上一条信息没听明白时用于纠正。对话中途、其他 Skill 内都可调用，让 Agent 补足背景，用简单语言和 `GLOSSARY.md` 统一词汇重新解释。它是事后补救；`/grill-with-docs-zh` 提前约定共同语言，是预防术语障碍的办法。
+- **`/teach-zh`**：以当前目录为有状态工作区，跨多个会话学习概念。
+- **`/writing-for-agents-zh`**：为 Agent 撰写 Skill、AGENTS.md 和被指针引用的文档时的参考。
+
+## 前提
+
+首次使用工程流程前运行 **`/setup-matt-pocock-skills-zh`**，配置其他 Skill 所依赖的 Issue tracker、triage 标签与领域文档布局。也支持自定义 Issue tracker。

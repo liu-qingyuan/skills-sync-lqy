@@ -1,5 +1,6 @@
 ---
 name: loop-me-lqy
+disable-model-invocation: true
 description: 在当前 workspace 中追问我想构建的工作流规格。
 ---
 

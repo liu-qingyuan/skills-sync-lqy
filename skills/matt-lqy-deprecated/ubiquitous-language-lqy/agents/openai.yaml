@@ -1,0 +1,6 @@
+interface:
+  display_name: ubiquitous-language-lqy
+  short_description: 从当前对话中提取 DDD 风格统一语言 glossary，标记歧义并提出标准术语，保存到 UBIQUITOUS_LANGUAGE
+  default_prompt: 使用 $ubiquitous-language-lqy 完成本次任务；先读取 SKILL.md，遵守现有范围与合同。
+policy:
+  allow_implicit_invocation: false

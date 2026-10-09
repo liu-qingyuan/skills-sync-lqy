@@ -1,11 +1,12 @@
 ---
 name: ralph-plan-lqy
+disable-model-invocation: true
 description: "规划或启动 Open Ralph GitHub issue backlog：Pi worker 默认，优先使用 Pi 会话的 `run_ralph` 工具，并提供 locked Pi CLI 回退。Use for `$ralph-plan`, `$ralph`, AFK coding loops, or clearing GitHub issue backlogs."
 ---
 
 # Ralph Plan
 
-默认使用 Pi worker。本 skill 只负责启动策略；每轮的选票、gate、实现交接和完成条件以 `templates/issue-backlog-prompt.md` 为准。
+仅在用户明确调用或要求启动循环时使用；“以 Ralph 为标准”或更新技能不表示启动授权。默认使用 Pi worker。本 skill 只负责启动策略；每轮的选票、gate、实现交接和完成条件以 `templates/issue-backlog-prompt.md` 为准。
 
 ## 边界
 

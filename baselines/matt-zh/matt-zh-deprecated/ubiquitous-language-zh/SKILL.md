@@ -1,5 +1,6 @@
 ---
 name: ubiquitous-language-zh
+disable-model-invocation: true
 description: 从当前对话中提取 DDD 风格统一语言 glossary，标记歧义并提出标准术语，保存到 UBIQUITOUS_LANGUAGE.md。
 ---
 

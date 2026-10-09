@@ -72,7 +72,7 @@ triage 期间发布到 issue tracker 的每条评论或 issue **必须**以下�
 
 3. **验证声明。** 在任何追问之前，先检查声明是否成立。对于 bug，按报告者步骤复现。对于 PR，确认 diff 确实完成了它声称的事：checkout、运行相关测试或命令。报告结果：已确认（附代码路径）、复现失败，或细节不足（强烈的 `needs-info` 信号）。已确认的验证会让 agent brief 更有力。
 
-4. **追问（如果需要）。** 如果请求还需要打磨，请同时运行 `/grilling-zh` 和 `/domain-modeling-zh`：一次一个问题地把它打磨成形，锐化领域术语，并在决策落地时内联更新 `CONTEXT.md`/ADR。
+4. **追问（如有需要）。** 请求仍需打磨时，调用 Skill 工具两次，分别指定 `grilling-zh` 和 `domain-modeling-zh`：逐轮提出问题，打磨请求、明确领域术语，并在决策落地时及时更新 `GLOSSARY.md` 与 ADR。
 
 5. **应用结果：**
    - `ready-for-agent` — 发布 agent brief 评论（见 [AGENT-BRIEF.md](AGENT-BRIEF.md)）。

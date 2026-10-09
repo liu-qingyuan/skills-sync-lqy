@@ -1,0 +1,6 @@
+interface:
+  display_name: tdd-lqy
+  short_description: 测试驱动开发与测试策略。用于 test-first 功能或 bug、red-green-refactor，或需要决定测试层级、m
+  default_prompt: 使用 $tdd-lqy 完成本次任务；先读取 SKILL.md，遵守现有范围与合同。
+policy:
+  allow_implicit_invocation: true

@@ -33,7 +33,7 @@ issue tracker 应该已经提供；如果缺少 `docs/agents/issue-tracker.md`�
 
 ### 3. 识别 standards 来源
 
-仓库中任何记录代码应该如何编写的内容，例如 `CODING_STANDARDS.md` 或 `CONTRIBUTING.md`。
+搜索仓库中**每个**记录代码应如何编写的文件。若 `CODING_STANDARDS.md` 或 `CONTRIBUTING.md` 存在，必须列入来源清单。
 
 除了仓库记录的内容，Standards 轴始终携带下面的 **smell baseline**：一组固定的 Fowler code smells（_Refactoring_, ch.3），即使仓库没有任何文档也适用。两条规则约束它：
 
@@ -57,7 +57,7 @@ issue tracker 应该已经提供；如果缺少 `docs/agents/issue-tracker.md`�
 
 ### 4. 并行生成两个 sub-agent
 
-发送一条包含两个 `Agent` tool calls 的消息。两个都使用 `general-purpose` subagent。
+在同一轮中并发调用两个前台 subagent，并汇总它们返回的报告。
 
 **Standards sub-agent prompt** 包括：
 

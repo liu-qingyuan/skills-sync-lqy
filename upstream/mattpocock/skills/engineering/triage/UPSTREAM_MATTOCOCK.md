@@ -1,8 +1,9 @@
 # Matt Pocock upstream mirror
 
 - Source repository: https://github.com/mattpocock/skills
-- Source commit: `d574778f94cf620fcc8ce741584093bc650a61d3`
+- Source commit: `49dd158d1076134a641b33efb035946536778336`
 - Source path: `skills/engineering/triage`
 - Local path: `upstream/mattpocock/skills/engineering/triage`
+- Status: Active
 
-This directory is an upstream-mirrored skill. Keep behavior aligned with upstream unless README explicitly marks a local customized variant with a different name.
+Source files in this directory are mirrored byte-for-byte from the pinned upstream commit.

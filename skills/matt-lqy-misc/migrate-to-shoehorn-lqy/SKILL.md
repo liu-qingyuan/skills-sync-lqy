@@ -1,5 +1,6 @@
 ---
 name: migrate-to-shoehorn-lqy
+disable-model-invocation: true
 description: 把测试文件中的 `as` 类型断言迁移到 @total-typescript/shoehorn。用于用户提到 shoehorn、想替换测试里的
   as，或需要 partial test data 时。
 ---

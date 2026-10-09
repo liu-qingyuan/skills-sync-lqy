@@ -1,0 +1,6 @@
+interface:
+  display_name: edit-article-lqy
+  short_description: 编辑和改进文章：重组章节、提升清晰度、压缩表达。用于用户想编辑、修改或改进文章草稿时。
+  default_prompt: 使用 $edit-article-lqy 完成本次任务；先读取 SKILL.md，遵守现有范围与合同。
+policy:
+  allow_implicit_invocation: false

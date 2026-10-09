@@ -1,5 +1,6 @@
 ---
 name: scaffold-exercises-lqy
+disable-model-invocation: true
 description: 创建练习目录结构，包括 sections、problems、solutions 和 explainers，并确保通过 lint。用于用户想
   scaffold exercises、创建练习 stub 或设置新课程章节时。
 ---

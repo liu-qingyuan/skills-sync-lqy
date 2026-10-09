@@ -1,0 +1,6 @@
+interface:
+  display_name: writing-for-agents-lqy
+  short_description: 编写 agent 读取的文档：skills、AGENTS.md 和按引用加载的说明。用于创建或编辑这些文件，收紧触发、完成标准与
+  default_prompt: 使用 $writing-for-agents-lqy 完成本次任务；先读取 SKILL.md，遵守现有范围与合同。
+policy:
+  allow_implicit_invocation: true

@@ -1,0 +1,6 @@
+interface:
+  display_name: to-spec-lqy
+  short_description: 把当前对话上下文整理成 spec 并发布到项目 issue tracker；不重新访谈，只综合已有讨论。
+  default_prompt: 使用 $to-spec-lqy 完成本次任务；先读取 SKILL.md，遵守现有范围与合同。
+policy:
+  allow_implicit_invocation: false

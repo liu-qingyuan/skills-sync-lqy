@@ -1,0 +1,6 @@
+interface:
+  display_name: writing-great-skills-lqy
+  short_description: 编写和编辑高质量 skills 的参考：让 skill 可预测的词汇和原则。
+  default_prompt: 使用 $writing-great-skills-lqy 完成本次任务；先读取 SKILL.md，遵守现有范围与合同。
+policy:
+  allow_implicit_invocation: false

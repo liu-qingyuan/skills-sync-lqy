@@ -1,0 +1,3 @@
+interface:
+  display_name: "PR"
+  short_description: "撰写易于 review 的 PR 正文"

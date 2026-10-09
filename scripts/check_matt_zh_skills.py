@@ -8,19 +8,20 @@ from __future__ import annotations
 
 import json
 import re
-import subprocess
 import sys
 from pathlib import Path
+
+import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
 SKILLS = ROOT / "skills"
 ZH_BASELINE = ROOT / "baselines" / "matt-zh"
 UPSTREAM = ROOT / "upstream" / "mattpocock" / "skills"
 MARKETPLACE = ROOT / ".claude-plugin" / "marketplace.json"
-EXPECTED_MATT_LQY_COUNT = 35
-EXPECTED_MATT_ZH_COUNT = 38
-EXPECTED_UPSTREAM_COUNT = 38
-EXPECTED_INSTALLABLE_COUNT = 50
+EXPECTED_MATT_LQY_COUNT = 38
+EXPECTED_MATT_ZH_COUNT = 46  # 38 current upstream identities + 8 retained legacy identities
+EXPECTED_UPSTREAM_COUNT = 46
+EXPECTED_INSTALLABLE_COUNT = 53
 POLLUTION_PATTERNS = [
     "这是 Matt Pocock",
     "中文本地化版本",
@@ -101,7 +102,10 @@ REQUIRED_CONTEXT_TERMS = [
     "Markdown",
     "仓库",
     "Token",
-    "Context map",
+    "Glossary map",
+    "Decision ticket",
+    "Task graph",
+    "Frontier",
     "按需创建",
 ]
 ENGLISH_COMMANDS = [
@@ -246,14 +250,14 @@ def check_zh_baseline_links(errors: list[str]) -> None:
 
 
 def check_context_glossary(errors: list[str]) -> None:
-    context = ROOT / "CONTEXT.md"
+    context = ROOT / "GLOSSARY.md"
     if not context.exists():
-        fail(errors, "missing root CONTEXT.md glossary for Matt zh terminology")
+        fail(errors, "missing root GLOSSARY.md glossary for Matt zh terminology")
         return
     text = context.read_text()
     for term in REQUIRED_CONTEXT_TERMS:
         if f"**{term}**" not in text:
-            fail(errors, f"CONTEXT.md missing required glossary term: {term}")
+            fail(errors, f"GLOSSARY.md missing required glossary term: {term}")
 
 
 def check_matt_body_clean(errors: list[str]) -> None:
@@ -296,15 +300,54 @@ def check_translation_shape(errors: list[str]) -> None:
             fail(errors, f"possible incomplete translation: {rel(skill_md)} has {zh_lines} lines vs upstream {up_lines}")
 
 
-def run_quick_validate(errors: list[str]) -> None:
-    validator = Path.home() / ".codex" / "skills" / ".system" / "skill-creator" / "scripts" / "quick_validate.py"
-    if not validator.exists():
-        fail(errors, f"quick_validate.py not found: {validator}")
-        return
+def check_skill_documents(errors: list[str]) -> None:
+    allowed = {"name", "description", "license", "allowed-tools", "metadata", "compatibility", "argument-hint", "disable-model-invocation"}
     for skill_dir in list_skill_dirs(SKILLS):
-        result = subprocess.run([sys.executable, str(validator), str(skill_dir)], cwd=ROOT, text=True, capture_output=True)
-        if result.returncode != 0:
-            fail(errors, f"quick_validate failed for {rel(skill_dir)}\n{result.stdout}{result.stderr}")
+        path = skill_dir / "SKILL.md"
+        match = re.match(r"^---\n(.*?)\n---(?:\n|$)", path.read_text(), flags=re.S)
+        if not match:
+            fail(errors, f"invalid frontmatter block: {rel(path)}")
+            continue
+        try:
+            data = yaml.safe_load(match.group(1))
+        except yaml.YAMLError as error:
+            fail(errors, f"invalid YAML frontmatter: {rel(path)}: {error}")
+            continue
+        if not isinstance(data, dict):
+            fail(errors, f"frontmatter must be a mapping: {rel(path)}")
+            continue
+        if set(data) - allowed:
+            fail(errors, f"unsupported frontmatter keys in {rel(path)}: {sorted(set(data) - allowed)}")
+        name = data.get("name")
+        if not isinstance(name, str) or len(name) > 64 or not re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", name):
+            fail(errors, f"invalid frontmatter name: {rel(path)}")
+        description = data.get("description")
+        if not isinstance(description, str) or not description.strip() or len(description) > 1024 or any(c in description for c in "<>"):
+            fail(errors, f"invalid frontmatter description: {rel(path)}")
+        explicit_only = data.get("disable-model-invocation", False)
+        if not isinstance(explicit_only, bool):
+            fail(errors, f"disable-model-invocation must be boolean: {rel(path)}")
+
+        metadata_path = skill_dir / "agents" / "openai.yaml"
+        if not metadata_path.exists():
+            if skill_dir.parent.name.startswith("matt-lqy-") or explicit_only:
+                fail(errors, f"missing Codex invocation metadata: {rel(skill_dir)}")
+            continue
+        try:
+            metadata = yaml.safe_load(metadata_path.read_text())
+        except yaml.YAMLError as error:
+            fail(errors, f"invalid Codex metadata: {rel(metadata_path)}: {error}")
+            continue
+        if not isinstance(metadata, dict) or not isinstance(metadata.get("interface"), dict):
+            fail(errors, f"Codex metadata interface must be a mapping: {rel(metadata_path)}")
+            continue
+        policy = metadata.get("policy", {})
+        if not isinstance(policy, dict):
+            fail(errors, f"invocation policy must be a mapping: {rel(metadata_path)}")
+            continue
+        implicit = policy.get("allow_implicit_invocation", True)
+        if not isinstance(implicit, bool) or implicit == explicit_only:
+            fail(errors, f"Pi/Codex invocation policy mismatch: {rel(metadata_path)}")
 
 
 def main() -> int:
@@ -317,7 +360,7 @@ def main() -> int:
     check_zh_baseline_links(errors)
     check_matt_body_clean(errors)
     check_translation_shape(errors)
-    run_quick_validate(errors)
+    check_skill_documents(errors)
 
     if errors:
         print("Matt LQY skill checks failed:", file=sys.stderr)

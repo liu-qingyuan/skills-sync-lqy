@@ -1,15 +1,15 @@
 ---
 name: implement-lqy
-description: 根据 spec 或一组 issues 实现一项工作。
+description: "实现一个指定 Ticket 或已授权 Ralph worker 选中的任务，遵循公开 Seam 的 TDD、预算化双轴 review 和单上下文停止规则。"
 ---
 
-实施用户指定的一个 Ticket。父 spec 仍需拆分时，先使用 `$to-tickets-lqy` 或要求用户指定子 Ticket。
+实施用户指定或已获用户授权的 Ralph worker 选定的一个 Ticket。收到编号或 URL 时，先按 tracker 契约获取完整正文、标签和评论，并说明标题；引用有歧义就询问。父 spec 仍需拆分时，提示用户先运行 `$to-tickets-lqy` 或指定子 Ticket，不自动发布或启动循环。
 
-实现前满足当前 Ticket 的 `$mermaid-gate-lqy`。Ticket 改变 Module、Interface、Seam 或知识归属时，先使用 `$codebase-design-lqy`；否则不要为了流程加载完整设计审查。尽可能在商定接缝处使用 `$tdd-lqy`。实现中运行聚焦测试，完成后运行相关完整测试套件。
+实现前满足当前 Ticket 的 `$mermaid-gate-lqy`。Ticket 改变 Module、Interface、Seam 或知识归属时，先使用 `$codebase-design-lqy`；否则不要为了流程加载完整设计审查。尽可能在商定接缝处读取并执行 `tdd-lqy` 的 `SKILL.md`；沿用 spec 中已确认的 Seam，只有真实歧义才询问。实现中运行聚焦测试，完成后运行相关完整测试套件。
 
 ## Review
 
-完成验证后，读取并完整执行 `$code-review-lqy`。fixed point、双轴 reviewer、blocking 标准、focused closure、调用预算和停止规则均以该 skill 为唯一来源；review 与门禁通过后继续完成 Ticket。
+完成验证后，按 skills 列表中的实际路径读取并完整执行 `$code-review-lqy` 的 `SKILL.md`；不假设存在 `Skill` tool。fixed point、双轴 reviewer、blocking 标准、focused closure、调用预算和停止规则均以该 skill 为唯一来源；review 与门禁通过后继续完成 Ticket。
 
 ## Oversized Stop
 

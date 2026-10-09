@@ -1,0 +1,7 @@
+interface:
+  display_name: to-tickets-lqy
+  short_description: 把计划、spec 或当前对话拆成一组 tracer-bullet Ticket；每个 Ticket 声明 blocking
+    ed
+  default_prompt: 使用 $to-tickets-lqy 完成本次任务；先读取 SKILL.md，遵守现有范围与合同。
+policy:
+  allow_implicit_invocation: false

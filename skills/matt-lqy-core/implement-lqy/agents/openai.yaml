@@ -1,0 +1,6 @@
+interface:
+  display_name: implement-lqy
+  short_description: 实施单个指定 Ticket 或已授权 Ralph 任务，遵循 TDD、有限 review 与停止合同。
+  default_prompt: 使用 $implement-lqy 完成本次任务；先读取 SKILL.md，遵守现有范围与合同。
+policy:
+  allow_implicit_invocation: true

@@ -1,5 +1,6 @@
 ---
 name: writing-great-skills-lqy
+disable-model-invocation: true
 description: 编写和编辑高质量 skills 的参考：让 skill 可预测的词汇和原则。
 ---
 

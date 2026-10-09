@@ -1,0 +1,6 @@
+interface:
+  display_name: writing-shape-lqy
+  short_description: 写作 exploit：把原始材料逐段塑造成一篇文章。
+  default_prompt: 使用 $writing-shape-lqy 完成本次任务；先读取 SKILL.md，遵守现有范围与合同。
+policy:
+  allow_implicit_invocation: false

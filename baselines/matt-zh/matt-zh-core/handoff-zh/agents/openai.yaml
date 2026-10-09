@@ -1,0 +1,5 @@
+interface:
+  display_name: "交接"
+  short_description: "将对话压缩为交接提示词"
+policy:
+  allow_implicit_invocation: false

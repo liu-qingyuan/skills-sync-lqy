@@ -19,6 +19,8 @@
         "./skills/matt-lqy-core/code-review-lqy",
         "./skills/matt-lqy-core/improve-codebase-architecture-lqy",
         "./skills/matt-lqy-core/prototype-lqy",
+        "./skills/matt-lqy-core/pr-lqy",
+        "./skills/matt-lqy-core/retro-lqy",
         "./skills/matt-lqy-core/resolving-merge-conflicts-lqy",
         "./skills/matt-lqy-core/setup-matt-pocock-skills-lqy",
         "./skills/matt-lqy-core/tdd-lqy",
@@ -27,6 +29,7 @@
         "./skills/matt-lqy-core/to-spec-lqy",
         "./skills/matt-lqy-core/triage-lqy",
         "./skills/matt-lqy-core/wayfinder-lqy",
+        "./skills/matt-lqy-core/writing-for-agents-lqy",
         "./skills/matt-lqy-core/writing-great-skills-lqy"
       ]
     },

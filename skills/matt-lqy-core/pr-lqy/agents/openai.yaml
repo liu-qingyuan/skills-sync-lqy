@@ -1,0 +1,6 @@
+interface:
+  display_name: pr-lqy
+  short_description: 编写或更新 PR 正文：用最小视觉摘要解释变化，给出 Before/After 验证证据，并说明回滚难度与影响范围。
+  default_prompt: 使用 $pr-lqy 完成本次任务；先读取 SKILL.md，遵守现有范围与合同。
+policy:
+  allow_implicit_invocation: true

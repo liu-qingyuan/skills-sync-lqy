@@ -1,0 +1,6 @@
+interface:
+  display_name: loop-me-lqy
+  short_description: 在当前 workspace 中追问我想构建的工作流规格。
+  default_prompt: 使用 $loop-me-lqy 完成本次任务；先读取 SKILL.md，遵守现有范围与合同。
+policy:
+  allow_implicit_invocation: false

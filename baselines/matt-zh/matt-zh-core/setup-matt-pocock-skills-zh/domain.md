@@ -1,47 +1,51 @@
-# 域文档
+# 领域文档
 
-在探索代码库时，工程技能应如何使用此仓库的域文档。
+工程 Skill 在探索代码库时如何使用仓库的领域文档。
 
-## 在探索之前，请阅读这些
+## 探索前阅读
 
-- **`CONTEXT.md`** 位于仓库根目录，或者
-- **`CONTEXT-MAP.md`** 位于仓库根目录（如果存在） — 它指向每个上下文一个 `CONTEXT.md`。阅读与主题相关的每一篇。
-- **`docs/adr/`** — 阅读涉及您将要工作的区域的 ADR。在多上下文仓库中，还请检查 `src/<context>/docs/adr/` 以了解上下文范围内的决策。
+- 根目录的 **`GLOSSARY.md`**；或
+- 若根目录存在 **`GLOSSARY-MAP.md`**，它指向各上下文自己的 `GLOSSARY.md`。阅读与主题相关的每份术语表。
+- **`docs/adr/`**：阅读涉及即将修改区域的 ADR。多上下文仓库还需检查 `src/<context>/docs/adr/` 中的上下文级决策。
 
-如果这些文件不存在，**安静地继续**。不要把缺失当作问题；也不要建议预先创建它们。当术语或决策真正明确时，`/domain-modeling-zh` skill（通常通过 `/grill-with-docs-zh` 和 `/improve-codebase-architecture-zh` 触发）会按需创建这些文件。
+文件不存在时**直接继续**，不要将缺失报告为问题，也不要建议预先创建。`/domain-modeling-zh`（经由 `/grill-with-docs-zh` 或 `/improve-codebase-architecture-zh` 触发）会在术语或决策真正确定时按需创建。
 
-## 文件结构
+## 文件布局
 
-单上下文仓库（大多数仓库）：
+单上下文（多数仓库）：
+
 ```
 /
-├── CONTEXT.md
+├── GLOSSARY.md
 ├── docs/adr/
 │   ├── 0001-event-sourced-orders.md
 │   └── 0002-postgres-for-write-model.md
 └── src/
 ```
-多上下文仓库（根目录中存在“CONTEXT-MAP.md”）：
+
+多上下文（根目录有 `GLOSSARY-MAP.md`）：
+
 ```
 /
-├── CONTEXT-MAP.md
-├── docs/adr/                          ← system-wide decisions
+├── GLOSSARY-MAP.md
+├── docs/adr/                          ← 系统级决策
 └── src/
     ├── ordering/
-    │   ├── CONTEXT.md
-    │   └── docs/adr/                  ← context-specific decisions
+    │   ├── GLOSSARY.md
+    │   └── docs/adr/                  ← 上下文级决策
     └── billing/
-        ├── CONTEXT.md
+        ├── GLOSSARY.md
         └── docs/adr/
 ```
-## 使用词汇表的词汇
 
-当您的输出命名域概念时（在问题标题、重构提案、假设、测试名称中），请使用“CONTEXT.md”中定义的术语。不要转向词汇表明确避免的同义词。
+## 使用术语表的语言
 
-如果您需要的概念尚未出现在术语表中，那么这是一个信号 - 要么您正在发明项目不使用的语言（重新考虑），要么存在真正的差距（请注意“/domain-modeling-zh”）。
+当产物中命名领域概念（Issue 标题、重构建议、假设、测试名称）时，使用 `GLOSSARY.md` 定义的术语，避免使用它明确不推荐的同义词。
+
+若所需概念尚未收入术语表，则需判断：是你在发明项目从未使用的语言（重新考虑），还是术语表确实有缺口（记录并交给 `/domain-modeling-zh`）。
 
 ## 标记 ADR 冲突
 
-如果您的输出与现有 ADR 相矛盾，请明确显示它，而不是默默地覆盖：
+若产物与现有 ADR 冲突，应明确指出，不要默默覆盖：
 
-> _Contradicts ADR-0007（事件源订单）——但值得重新打开，因为……_
+> *与 ADR-0007（事件溯源订单）冲突，但值得重新讨论，因为……*

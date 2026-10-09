@@ -1,0 +1,5 @@
+interface:
+  display_name: "Triage"
+  short_description: "推动 Issue 在 triage 角色间流转"
+policy:
+  allow_implicit_invocation: false

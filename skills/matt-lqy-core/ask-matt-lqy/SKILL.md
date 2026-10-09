@@ -1,61 +1,38 @@
 ---
 name: ask-matt-lqy
-description: 询问当前情境应该使用哪一个 skill 或工作流。这是本仓库用户主动调用 skills 的中文路由器。用于用户不确定该用哪个 Matt Pocock
-  工作流，或想让 AI 帮忙选择 grill、triage、to-spec、tdd、handoff 等流程时。
+description: "为当前情境推荐 LQY skill 或工作流：Ralph 批量实施、单 Ticket、规划、诊断、复盘和交接。只推荐，不自动启动。"
+disable-model-invocation: true
 ---
 
-# 询问马特
+# 选择工作流
 
-你不记得每一项技能，所以要问。
+推荐前先读取候选 skill 的实际 `SKILL.md`，不要仅凭名字描述能力，也不替用户执行 user-only 入口。
 
-**流程**是通过技能的路径。大多数路径沿着一条**主流**运行，并有多个**入口匝道**并入其中。其他一切都是独立的。
+## 主流程
 
-## 主流程：想法→船舶
+- 想法未明确：有项目时用 `grill-with-docs-lqy`，否则用 `grill-me-lqy`。
+- 需要可运行的答案：按需 `prototype-lqy`，把验证出的决策带回讨论。
+- 多 Ticket：`to-spec-lqy` 建立父 spec / Git 契约，`to-tickets-lqy` 发布有依赖的实施 Tickets。
+- 批量实施：**Ralph 是标准入口**。用户明确启动 `ralph-plan-lqy` 后，按 branch / worktree 串行消费 ready-for-agent Tickets，交 `implement-lqy` 完成每项。
+- 单 Ticket：`implement-lqy`，公开 Seam 上 TDD、验证、bounded 双轴 review、受限 clean 和完成状态。
+- 写 PR 正文：`pr-lqy`；不要求从直接 commit/push 改成 PR。
+- 会话复盘：用户主动选择 `retro-lqy`；只建议，不自动改环境。
 
-大多数工作出行的路线。您有一个想法并希望将其实现。
+不把 `implement-spec`、`chief-of-staff`、多层 subagent 调度或定时任务推荐成默认实施流程。
 
-1. **`/grill-with-docs-lqy`** — 通过追问加深想法。当您**拥有代码库**时，请从这里开始：它是有状态的，保留在“CONTEXT.md”和 ADR 中学到的内容。 （没有代码库？使用 `/grill-me-lqy` — 请参阅独立版。）
-2. **分支 — 你能解决对话中的每个问题吗？** 如果问题需要一个可运行的答案（状态、业务逻辑、你必须看到的 UI），请绕道原型，在两个方向上通过 **`/handoff-lqy`** 桥接（请参阅交叉会话）：
-   - **`/handoff-lqy`** 退出，然后针对该文件打开一个新会话，
-   - **`/prototype-lqy`** 用一次性代码回答问题，
-   - **`/handoff-lqy`** 返回您所学到的内容，并从原始想法线程中引用它。
-3. **分支 — 这是多会话构建吗？**
-   - **是** → **`/to-spec-lqy`**（将线程变成 spec）→ **`/to-tickets-lqy`** （将 spec 拆分为可独立抓取的 Ticket）。因为这些 Ticket 是独立的，**每个 Ticket 都有清晰上下文**：每个 Ticket 开始一个新的会话，并通过向其传递 spec 和要处理的单个 Ticket 来启动 **`/implement-lqy`**。
-   - **否** → **`/implement-lqy`** 就在这里，在同一个上下文窗口中。
+## 其它入口
 
-### 环境卫生
+- 已观察故障：`diagnosing-bugs-lqy`，先建立反馈循环。
+- 外部 issue 请求：`triage-lqy`；已经由 Ticket publisher 准备的工作不重复 triage，PR 不作为请求入口。
+- 多会话仍无法看清方向：`wayfinder-lqy`；决策 Ticket 不进 Ralph，路线清晰后再 `to-spec-lqy`。
+- 当前有真实架构摩擦：`improve-codebase-architecture-lqy`，只调查相关热点。
+- 教学：`teach-lqy`。编辑 agent 文档：`writing-for-agents-lqy`。
+- 旧个人 skills 仍可显式使用，但不因上游删除就自动删掉或转移它们的数据。
 
-将步骤 1-3 保留在**一个不间断的上下文窗口**中 - 在“/to-tickets-lqy”之前不要压缩或清除 - 因此追问、spec 和 Ticket 都建立在相同的思维之上。然后，每个“/implement-lqy”都会重新开始，从 Ticket 开始工作。
+## 上下文边界
 
-对此的限制是 **[智能区域](https://www.aihero.dev/ai-coding-dictionary/smart-zone)**：该窗口（最先进模型上的约 120k token）在该窗口内模型仍然可以进行敏锐的推理。如果会话在“/to-tickets-lqy”之前接近它，请不要继续降级 - “/handoff-lqy”并在新线程中继续。
+依次判断：当前对话继续是否足够；下一阶段能否只从 Ticket 等一手材料重新开始；是否需要跨 harness / 目录的 portable handoff；有没有适合有限只读委派的独立问题；最后才考虑 compact。
 
-## 入口匝道
+`handoff-out` 输出可复制 prompt，`handoff-lqy` 写临时交接文件，二者不互相替代。不照搬某个模型的固定 Token 阈值，按实际上下文和完整证据判断。
 
-生成工作的起始情况，然后合并到主流中。
-
-- **错误和请求堆积** → **`/triage-lqy`**。它通过triage role转移问题并产生 agent-ready issue，这些问题稍后会被处理。
-
-  triage 仅适用于**不是您创建的**问题 - 错误报告、传入的功能请求、任何原始的内容。 `/to-tickets-lqy` 产生的 Ticket 已经 ready-for-agent，因此**不要对它们进行 triage**。
-
-- **巨大而模糊的 effort** → **`/wayfinder-lqy`**。用于 greenfield 项目或大型 feature build，大到一个会话装不下、从当前状态到 destination 的路还看不清。它在 issue tracker 上维护共享 map，逐个解决调查 Ticket，产出**决策而不是交付物**；路线清楚后再并入 `/to-spec-lqy`，或在足够小时直接进入 `/implement-lqy`。
-
-## 代码库健康状况
-
-不是功能工作——维护。
-
-- **`/improve-codebase-architecture-lqy`** — 只要有空闲时间就运行，以保持代码库适合 agent 操作。它会带来加深机会；选择一个_产生一个想法_您可以将其纳入“/grill-with-docs-lqy”的主要流程。
-
-## 交叉会话
-
-- **`/handoff-lqy`** — 当线程已满或您需要分支（例如进入 `/prototype-lqy` 会话）时，这会将对话压缩到一个 markdown 文件中。您不需要继续原地不动 - 您**打开一个新会话并引用该文件**来传递上下文。它是任一方向上下文窗口之间的桥梁。当您想要**新会话**但需要**保留当前对话**时，请使用它。
-- **`/compact`**（内置）- 保持**相同的对话**，让之前的回合进行总结。当您不介意丢失逐字历史记录时，可以在**阶段之间的有意中断**时使用它。不要在中期压缩——agent 可能会迷失方向。 `/handoff-lqy` 叉子； `/compact` 继续。
-
-## 独立
-
-完全脱离主流。- **`/grill-me-lqy`** — 与“/grill-with-docs-lqy”相同的无情面试，但当你**没有代码库**时。无状态：它在本地不保存任何内容，不构建“CONTEXT.md”。利用它来完善不在仓库中的任何计划或设计。
-- **`/teach-lqy`** — 使用当前目录作为有状态工作区，通过多个会话学习概念。
-- **`/writing-great-skills-lqy`** — 良好写作和编辑技能的参考。
-
-## 前提条件
-
-**`$setup-matt-pocock-skills-lqy`** — 在第一个工程流程之前运行，以配置其他技能假定的issue tracker、triage 标签和文档布局。自定义 issue tracker 也可以工作。
+缺少 tracker / domain 配置时，提示用户显式调用 `setup-matt-pocock-skills-lqy`。本工作流保持 GitHub Issues-only、单领域术语表与中文输出。

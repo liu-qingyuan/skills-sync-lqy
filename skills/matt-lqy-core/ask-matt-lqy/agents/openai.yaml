@@ -1,0 +1,6 @@
+interface:
+  display_name: ask-matt-lqy
+  short_description: 为当前情境推荐 LQY skill 或工作流：Ralph 批量实施、单 Ticket、规划、诊断、复盘和交接。只推荐，不自动启动
+  default_prompt: 使用 $ask-matt-lqy 完成本次任务；先读取 SKILL.md，遵守现有范围与合同。
+policy:
+  allow_implicit_invocation: false

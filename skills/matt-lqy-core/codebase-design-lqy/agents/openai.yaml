@@ -1,0 +1,6 @@
+interface:
+  display_name: codebase-design-lqy
+  short_description: 用于设计深模块的共享词汇。用于用户想设计或改进模块接口、寻找 deepening 机会、决定 seam 放在哪里、让代码更可测试
+  default_prompt: 使用 $codebase-design-lqy 完成本次任务；先读取 SKILL.md，遵守现有范围与合同。
+policy:
+  allow_implicit_invocation: true

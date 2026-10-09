@@ -27,7 +27,7 @@
 - Agent 3：“围绕最常见的调用方优化——让默认路径极其简单。”
 - Agent 4（如果适用）：“围绕跨接缝依赖的端口与适配器来设计。”
 
-在简报中同时包含 [SKILL.md](SKILL.md) 词汇和 CONTEXT.md 词汇，这样每个 sub-agent 都能用项目的架构语言和领域语言一致地命名事物。
+在简报中同时包含 [SKILL.md](SKILL.md) 词汇和 GLOSSARY.md 词汇，这样每个 sub-agent 都能用项目的架构语言和领域语言一致地命名事物。
 
 每个 sub-agent 输出：
 

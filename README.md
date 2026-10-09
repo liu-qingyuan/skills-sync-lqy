@@ -1,6 +1,6 @@
 # skills-sync-lqy
 
-我的 Codex Skills 仓库。目标是：
+我的 Pi / Codex Skills 仓库。目标是：
 
 1. 同步 Matt Pocock 上游英文原版 skills，目录结构尽量跟上游一致。
 2. 维护一套 `-zh` 中文本地化 baseline，作为从官方英文上游合并变化的中间层。
@@ -30,7 +30,7 @@ npx skills@latest add liu-qingyuan/skills-sync-lqy
 $setup-matt-pocock-skills-lqy
 ```
 
-它会直接应用 LQY 默认值：GitHub Issues-only、五个标准 triage labels、单 context 领域文档、中文输出和根目录 `AGENTS.md`，不再逐项提问。需要自定义配置时使用 upstream `setup-matt-pocock-skills`。某些 agent 可能把同一个 skill 写成 `/setup-matt-pocock-skills-lqy`；在 Codex 里优先使用 `$setup-matt-pocock-skills-lqy`。
+它只在用户显式调用时应用 LQY 默认值：GitHub Issues-only、补齐缺失的五个标准 triage labels、单领域术语表（新项目默认 `GLOSSARY.md`，旧项目保留既有权威路径）、中文输出和根目录 `AGENTS.md`。不会删除已有标签或自动启动 Ralph。需要自定义时先修改项目契约；英文 mirror 和中文 baseline 是维护材料，不在默认安装层自动执行。某些 agent 可能把同一个 skill 写成 `/setup-matt-pocock-skills-lqy`；在 Codex 里优先使用 `$setup-matt-pocock-skills-lqy`。
 
 如果只安装我的本地 skills，例如 `clean`、`simple`、`gitnexus`、`handoff-out`，通常安装后即可使用。
 
@@ -97,6 +97,8 @@ upstream/mattpocock/skills/ # Matt Pocock 官方英文上游镜像，只用于�
 
 ## Git-bound Ralph 工作流
 
+**Ralph 是批量实施标准，`implement-lqy` 仍只处理一个 Ticket。** 说“以 Ralph 为标准”或同步技能不是启动授权；循环只在显式调用或启动请求后运行。
+
 `ralph-plan-lqy` 把一个 Ralph worker 绑定到一个 Git branch 和对应 worktree。进入 backlog 的具体 Ticket 必须是 open + `ready-for-agent`，正文最后包含固定的 `## Git` 契约；worker 只消费 `Branch` 精确匹配当前 attached branch 的 Ticket，并在 branch 内按 issue number 升序选择第一个通过 eligibility gate 的任务。
 
 直接调用 `$ralph-plan-lqy` 即以 Pi 启动；明确要求只规划时除外。无 `run_ralph` 时回退 locked Pi CLI，子 iteration 禁止嵌套。
@@ -146,6 +148,18 @@ docs/localization/mattpocock-zh-skills.md
 
 原则：官方英文版只负责同步上游，不出现在 `npx skills@latest add liu-qingyuan/skills-sync-lqy` 的安装选择列表中；中文 `*-zh` baseline 也不出现在安装选择列表中；`*-lqy` 是当前对外安装的 Matt 版本。
 
+## 本轮选择性适配
+
+审阅来源：`49dd158d1076134a641b33efb035946536778336`（v1.3.1 + main）。mirror 和中文 baseline 各保留 38 个 active 与 8 个 frozen legacy；安装层共 53 个 skills，其中 Matt LQY 38 个。
+
+- 新增 `pr-lqy`（只写正文）、`retro-lqy`（人工触发、只建议）、`writing-for-agents-lqy`（agent 文档纪律）。
+- 不安装 `chief-of-staff`、`implement-spec` 或额外调度层；不自动删除上游退役的个人技能，旧写作 skill 仍可显式选择。
+- Pi `disable-model-invocation` 与 Codex `allow_implicit_invocation` 同步；已授权 Ralph worker 仍能加载 implement / tdd / review。
+- 隐藏凭据仅影响展示副本，不改原始日志、`.env`、fixture、业务数据或真实复现输入；不增加安全整改。
+- 新项目领域术语表默认 `GLOSSARY.md`；旧项目遵守已指定的同一份文档，不自动迁移或双写。
+
+验证与安装记录：[交付报告](docs/reports/mattpocock-sync-2026-10-09.md)。
+
 ## Matt Pocock 上游同步
 
 上游仓库：<https://github.com/mattpocock/skills>
@@ -159,7 +173,7 @@ docs/upstream-mirrors/mattpocock-skills.md
 同步原则：
 
 - Matt 官方英文版保留 Matt 的两层目录，例如 `upstream/mattpocock/skills/engineering/tdd`、`upstream/mattpocock/skills/productivity/handoff`，但只作为同步源，不写入 `.claude-plugin/marketplace.json`，不在安装器里显示。
-- 保留上游行为；如因本地 Codex 校验需要删掉不兼容 frontmatter 字段，要记录在同步文档里。
+- 英文 active mirror 与固定 upstream SHA 保持字节一致；legacy 明确记录旧来源。兼容性在安装层与本地 validator 处理，不为校验删除上游 frontmatter。
 - 中文 baseline 统一放入 `baselines/matt-zh/matt-zh-*/*-zh`。
 - 当前可安装 Matt 版本统一放入 `skills/matt-lqy-*/*-lqy`，并写入 `.claude-plugin/marketplace.json`。
 - 同步后输出：上游哪些地方变了、对应中文 baseline 如何处理、对应 LQY 安装版是否需要适配。
@@ -214,17 +228,18 @@ upstream/
 AI 可以用下面命令做内部验证；这些不是用户日常安装命令。优先运行仓库级检查：
 
 ```bash
-python3 scripts/check_matt_zh_skills.py
+uv run --no-project --with pyyaml python scripts/check_matt_zh_skills.py
 ```
 
 这个脚本会检查：
 
 - `skills/` 只暴露可安装版本，Matt 英文官方镜像和中文 baseline 不能漏进安装列表。
-- 35 个 Matt LQY `*-lqy` skills 都有 `LOCALIZATION.md`，并指向有效 `*-zh` baseline 和上游路径。
-- 38 个 Matt 中文 `*-zh` baseline 都有 `LOCALIZATION.md` 和有效上游路径。
+- 38 个 Matt LQY `*-lqy` skills 都有 `LOCALIZATION.md`，并指向有效 `*-zh` baseline 和上游路径。
+- 46 个 Matt 中文 `*-zh` baseline（38 active + 8 legacy）都有 `LOCALIZATION.md` 和有效上游路径。
 - `.claude-plugin/marketplace.json` 必须和 `skills/` 下可安装目录一致，并且不能列出 `*-zh`。
 - README 的 Codex setup 用法必须优先写 `$setup-matt-pocock-skills-lqy`。
-- 所有可安装 skill 必须通过 `quick_validate.py`。
+- 所有可安装 skill 通过本仓库 YAML / 命名 / description / 调用策略校验；不依赖或修改用户系统 `quick_validate.py`。
+- Pi 和 Codex 的隐式调用策略一致，已授权 Ralph worker 不被 implement 的调用 metadata 拦截。
 
 再检查安装器发现结果：
 
@@ -246,11 +261,17 @@ python3 scripts/sync_installed_project_skills.py /path/to/project --repo-url htt
 python3 scripts/sync_installed_project_skills.py /path/to/project --dry-run
 ```
 
-如果只改了某个 skill，也可以额外验证对应目录：
+新增维护契约测试与原有 Ralph / publisher 测试：
 
 ```bash
-python3 ~/.codex/skills/.system/skill-creator/scripts/quick_validate.py skills/<category>/<skill-name>
+uv run --no-project --with pyyaml python -m unittest discover -s scripts/tests
+python3 -m unittest discover -s skills/lqy-local/ralph-plan-lqy/tests
+python3 -m unittest discover -s skills/matt-lqy-core/to-spec-lqy/tests
+python3 -m unittest discover -s skills/matt-lqy-core/to-tickets-lqy/tests
+python3 -m unittest discover -s skills/matt-lqy-core/triage-lqy/tests
 ```
+
+这些测试使用隔离临时仓库与 fake gh，不会启动真实 Ralph 或修改真实 GitHub issues。
 
 ## GitNexus 依赖说明
 

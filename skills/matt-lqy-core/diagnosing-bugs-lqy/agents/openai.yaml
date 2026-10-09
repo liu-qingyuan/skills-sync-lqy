@@ -1,0 +1,6 @@
+interface:
+  display_name: diagnosing-bugs-lqy
+  short_description: 诊断已观察的 bug 或性能回归：建立能捕获症状的反馈循环，最小化复现、验证假设并补回归测试。展示凭据时保留原始数据与真实复现输
+  default_prompt: 使用 $diagnosing-bugs-lqy 完成本次任务；先读取 SKILL.md，遵守现有范围与合同。
+policy:
+  allow_implicit_invocation: true

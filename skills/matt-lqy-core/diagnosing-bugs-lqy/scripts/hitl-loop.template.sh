@@ -10,7 +10,10 @@
 #   step "<instruction>"          → show instruction, wait for Enter
 #   capture VAR "<question>"      → show question, read response into VAR
 #
-# At the end, captured values are printed as KEY=VALUE for the agent to parse.
+# At the end, captured values are printed as KEY=VALUE for local diagnosis.
+# Do not ask for passwords, tokens, session cookies, or private keys.
+# Hide confirmed secret values only in reply excerpts; never rewrite captured
+# originals or replace real local reproduction inputs with <REDACTED>.
 
 set -euo pipefail
 

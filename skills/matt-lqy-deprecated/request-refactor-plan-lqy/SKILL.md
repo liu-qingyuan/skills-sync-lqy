@@ -1,5 +1,6 @@
 ---
 name: request-refactor-plan-lqy
+disable-model-invocation: true
 description: 通过用户访谈创建包含小提交步骤的详细重构计划，然后作为 GitHub issue 提交。用于用户想规划重构、创建重构 RFC 或拆分安全增量步骤时。
 ---
 

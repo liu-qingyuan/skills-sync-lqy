@@ -1,17 +1,18 @@
 ---
 name: to-spec-lqy
+disable-model-invocation: true
 description: 把当前对话上下文整理成 spec 并发布到项目 issue tracker；不重新访谈，只综合已有讨论。
 ---
 
 该 skill 会基于当前对话上下文和对代码库的理解产出一份 spec。不要重新访谈用户，只综合你已经知道的信息。
 
-issue tracker 和 triage 标签词汇表应该已经提供；如果没有，请运行 `$setup-matt-pocock-skills-lqy`。
+issue tracker 和 triage 标签词汇表应该已经提供；如果没有，提示用户显式运行 `$setup-matt-pocock-skills-lqy`。
 
 issue 标题、正文、评论和完成摘要默认使用中文。labels、命令、路径、代码标识符、配置键和错误原文保留原 token。
 
 ## 流程
 
-1. 如果还没有探索仓库，先探索仓库以理解代码库当前状态。在整份 spec 中使用项目的领域词汇表，并尊重你触及区域的 ADR。
+1. 如果还没有探索仓库，先探索当前代码、测试和项目明确指定的术语表（新项目默认 `GLOSSARY.md`）；不自动更名旧 CONTEXT。spec 使用该表词汇并尊重相关 ADR。事实自己查，只有真实歧义才询问用户。
 
 2. 画出这个功能将在哪些 seam 上测试。优先使用已有 seam，而不是创建新 seam。尽可能使用最高层 seam。如果确实需要新 seam，把它提议在你能找到的最高位置。代码库中的 seam 越少越好；理想数量是 1。
 
@@ -65,7 +66,7 @@ issue 标题、正文、评论和完成摘要默认使用中文。labels、命�
 
    后续从 `workspace.path` 启动新的 Codex 会话并信任该 worktree，项目 MCP 才会加载；`xcrun mcpbridge` 会在新会话中重新连接当前 Xcode。不要复制 Codex trust、Xcode PID 或 session ID。
 
-8. PR、本地 Markdown tracker 和明确不进入 Ralph backlog 的工作流保留各自原生发布方式，不强制添加 `## Git`，也不调用上述 publisher。
+8. LQY 保持 GitHub Issues-only，不静默换成 PR 或本地 Markdown tracker；明确不进入 Ralph backlog 的 GitHub 记录不强制添加 `## Git`，也不调用上述 publisher。
 
 <spec-template>
 

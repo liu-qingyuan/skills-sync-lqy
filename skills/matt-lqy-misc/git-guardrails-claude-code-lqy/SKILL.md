@@ -1,5 +1,6 @@
 ---
 name: git-guardrails-claude-code-lqy
+disable-model-invocation: true
 description: 设置 Claude Code hooks，阻止危险 git 命令（push、reset --hard、clean、branch -D 等）。用于用户想防止破坏性
   git 操作、添加 git 安全 hook 或阻止 git push/reset 时。
 ---
