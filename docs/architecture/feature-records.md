@@ -31,7 +31,7 @@ C4Container
 
 ## Module / Contract / Governance
 
-- **Module / Interface**：setup skill 携带唯一实现；公共 CLI 为 `install/list/check/review`，项目统一入口 `.feature-docs/run`。内部隐藏 Git 快照、归属、指纹和安装收据。
+- **Module / Interface**：setup skill 携带唯一实现；公共 CLI 为 `install/list/check/review`，项目统一入口 `.feature-docs/run`。记录仅保留 `status/paths/reviewed_code`，标题用 Markdown H1；`paths` 合并源码与测试引用，保留所有引用与两者的版本绑定。旧五字段格式仍可读取、复核且不自动改写；内部隐藏 Git 快照、归属、指纹和安装收据。
 - **Adapter / Seam**：Git 是真实 Adapter；以 CLI 退出码和真实 commit/push 为 test surface。工作区、index、commit 是不同的验证输入，不能互借内容。
 - **Boundary / Locality**：`.feature-docs/config.json` 记录项目选择的 `managed` 范围与安装资产；`docs/features/` 是项目数据，不放入会被 skills 同步覆盖的安装目录。
 - **Governance**：仅显式 setup 安装；既有 hooks、修改过的安装资产或冲突配置则拒绝覆盖。升级保留范围和业务记录；不自动生成能力事实或刷新业务指纹。

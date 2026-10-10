@@ -44,7 +44,7 @@ GitHub Issues only；PR 不进入 triage 或 Ralph。见 `docs/agents/issue-trac
 
 ### Feature records
 
-若已有 `.feature-docs/run`，任务开始先读 `./.feature-docs/run list`，再按需读相关页面；同步当前事实，交付前通过记录检查。见 `docs/agents/feature-docs.md`。
+已启用时先执行 `./.feature-docs/run list`，只读相关记录；维护与交付见 `docs/agents/feature-docs.md`。
 
 ### Workflow
 
@@ -71,9 +71,7 @@ CLAUDE.md
 
 ## 3. Feature 记录门禁
 
-读取并执行 [feature-docs.md](feature-docs.md)；用本 skill 的 [scripts/feature_docs.py](scripts/feature_docs.py) 在当前 worktree 显式安装。先选一个真实能力按代码/测试 globs 纳管，用 [templates/feature.md](templates/feature.md) 核对事实。保留项目记录；hooks 或安装资产冲突即停止并报告。
-
-安装后 `list` / `check` 必须通过，确认 `core.hooksPath` 有效；代码、测试、记录和门禁资产一起提交。尚无可确认能力/测试入口或有冲突时明确报告门禁未启用，不捏造完成状态。业务测试仍运行项目已有命令，不强制 unittest。
+按 [feature-docs.md](feature-docs.md) 在当前 worktree 安装 [工具](scripts/feature_docs.py)，用 [模板](templates/feature.md) 先纳管一个真实能力。确认 `list` / `check` 通过、`core.hooksPath` 有效，提交记录与门禁资产；无真实能力/测试入口或有冲突时报告未启用。
 
 ## 4. 标签与验证
 

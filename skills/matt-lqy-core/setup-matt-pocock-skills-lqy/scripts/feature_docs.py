@@ -171,7 +171,8 @@ def policy(files):
 
 def features(files):
     result = {}
-    required = {'title', 'status', 'code', 'tests', 'reviewed_code'}
+    required = {'status', 'paths', 'reviewed_code'}
+    legacy = {'title', 'status', 'code', 'tests', 'reviewed_code'}
     for path, (mode, content) in sorted(files.items()):
         if not path.startswith('docs/features/'):
             continue
@@ -187,14 +188,19 @@ def features(files):
             raise GateError('INVALID_FRONT_MATTER ' + path)
         header, body = text[4:].split('\n---\n', 1)
         meta = parse_json(header, path)
-        if not isinstance(meta, dict) or set(meta) != required:
+        if not isinstance(meta, dict) or set(meta) not in (required, legacy):
             raise GateError('INVALID_FIELDS ' + path)
-        if (not isinstance(meta['title'], str) or not meta['title'].strip()
-                or any(c in meta['title'] for c in ('\n', '\r', '\t'))):
+        if 'paths' in meta:
+            heading = body.lstrip().split('\n', 1)[0]
+            title = heading[2:] if heading.startswith('# ') else ''
+        else:
+            title = meta['title']
+        if (not isinstance(title, str) or not title.strip()
+                or any(c in title for c in ('\n', '\r', '\t'))):
             raise GateError('INVALID_TITLE ' + path)
         if meta['status'] not in ('partial', 'implemented') or not isinstance(meta['reviewed_code'], str):
             raise GateError('INVALID_STATUS_OR_BASE ' + path)
-        for field in ('code', 'tests'):
+        for field in (('paths',) if 'paths' in meta else ('code', 'tests')):
             patterns = meta[field]
             if (not isinstance(patterns, list) or not patterns or not all(safe_path(p) for p in patterns)
                     or len(set(patterns)) != len(patterns)):
@@ -204,13 +210,14 @@ def features(files):
                                   body, flags=re.MULTILINE | re.DOTALL)
             if len(sections) != 1 or not sections[0].strip():
                 raise GateError('MISSING_SECTION ' + path + ': ' + heading)
-        result[slug] = (path, meta, body)
+        result[slug] = (path, title, meta, body)
     return result
 
 
 def evidence(meta, files):
     selected = set()
-    for pattern in meta['code'] + meta['tests']:
+    fields = ('paths',) if 'paths' in meta else ('code', 'tests')
+    for pattern in (p for field in fields for p in meta[field]):
         matches = {p for p in files if fnmatch.fnmatchcase(p, pattern)}
         if not matches:
             raise GateError('MISSING_REFERENCE ' + pattern)
@@ -221,7 +228,7 @@ def evidence(meta, files):
                 raise GateError('UNSUPPORTED_FILE ' + path)
         selected.update(matches)
     digest = hashlib.sha256()
-    declaration = json.dumps({k: sorted(meta[k]) for k in ('code', 'tests')},
+    declaration = json.dumps({k: sorted(meta[k]) for k in fields},
                              sort_keys=True, separators=(',', ':')).encode('utf-8')
     digest.update(declaration + b'\0')
     for path in sorted(selected):
@@ -241,16 +248,16 @@ def inspect(files):
             errors.append('INSTALLATION_DRIFT ' + path + ': preserve custom changes; rerun installer for missing assets')
     if config['tool'] not in files or files[config['tool']][0] not in REGULAR:
         errors.append('MISSING_TOOL ' + config['tool'])
-    for slug, (path, meta, body) in features(files).items():
+    for slug, (path, title, meta, _) in features(files).items():
         try:
             expected, selected = evidence(meta, files)
         except GateError as error:
             errors.append(f'{slug}: {error}')
-            rows.append((slug, path, meta, body, '', 'missing'))
+            rows.append((slug, title, meta['status'], 'missing', path))
             continue
         owned.update(selected)
         state = 'fresh' if meta['reviewed_code'] == expected else 'stale'
-        rows.append((slug, path, meta, body, expected, state))
+        rows.append((slug, title, meta['status'], state, path))
         if state == 'stale':
             errors.append('STALE ' + slug + ': review facts before refreshing its baseline')
     for path, (mode, _) in sorted(files.items()):
@@ -389,7 +396,7 @@ def main(argv=None):
             records = features(current)
             if args.feature not in records:
                 raise GateError('UNKNOWN_FEATURE ' + args.feature)
-            path, meta, body = records[args.feature]
+            path, _, meta, body = records[args.feature]
             meta['reviewed_code'], _ = evidence(meta, files)
             destination = root / path
             payload = '---\n' + json.dumps(meta, ensure_ascii=False, indent=2) + '\n---\n' + body
@@ -399,8 +406,8 @@ def main(argv=None):
         config, rows, errors = inspect(files)
         if args.command == 'list':
             print('SCOPE\t' + ', '.join(config['managed']))
-            for slug, path, meta, _, _, state in rows:
-                print(f'{slug}\t{meta["title"]}\t{meta["status"]}\t{state}\t{path}')
+            for row in rows:
+                print('\t'.join(row))
         for error in errors:
             print(error, file=sys.stderr)
         if errors:

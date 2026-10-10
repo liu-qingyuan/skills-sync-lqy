@@ -20,12 +20,12 @@ def run(args, cwd, **kwargs):
 
 
 def record(repo, slug='export', code=None, tests=None):
-    meta = {'title': '示例能力', 'status': 'implemented', 'code': code or ['lib/export.js'],
-            'tests': tests or ['qa/export.spec.js'], 'reviewed_code': ''}
+    meta = {'status': 'implemented', 'paths': (code or ['lib/export.js']) + (tests or ['qa/export.spec.js']),
+            'reviewed_code': ''}
     path = repo / 'docs/features' / f'{slug}.md'
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text('---\n' + json.dumps(meta, ensure_ascii=False, indent=2) + '\n---\n'
-                    '\n## 当前行为\n返回约定的导出结果。\n\n## 限制与剩余\n本地契约示例。\n', encoding='utf-8')
+                    '\n# 示例能力\n\n## 当前行为\n返回约定的导出结果。\n\n## 限制与剩余\n本地契约示例。\n', encoding='utf-8')
     return path
 
 
@@ -66,6 +66,40 @@ class FeatureDocsContract(unittest.TestCase):
         self.install()
         self.git('add', '.')
         self.git('commit', '-m', 'baseline')
+
+    def test_three_fields_keep_the_index_and_bind_both_source_and_tests(self):
+        meta = {'status': 'partial', 'paths': ['lib/export.js', 'qa/export.spec.js'], 'reviewed_code': ''}
+        body = self.doc.read_text().split('\n---\n', 1)[1]
+        self.doc.write_text('---\n' + json.dumps(meta) + '\n---\n' + body)
+        self.install()
+        self.assertIn('export\t示例能力\tpartial\tfresh\tdocs/features/export.md', self.success('list').stdout)
+        saved = json.loads(self.doc.read_text().split('---', 2)[1])
+        self.assertEqual(set(saved), {'status', 'paths', 'reviewed_code'})
+        for name in meta['paths']:
+            with self.subTest(path=name):
+                path = self.repo / name
+                path.write_text(path.read_text() + '// changed\n')
+                self.assertIn('STALE export', self.cli('check').stderr)
+                self.success('review', 'export', '--confirm')
+                self.success('check')
+
+    def test_legacy_baseline_remains_valid_without_automatic_record_migration(self):
+        # Public baseline captured from the previous five-field CLI for these fixture files.
+        baseline = 'sha256:c02cae4e2c02ddbdc1a4d273bb9f535f1ebd589004ed8a0d02990c269e5ab006'
+        meta = {'title': '既有能力', 'status': 'partial', 'code': ['lib/export.js'],
+                'tests': ['qa/export.spec.js'], 'reviewed_code': baseline}
+        body = self.doc.read_text().split('\n---\n', 1)[1].replace('\n# 示例能力\n', '')
+        self.doc.write_text('---\n' + json.dumps(meta, ensure_ascii=False, indent=2) + '\n---\n' + body)
+        before = self.doc.read_bytes()
+        self.success('install', '--scope', 'lib/**')
+        self.success('check')
+        self.assertIn('export\t既有能力\tpartial\tfresh', self.success('list').stdout)
+        self.assertEqual(self.doc.read_bytes(), before)
+        self.git('add', '.')
+        self.git('commit', '-m', 'existing five-field record')
+        self.success('check', '--ref', 'HEAD')
+        self.success('review', 'export', '--confirm')
+        self.assertEqual(self.doc.read_bytes(), before)
 
     def test_install_is_idempotent_and_preserves_project_records(self):
         before = self.doc.read_bytes()
@@ -239,7 +273,8 @@ class FeatureDocsContract(unittest.TestCase):
         original = self.doc.read_text()
         variants = [original.replace('lib/export.js', 'lib/missing.js'),
                     original.replace('"status": "implemented"', '"status": "unknown"'),
-                    original.replace('"title": "示例能力",', '"title": "示例能力", "title": "重复",'),
+                    original.replace('"status": "implemented",', '"status": "implemented", "status": "partial",'),
+                    original.replace('# 示例能力\n', '# \n'),
                     original.replace('## 当前行为\n返回约定的导出结果。', '## 当前行为\n'),
                     original.replace('lib/export.js', '../outside.js')]
         for text in variants:

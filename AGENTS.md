@@ -52,4 +52,4 @@ GitHub issues；外部 PR 不作为 triage 请求入口。见 `docs/agents/issue
 
 ### Feature records
 
-若已有 `.feature-docs/run`，任务开始先读 `./.feature-docs/run list`，再按需读相关页面；同步当前事实，交付前通过记录检查。见 `docs/agents/feature-docs.md`。
+已启用时先执行 `./.feature-docs/run list`，只读相关记录；维护与交付见 `docs/agents/feature-docs.md`。

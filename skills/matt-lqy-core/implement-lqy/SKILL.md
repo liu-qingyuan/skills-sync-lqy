@@ -9,9 +9,7 @@ description: "实现一个指定 Ticket 或已授权 Ralph worker 选中的任�
 
 ## Feature 当前事实
 
-若项目已有 `.feature-docs/run`，开始时运行 `list` / `check`，只展开相关页面；中断留下的过期记录先查明，不自动盖章。按 `docs/agents/feature-docs.md` 纳管本任务实际代码/测试，更新对应能力的当前行为、限制与状态；不为每个补丁另建记录或追加日志。未启用的项目保留原工作流，提示显式 setup，不擅自安装 hooks。
-
-完成项目原有验证并核对事实后，显式 `review <feature> --confirm`；暂存代码、测试和页面，再运行 `check --staged`。这只证明记录版本一致，不替代测试或双轴 review。
+若有 `.feature-docs/run`，读取并执行 `docs/agents/feature-docs.md`，只维护本任务相关能力；不替代测试或双轴 review。未启用则保持原流程，提示显式 setup。
 
 ## Review
 

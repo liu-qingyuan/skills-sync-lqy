@@ -97,18 +97,14 @@ upstream/mattpocock/skills/ # Matt Pocock 官方英文上游镜像，只用于�
 
 ## Feature 微文档与本地门禁
 
-复用 setup / implement，不新增 skill 或 CI 服务。项目记录放 `docs/features/`；先读自动索引，再按需展开能力的当前行为、限制和源码/测试入口。工具约定见 [docs/agents/feature-docs.md](docs/agents/feature-docs.md)。
-
-本仓库先纳管 setup、单 Ticket 实施、已安装 skills 同步三个能力，不为全部 53 个 skills 补重复文档；范围由索引明确显示。
+复用 setup / implement。`docs/features/` 保存当前事实，三字段为 `status/paths/reviewed_code`，标题写在 Markdown；先看索引，再按需读正文。
 
 ```bash
-./.feature-docs/run install  # clone 后恢复本地 hooks；Git 不复制 hook 配置
+./.feature-docs/run install  # clone 后恢复 hooks
 ./.feature-docs/run list
-./.feature-docs/run check
-python3 -m unittest discover -s skills/matt-lqy-core/setup-matt-pocock-skills-lqy/tests
 ```
 
-提交前查真实 index，推送前查实际 tip；`review --confirm` 只刷新已复核事实的版本基准，不自动暂存或替代业务测试。已有 hooks/修改过的安装资产冲突则停止；新项目显式调用 setup，工具升级保留范围与业务记录。本地 hooks 可绕过，未纳管目录不宣称受保护。
+本仓库只先纳管 setup、单 Ticket 实施、skills 同步三个能力。门禁检查 Git 快照，不替代业务测试；未纳管目录不受保护，hooks 可绕过。维护规则见 [docs/agents/feature-docs.md](docs/agents/feature-docs.md)。
 
 ## Git-bound Ralph 工作流
 

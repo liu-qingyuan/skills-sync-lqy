@@ -1,27 +1,24 @@
 ---
 {
-  "title": "Feature 当前事实与本地门禁",
   "status": "implemented",
-  "code": [
+  "paths": [
     "skills/matt-lqy-core/setup-matt-pocock-skills-lqy/**",
     ".feature-docs/**",
     "AGENTS.md",
-    "docs/agents/feature-docs.md"
-  ],
-  "tests": [
+    "docs/agents/feature-docs.md",
     "skills/matt-lqy-core/setup-matt-pocock-skills-lqy/tests/test_feature_docs.py",
     "scripts/tests/test_skill_maintenance.py"
   ],
-  "reviewed_code": "sha256:dc189b816374e87f001acd9c27e7fc51d6205ef58f9b24835f0d798116593926"
+  "reviewed_code": "sha256:19d56580d00e74970e25563ed96a2f65c136d23311b725c0bfa9bf4bf924ddbc"
 }
 ---
 
+# Feature 当前事实与本地门禁
+
 ## 当前行为
 
-setup skill 携带一个 Python 标准库工具：显式安装、自动索引、只读快照检查和指定能力复核。项目统一入口为 `.feature-docs/run`；范围只显式追加，升级保留事实与原范围，既有 hooks/定制资产冲突则拒绝覆盖。
-
-源码、模板和公开测试可使用任意真实仓库目录的 globs。pre-commit 查 index，pre-push 查实际 tip；缺失引用、未归属源码或过期基准阻止普通交付。复核不自动暂存。项目记录放 `docs/features/`，不会被已安装 skills 整目录同步删除。
+单个标准库工具提供 install/list/check/review；三字段记录兼容旧格式，源码和测试都绑定版本。pre-commit 查 index，pre-push 查实际 tip；缺失引用、未归属源码、过期基准阻止普通交付。安装只追加范围，保留项目事实，拒绝覆盖定制 hooks/资产。
 
 ## 限制与剩余
 
-仅检查声明范围和版本绑定，不判断散文真假、不执行业务测试或阻止 issue 关闭；有 Shell 权限者能绕过 hooks。clone 后需执行 `./.feature-docs/run install`。当前只在 macOS 验证，不宣称 Windows/Linux 已通过；本仓库仅先纳管索引列出的三组能力。
+不判断散文真假、不跑业务测试或硬限制 issue 关闭；hooks 可绕过。clone 需恢复安装；只在 macOS 验证，本仓库只纳管索引列出的三组能力。
