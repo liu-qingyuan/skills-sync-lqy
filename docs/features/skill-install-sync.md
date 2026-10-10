@@ -1,12 +1,11 @@
 ---
 {
-  "status": "implemented",
   "paths": [
     "scripts/sync_installed_project_skills.py",
     "setup",
     "scripts/tests/test_skill_maintenance.py"
   ],
-  "reviewed_code": "sha256:09d1ffac1374ac2111140359c498de3eea1b253d139ca5ae3f3ed12072c7ad42"
+  "fingerprint": "sha256:09d1ffac1374ac2111140359c498de3eea1b253d139ca5ae3f3ed12072c7ad42"
 }
 ---
 

@@ -171,8 +171,8 @@ def policy(files):
 
 def features(files):
     result = {}
-    required = {'status', 'paths', 'reviewed_code'}
-    legacy = {'title', 'status', 'code', 'tests', 'reviewed_code'}
+    required = {'paths', 'fingerprint'}
+    legacy = ({'status', 'paths', 'reviewed_code'}, {'title', 'status', 'code', 'tests', 'reviewed_code'})
     for path, (mode, content) in sorted(files.items()):
         if not path.startswith('docs/features/'):
             continue
@@ -188,7 +188,7 @@ def features(files):
             raise GateError('INVALID_FRONT_MATTER ' + path)
         header, body = text[4:].split('\n---\n', 1)
         meta = parse_json(header, path)
-        if not isinstance(meta, dict) or set(meta) not in (required, legacy):
+        if not isinstance(meta, dict) or set(meta) not in (required, *legacy):
             raise GateError('INVALID_FIELDS ' + path)
         if 'paths' in meta:
             heading = body.lstrip().split('\n', 1)[0]
@@ -198,8 +198,10 @@ def features(files):
         if (not isinstance(title, str) or not title.strip()
                 or any(c in title for c in ('\n', '\r', '\t'))):
             raise GateError('INVALID_TITLE ' + path)
-        if meta['status'] not in ('partial', 'implemented') or not isinstance(meta['reviewed_code'], str):
-            raise GateError('INVALID_STATUS_OR_BASE ' + path)
+        if 'status' in meta and meta['status'] not in ('partial', 'implemented'):
+            raise GateError('INVALID_STATUS ' + path)
+        if not isinstance(meta.get('fingerprint', meta.get('reviewed_code')), str):
+            raise GateError('INVALID_BASE ' + path)
         for field in (('paths',) if 'paths' in meta else ('code', 'tests')):
             patterns = meta[field]
             if (not isinstance(patterns, list) or not patterns or not all(safe_path(p) for p in patterns)
@@ -253,11 +255,11 @@ def inspect(files):
             expected, selected = evidence(meta, files)
         except GateError as error:
             errors.append(f'{slug}: {error}')
-            rows.append((slug, title, meta['status'], 'missing', path))
+            rows.append((slug, title, 'missing', path))
             continue
         owned.update(selected)
-        state = 'fresh' if meta['reviewed_code'] == expected else 'stale'
-        rows.append((slug, title, meta['status'], state, path))
+        state = 'fresh' if meta.get('fingerprint', meta.get('reviewed_code')) == expected else 'stale'
+        rows.append((slug, title, state, path))
         if state == 'stale':
             errors.append('STALE ' + slug + ': review facts before refreshing its baseline')
     for path, (mode, _) in sorted(files.items()):
@@ -397,7 +399,8 @@ def main(argv=None):
             if args.feature not in records:
                 raise GateError('UNKNOWN_FEATURE ' + args.feature)
             path, _, meta, body = records[args.feature]
-            meta['reviewed_code'], _ = evidence(meta, files)
+            field = 'fingerprint' if 'fingerprint' in meta else 'reviewed_code'
+            meta[field], _ = evidence(meta, files)
             destination = root / path
             payload = '---\n' + json.dumps(meta, ensure_ascii=False, indent=2) + '\n---\n' + body
             atomic_write(destination, payload.encode('utf-8'), stat.S_IMODE(destination.stat().st_mode))

@@ -1,8 +1,7 @@
 ---
 {
-  "status": "partial",
   "paths": ["真实源码-glob", "真实测试-glob"],
-  "reviewed_code": ""
+  "fingerprint": ""
 }
 ---
 

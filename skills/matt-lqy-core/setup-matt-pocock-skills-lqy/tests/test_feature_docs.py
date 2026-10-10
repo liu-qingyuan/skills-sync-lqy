@@ -20,8 +20,7 @@ def run(args, cwd, **kwargs):
 
 
 def record(repo, slug='export', code=None, tests=None):
-    meta = {'status': 'implemented', 'paths': (code or ['lib/export.js']) + (tests or ['qa/export.spec.js']),
-            'reviewed_code': ''}
+    meta = {'paths': (code or ['lib/export.js']) + (tests or ['qa/export.spec.js']), 'fingerprint': ''}
     path = repo / 'docs/features' / f'{slug}.md'
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text('---\n' + json.dumps(meta, ensure_ascii=False, indent=2) + '\n---\n'
@@ -67,14 +66,14 @@ class FeatureDocsContract(unittest.TestCase):
         self.git('add', '.')
         self.git('commit', '-m', 'baseline')
 
-    def test_three_fields_keep_the_index_and_bind_both_source_and_tests(self):
-        meta = {'status': 'partial', 'paths': ['lib/export.js', 'qa/export.spec.js'], 'reviewed_code': ''}
+    def test_two_fields_keep_the_index_and_bind_both_source_and_tests(self):
+        meta = {'paths': ['lib/export.js', 'qa/export.spec.js'], 'fingerprint': ''}
         body = self.doc.read_text().split('\n---\n', 1)[1]
         self.doc.write_text('---\n' + json.dumps(meta) + '\n---\n' + body)
         self.install()
-        self.assertIn('export\t示例能力\tpartial\tfresh\tdocs/features/export.md', self.success('list').stdout)
+        self.assertIn('export\t示例能力\tfresh\tdocs/features/export.md', self.success('list').stdout)
         saved = json.loads(self.doc.read_text().split('---', 2)[1])
-        self.assertEqual(set(saved), {'status', 'paths', 'reviewed_code'})
+        self.assertEqual(set(saved), {'paths', 'fingerprint'})
         for name in meta['paths']:
             with self.subTest(path=name):
                 path = self.repo / name
@@ -93,13 +92,29 @@ class FeatureDocsContract(unittest.TestCase):
         before = self.doc.read_bytes()
         self.success('install', '--scope', 'lib/**')
         self.success('check')
-        self.assertIn('export\t既有能力\tpartial\tfresh', self.success('list').stdout)
+        self.assertIn('export\t既有能力\tfresh', self.success('list').stdout)
         self.assertEqual(self.doc.read_bytes(), before)
         self.git('add', '.')
         self.git('commit', '-m', 'existing five-field record')
         self.success('check', '--ref', 'HEAD')
         self.success('review', 'export', '--confirm')
         self.assertEqual(self.doc.read_bytes(), before)
+
+    def test_three_field_records_keep_their_fingerprint_and_are_not_rewritten(self):
+        # Public baseline captured from the previous three-field CLI.
+        baseline = 'sha256:a21fa6a5426df8068f61299054ff374302d6fbc89fb584de3d00993ad2a74ad4'
+        meta = {'status': 'partial', 'paths': ['lib/export.js', 'qa/export.spec.js'], 'reviewed_code': baseline}
+        body = self.doc.read_text().split('\n---\n', 1)[1]
+        self.doc.write_text('---\n' + json.dumps(meta, indent=2) + '\n---\n' + body)
+        before = self.doc.read_bytes()
+        self.success('install', '--scope', 'lib/**')
+        self.success('check')
+        self.assertIn('export\t示例能力\tfresh', self.success('list').stdout)
+        self.success('review', 'export', '--confirm')
+        self.assertEqual(self.doc.read_bytes(), before)
+        self.git('add', '.')
+        self.git('commit', '-m', 'existing three-field record')
+        self.success('check', '--ref', 'HEAD')
 
     def test_install_is_idempotent_and_preserves_project_records(self):
         before = self.doc.read_bytes()
@@ -271,9 +286,11 @@ class FeatureDocsContract(unittest.TestCase):
     def test_missing_references_and_malformed_records_are_rejected(self):
         self.install()
         original = self.doc.read_text()
+        fingerprint = json.loads(original.split('---', 2)[1])['fingerprint']
         variants = [original.replace('lib/export.js', 'lib/missing.js'),
-                    original.replace('"status": "implemented"', '"status": "unknown"'),
-                    original.replace('"status": "implemented",', '"status": "implemented", "status": "partial",'),
+                    original.replace('"fingerprint": "' + fingerprint + '"', '"fingerprint": null'),
+                    original.replace('"paths": [', '"paths": [], "paths": ['),
+                    original.replace('"paths": [', '"status": "implemented", "paths": ['),
                     original.replace('# 示例能力\n', '# \n'),
                     original.replace('## 当前行为\n返回约定的导出结果。', '## 当前行为\n'),
                     original.replace('lib/export.js', '../outside.js')]

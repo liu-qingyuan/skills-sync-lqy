@@ -2,7 +2,7 @@
 
 - 已启用时先运行 `./.feature-docs/run list`，只展开相关页面；中断恢复用 `check` 查过期记录，不自动盖章。
 - `docs/features/<feature>.md` 只保存当前事实：改原页，不按补丁新建或追加日志。Git 保存历史，Issues 保存任务进度。
-- 标题用 Markdown H1；正文保留非空 `## 当前行为`、`## 限制与剩余`。JSON 仅三字段：`status`（`partial`/`implemented`，不表示部署状态）、`paths`（源码与测试的真实相对 globs）、`reviewed_code`（工具维护）。旧五字段仍兼容，不自动改写。
+- 标题用 Markdown H1，正文描述用途和限制，保留非空 `## 当前行为`、`## 限制与剩余`。JSON 仅 `paths`（关联源码与测试的真实相对 globs）、`fingerprint`（工具维护的已确认版本指纹，不表示代码审查）。旧格式仍兼容，不自动改写。
 
 ## 交付
 

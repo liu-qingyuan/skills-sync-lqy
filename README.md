@@ -97,7 +97,7 @@ upstream/mattpocock/skills/ # Matt Pocock 官方英文上游镜像，只用于�
 
 ## Feature 微文档与本地门禁
 
-复用 setup / implement。`docs/features/` 保存当前事实，三字段为 `status/paths/reviewed_code`，标题写在 Markdown；先看索引，再按需读正文。
+复用 setup / implement。`docs/features/` 描述功能用途与限制，仅保留 `paths/fingerprint` 做文件关联与版本绑定；先看索引，再按需读正文。
 
 ```bash
 ./.feature-docs/run install  # clone 后恢复 hooks

@@ -1,11 +1,10 @@
 ---
 {
-  "status": "implemented",
   "paths": [
     "skills/matt-lqy-core/implement-lqy/**",
     "scripts/tests/test_skill_maintenance.py"
   ],
-  "reviewed_code": "sha256:96bc6d8649687cac4e819206aa17af5635850fb711a5e7ad7108293423ed141e"
+  "fingerprint": "sha256:96bc6d8649687cac4e819206aa17af5635850fb711a5e7ad7108293423ed141e"
 }
 ---
 

@@ -34,6 +34,12 @@ _Avoid_: 票证系统、问题系统
 **Decision ticket**:
 等待调研、原型或追问解决的决策条目，产出决策而非交付物；不带 `ready-for-agent`，不进入 Ralph。
 
+**Feature 记录**:
+描述一项能力的当前用途、行为和限制；不是任务进度表，历史归 Git、任务进度归 Issues。
+
+**指纹**:
+`fingerprint`，记录已确认的关联文件版本，用于发现事实记录可能漏更新；不表示代码审查或测试通过。
+
 **Task graph**:
 Tickets 及其 blocking edges 形成的依赖图。
 
