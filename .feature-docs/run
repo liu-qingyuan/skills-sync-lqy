@@ -1,0 +1,4 @@
+#!/bin/sh
+set -eu
+root="$(cd "$(dirname "$0")/.." && pwd -P)"
+exec python3 "$root"/skills/matt-lqy-core/setup-matt-pocock-skills-lqy/scripts/feature_docs.py --repo "$root" "$@"

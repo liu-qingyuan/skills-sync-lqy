@@ -49,3 +49,7 @@ GitHub issues；外部 PR 不作为 triage 请求入口。见 `docs/agents/issue
 ### Domain docs
 
 单上下文：根目录 `GLOSSARY.md`，ADR 按需放在 `docs/adr/`。见 `docs/agents/domain.md`。
+
+### Feature records
+
+若已有 `.feature-docs/run`，任务开始先读 `./.feature-docs/run list`，再按需读相关页面；同步当前事实，交付前通过记录检查。见 `docs/agents/feature-docs.md`。

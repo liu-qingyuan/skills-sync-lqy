@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "managed": [
+    "skills/matt-lqy-core/setup-matt-pocock-skills-lqy/**",
+    "skills/matt-lqy-core/implement-lqy/**",
+    "scripts/sync_installed_project_skills.py",
+    "scripts/tests/test_skill_maintenance.py",
+    ".feature-docs/**",
+    "AGENTS.md",
+    "docs/agents/feature-docs.md",
+    "setup"
+  ],
+  "tool": "skills/matt-lqy-core/setup-matt-pocock-skills-lqy/scripts/feature_docs.py",
+  "assets": {
+    ".feature-docs/.gitattributes": "a79691a93b46e49ce460c26ef22afcc03d6eca1e63bf2edbc20e96159510f6c9",
+    ".feature-docs/hooks/pre-commit": "73e40645c23881945d309241194a66970c8170411085642c5c9fc9153b1597e5",
+    ".feature-docs/hooks/pre-push": "e97c8ab886b8b00b90013dcf80757bf0309914f89c05455ba47219a774f8e928",
+    ".feature-docs/run": "334040e1d362266a2c6394c8068f3ab04cec51c4fff6d1f94926135ed2a1b8c0"
+  }
+}

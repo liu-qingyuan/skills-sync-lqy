@@ -7,6 +7,12 @@ description: "实现一个指定 Ticket 或已授权 Ralph worker 选中的任�
 
 实现前满足当前 Ticket 的 `$mermaid-gate-lqy`。Ticket 改变 Module、Interface、Seam 或知识归属时，先使用 `$codebase-design-lqy`；否则不要为了流程加载完整设计审查。尽可能在商定接缝处读取并执行 `tdd-lqy` 的 `SKILL.md`；沿用 spec 中已确认的 Seam，只有真实歧义才询问。实现中运行聚焦测试，完成后运行相关完整测试套件。
 
+## Feature 当前事实
+
+若项目已有 `.feature-docs/run`，开始时运行 `list` / `check`，只展开相关页面；中断留下的过期记录先查明，不自动盖章。按 `docs/agents/feature-docs.md` 纳管本任务实际代码/测试，更新对应能力的当前行为、限制与状态；不为每个补丁另建记录或追加日志。未启用的项目保留原工作流，提示显式 setup，不擅自安装 hooks。
+
+完成项目原有验证并核对事实后，显式 `review <feature> --confirm`；暂存代码、测试和页面，再运行 `check --staged`。这只证明记录版本一致，不替代测试或双轴 review。
+
 ## Review
 
 完成验证后，按 skills 列表中的实际路径读取并完整执行 `$code-review-lqy` 的 `SKILL.md`；不假设存在 `Skill` tool。fixed point、双轴 reviewer、blocking 标准、focused closure、调用预算和停止规则均以该 skill 为唯一来源；review 与门禁通过后继续完成 Ticket。
@@ -17,6 +23,6 @@ description: "实现一个指定 Ticket 或已授权 Ralph worker 选中的任�
 
 遵守 `docs/agents/issue-tracker.md` 的语言约定。多行 `gh issue comment` 使用 heredoc 或 `--body-file`。
 
-- 完成：commit/push，评论 hash、验证结果和摘要，关闭 issue。
-- Oversized 或有完整增量：commit/push，评论已完成内容和拆分建议，不关闭 issue。
+- 完成：启用记录门禁的项目先通过 `check --staged`，commit 后通过 `check --ref HEAD`；然后 push，评论 hash、验证结果和摘要，关闭 issue。
+- Oversized 或有完整增量：同步当前能力与剩余；通过已启用的记录门禁后 commit/push，评论已完成内容和拆分建议，不关闭 issue。
 - 没有 upstream：停止并要求用户确认，不要创建远程分支。

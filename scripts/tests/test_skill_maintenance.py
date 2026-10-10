@@ -88,6 +88,42 @@ class SkillContractTests(unittest.TestCase):
         self.assertNotIn("远程默认 branch 对应的本地主分支", default)
         self.assertIn("不带 `ready-for-agent`", seed)
 
+    def test_feature_gate_has_one_payload_and_short_workflow_pointers(self) -> None:
+        setup = CORE / "setup-matt-pocock-skills-lqy"
+        self.assertTrue((setup / "scripts/feature_docs.py").is_file())
+        self.assertTrue((setup / "templates/feature.md").is_file())
+        self.assertEqual((setup / "feature-docs.md").read_bytes(),
+                         (ROOT / "docs/agents/feature-docs.md").read_bytes())
+        self.assertIn("### Feature records", (ROOT / "AGENTS.md").read_text())
+        implementation = (CORE / "implement-lqy/SKILL.md").read_text()
+        for pointer in ("docs/agents/feature-docs.md", "check --staged", "check --ref HEAD"):
+            self.assertIn(pointer, implementation)
+        self.assertIn("不替代测试", implementation)
+
+    def test_installed_skill_sync_keeps_feature_data_and_carries_portable_tool(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="project sync ") as directory:
+            project = Path(directory)
+            installed = project / ".agents/skills/setup-matt-pocock-skills-lqy"
+            installed.mkdir(parents=True)
+            (installed / "SKILL.md").write_text(
+                "---\nname: setup-matt-pocock-skills-lqy\ndescription: old installed version\n---\n")
+            record = project / "docs/features/existing.md"
+            record.parent.mkdir(parents=True)
+            record.write_text("项目自有事实，不应随 skills 升级覆盖。\n")
+            before = record.read_bytes()
+            result = subprocess.run([sys.executable, str(ROOT / "scripts/sync_installed_project_skills.py"),
+                                     str(project)], capture_output=True, text=True)
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            tool = installed / "scripts/feature_docs.py"
+            self.assertEqual(tool.read_bytes(), (CORE / "setup-matt-pocock-skills-lqy/scripts/feature_docs.py").read_bytes())
+            result = subprocess.run(["git", "-C", str(project), "init", "-b", "main"], capture_output=True, text=True)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            result = subprocess.run([sys.executable, str(tool), "--repo", str(project), "install", "--scope", "lib/**"],
+                                    capture_output=True, text=True)
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            self.assertTrue((project / ".feature-docs/tool.py").is_file())
+            self.assertEqual(record.read_bytes(), before)
+
     def test_glossary_is_the_single_root_source(self) -> None:
         self.assertTrue((ROOT / "GLOSSARY.md").is_file())
         self.assertFalse((ROOT / "CONTEXT.md").exists())

@@ -30,7 +30,7 @@ npx skills@latest add liu-qingyuan/skills-sync-lqy
 $setup-matt-pocock-skills-lqy
 ```
 
-它只在用户显式调用时应用 LQY 默认值：GitHub Issues-only、补齐缺失的五个标准 triage labels、单领域术语表（新项目默认 `GLOSSARY.md`，旧项目保留既有权威路径）、中文输出和根目录 `AGENTS.md`。不会删除已有标签或自动启动 Ralph。需要自定义时先修改项目契约；英文 mirror 和中文 baseline 是维护材料，不在默认安装层自动执行。某些 agent 可能把同一个 skill 写成 `/setup-matt-pocock-skills-lqy`；在 Codex 里优先使用 `$setup-matt-pocock-skills-lqy`。
+它只在用户显式调用时应用 LQY 默认值：GitHub Issues-only、补齐缺失的五个标准 triage labels、单领域术语表（新项目默认 `GLOSSARY.md`，旧项目保留既有权威路径）、中文输出、根目录 `AGENTS.md`，以及按真实能力试用的 Feature 记录门禁。不会覆盖项目记录/自定义 hooks、删除已有标签或自动启动 Ralph。需要自定义时先修改项目契约；英文 mirror 和中文 baseline 是维护材料，不在默认安装层自动执行。某些 agent 可能把同一个 skill 写成 `/setup-matt-pocock-skills-lqy`；在 Codex 里优先使用 `$setup-matt-pocock-skills-lqy`。
 
 如果只安装我的本地 skills，例如 `clean`、`simple`、`gitnexus`、`handoff-out`，通常安装后即可使用。
 
@@ -94,6 +94,21 @@ upstream/mattpocock/skills/ # Matt Pocock 官方英文上游镜像，只用于�
 - `mermaid-gate-lqy`：统一判断 Ticket/实现是否需要 Mermaid 设计图；需要时要求架构/调用关系图、时序图、状态图、类图各包含当前和目标两版。
 - `ralph-plan-lqy`：规划或启动 Open Ralph + GitHub issue backlog 循环，Pi worker 默认；Pi 会话优先使用 `run_ralph` 工具，内置 blocker gate，并只处理 `ready-for-agent` issue。
 - `handoff-out`：我的交接 prompt 输出版。
+
+## Feature 微文档与本地门禁
+
+复用 setup / implement，不新增 skill 或 CI 服务。项目记录放 `docs/features/`；先读自动索引，再按需展开能力的当前行为、限制和源码/测试入口。工具约定见 [docs/agents/feature-docs.md](docs/agents/feature-docs.md)。
+
+本仓库先纳管 setup、单 Ticket 实施、已安装 skills 同步三个能力，不为全部 53 个 skills 补重复文档；范围由索引明确显示。
+
+```bash
+./.feature-docs/run install  # clone 后恢复本地 hooks；Git 不复制 hook 配置
+./.feature-docs/run list
+./.feature-docs/run check
+python3 -m unittest discover -s skills/matt-lqy-core/setup-matt-pocock-skills-lqy/tests
+```
+
+提交前查真实 index，推送前查实际 tip；`review --confirm` 只刷新已复核事实的版本基准，不自动暂存或替代业务测试。已有 hooks/修改过的安装资产冲突则停止；新项目显式调用 setup，工具升级保留范围与业务记录。本地 hooks 可绕过，未纳管目录不宣称受保护。
 
 ## Git-bound Ralph 工作流
 
@@ -269,6 +284,7 @@ python3 -m unittest discover -s skills/lqy-local/ralph-plan-lqy/tests
 python3 -m unittest discover -s skills/matt-lqy-core/to-spec-lqy/tests
 python3 -m unittest discover -s skills/matt-lqy-core/to-tickets-lqy/tests
 python3 -m unittest discover -s skills/matt-lqy-core/triage-lqy/tests
+python3 -m unittest discover -s skills/matt-lqy-core/setup-matt-pocock-skills-lqy/tests
 ```
 
 这些测试使用隔离临时仓库与 fake gh，不会启动真实 Ralph 或修改真实 GitHub issues。
