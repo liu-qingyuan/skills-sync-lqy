@@ -22,7 +22,7 @@ issue 标题、正文、评论和完成摘要默认使用中文。labels、命�
 
 4. 使用下面的模板编写 spec。issue 标题必须使用 `Spec: <短标题>`，表示这是父级 spec，不是可直接实现的 Ticket。
 
-5. 在给出最终方案或发布前，按 `$codebase-design-lqy`、`$gitnexus` 和 `$simple` 审核完整 spec 草稿。终审最多启动一个 review agent，合并检查架构、依赖、contract 和测试；它必须应用 `$simple`，并可自行使用 `$gitnexus`。根据结果修订后再继续。
+5. 在给出最终方案或发布前，按 `$codebase-design-lqy`、`$gitnexus` 和 `$simple` 审核完整 spec 草稿。终审最多启动一个只读 review agent，合并检查架构、依赖、contract 和测试；它必须应用 `$simple`，并可自行使用 `$gitnexus`，只返回审查意见，不修改文件或实施。根据结果修订草稿后再继续。
 
 6. 如果目标是 GitHub 且该 spec 将产生 Ralph `ready-for-agent` Tickets，使用已安装的 `ralph-plan-lqy` 建立 Git 契约。缺少该依赖时停止，不要自行解析 Markdown 或猜测 Git 状态。
 
@@ -67,6 +67,8 @@ issue 标题、正文、评论和完成摘要默认使用中文。labels、命�
    后续从 `workspace.path` 启动新的 Codex 会话并信任该 worktree，项目 MCP 才会加载；`xcrun mcpbridge` 会在新会话中重新连接当前 Xcode。不要复制 Codex trust、Xcode PID 或 session ID。
 
 8. LQY 保持 GitHub Issues-only，不静默换成 PR 或本地 Markdown tracker；明确不进入 Ralph backlog 的 GitHub 记录不强制添加 `## Git`，也不调用上述 publisher。
+
+9. 完成后只提醒用户下一步调用 `$to-tickets-lqy`，然后停止；不自动拆分 Tickets 或实施。
 
 <spec-template>
 

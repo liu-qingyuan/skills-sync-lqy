@@ -48,6 +48,32 @@ class SkillContractTests(unittest.TestCase):
         template = (ralph / "templates" / "issue-backlog-prompt.md").read_text()
         self.assertIn("implement-lqy", template)
 
+    def test_planning_skills_preserve_phase_authorization(self) -> None:
+        contracts = {
+            "setup-matt-pocock-skills-lqy": (
+                "等待用户明确调用", "确认规划不等于授权实施",
+                "规划阶段的子 agent 仅可只读查证或审查",
+            ),
+            "grilling-lqy": ("确认只表示共识成立，不授权实施或启动后续 skill", "确认后交还控制权"),
+            "to-spec-lqy": (
+                "最多启动一个只读 review agent", "只返回审查意见，不修改文件或实施",
+                "完成后只提醒用户下一步调用 `$to-tickets-lqy`，然后停止",
+            ),
+            "to-tickets-lqy": (
+                "最多启动一个只读 review agent", "只返回审查意见，不修改文件或实施",
+                "只处理本阶段已授权的改动", "不得借此实施 Ticket 或接手其它业务改动",
+                "发布后停止", "不自动实施或启动循环",
+            ),
+        }
+        for name, expected in contracts.items():
+            skill = (CORE / name / "SKILL.md").read_text()
+            if name == "setup-matt-pocock-skills-lqy":
+                skill = skill.split("```markdown\n", 1)[1].split("\n```", 1)[0]
+            with self.subTest(skill=name):
+                for phrase in expected:
+                    self.assertIn(phrase, skill)
+        self.assertNotIn("等用户确认后才实施", (CORE / "grilling-lqy" / "SKILL.md").read_text())
+
     def test_diagnosis_preserves_real_reproduction_inputs(self) -> None:
         skill = (CORE / "diagnosing-bugs-lqy" / "SKILL.md").read_text()
         for contract in ("仅在展示副本", "原始日志", "fixture", "真实凭据", "不新增安全依赖", "先向用户说明"):

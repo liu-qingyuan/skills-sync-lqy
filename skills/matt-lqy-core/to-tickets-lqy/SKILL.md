@@ -49,7 +49,7 @@ issue 标题、正文、评论和完成摘要默认使用中文。labels、命�
 
 ### 5. 设计终审
 
-在给出 Ticket 方案或发布前，按 `$codebase-design-lqy`、`$gitnexus` 和 `$simple` 审核完整草稿。终审最多启动一个 review agent，合并检查架构、依赖、contract 和测试；它必须应用 `$simple`，并可自行使用 `$gitnexus`。根据结果修订后再继续。
+在给出 Ticket 方案或发布前，按 `$codebase-design-lqy`、`$gitnexus` 和 `$simple` 审核完整草稿。终审最多启动一个只读 review agent，合并检查架构、依赖、contract 和测试；它必须应用 `$simple`，并可自行使用 `$gitnexus`，只返回审查意见，不修改文件或实施。根据结果修订草稿后再继续。
 
 ### 6. 追问用户
 
@@ -139,7 +139,7 @@ publisher 负责完整事务：
 
 如果 provisioner 报告 `base drift`，停止并向用户展示记录的旧 SHA、远程新 SHA 和相关提交摘要，等待明确选择。选择保留旧 SHA 时，在用户明确批准后从头重新运行 publisher 并添加 `--allow-base-drift`；该路径仍只接受 clean、base-ancestor、upstream/remote 同步的目标 branch。选择新 SHA 时先由用户明确批准更新父 spec 的 `Base commit`，然后不带 flag 从头重新验证。不要静默刷新父 spec，也不要默认绕过 drift gate。
 
-worktree dirty 时，由 agent 完成可确认的改动，验证并 commit/push 后重跑 publisher。仅在意图不明时询问用户；禁止 stash、reset、`git clean` 或临时 workspace 绕过 gate。
+worktree dirty 时，只处理本阶段已授权的改动，验证并 commit/push 后重跑 publisher；不得借此实施 Ticket 或接手其它业务改动。无法在此范围内处理时停止并询问用户；禁止 stash、reset、`git clean` 或临时 workspace 绕过 gate。
 
 部分创建、回读或标签失败时，publication gate 保持 open，所有已创建 issues 都不可领取；其中部分 Ticket 可能已经带 `ready-for-agent`，不要手工关闭 gate、补标签或关闭/修改父 spec。修复原因后重新规划如何处理这些 draft issues，避免重复发布。
 
@@ -195,5 +195,5 @@ issue tracker 上 parent issue 的引用（如果来源是已有 issue；否则�
 
 无论哪种形式，都避免写具体文件路径或代码片段；它们很快会过时。例外：如果 prototype 产出的片段比散文更精确地编码了决策（状态机、reducer、schema、type shape），可以内联并简短说明它来自 prototype。只保留决策密集的部分，不要放工作 demo，只放重要部分。
 
-Ralph 是批量实施标准：用户明确启动后，由 worker 一次处理 frontier 上一个 Ticket，并加载 `implement-lqy` 的 SKILL.md。单 Ticket 可直接交给 implement；不因发布 Tickets 自动启动循环。
+Ralph 是批量实施标准：用户明确启动后，由 worker 一次处理 frontier 上一个 Ticket，并加载 `implement-lqy` 的 SKILL.md。发布后停止；仅提示用户可明确授权实施指定 Ticket 或启动 Ralph，不自动实施或启动循环。
 </content>
