@@ -70,6 +70,12 @@ class SkillContractTests(unittest.TestCase):
                                           "run_in_background", "isolation:", "Skill tool"):
                 self.assertNotIn(implementation_detail, text)
 
+    def test_subagent_entry_resolves_spec_from_context(self) -> None:
+        skill = (CORE / "implement-spec-subagent-lqy/SKILL.md").read_text()
+        self.assertIn("优先从当前对话确定已批准的 Spec", skill)
+        self.assertIn("不能唯一确定时才询问", skill)
+        self.assertNotIn("$implement-spec-subagent-lqy <", (ROOT / "README.md").read_text())
+
     def test_subagent_workers_defer_delivery_to_the_integrator(self) -> None:
         implementation = (CORE / "implement-lqy/SKILL.md").read_text()
         self.assertIn("受委派 worker", implementation)

@@ -8,7 +8,7 @@
     "skills/matt-lqy-core/setup-matt-pocock-skills-lqy/tests/test_feature_docs.py",
     "scripts/tests/test_skill_maintenance.py"
   ],
-  "fingerprint": "sha256:9e083d91bee4798a5c105988572dcb330558ce02556ed0b5ea5e878c61c0be58"
+  "fingerprint": "sha256:5ab96d847f54b64637472c58e213345b60232fee4aab4dff4d73143d062eca61"
 }
 ---
 

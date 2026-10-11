@@ -6,7 +6,7 @@ disable-model-invocation: true
 
 # 子 agent 实施 Spec
 
-仅在用户明确选择本入口时实施指定 Spec，不启动 Ralph。规划确认或发布 Tickets 不是实施授权；Ralph iteration 内不能调用本入口。缺少 Spec/Tickets 或 tracker 配置时提示对应前置 skill，然后停止。
+仅在用户明确选择本入口时实施指定 Spec，不启动 Ralph。优先从当前对话确定已批准的 Spec；不能唯一确定时才询问 issue 编号或 URL。规划确认或发布 Tickets 不是实施授权；Ralph iteration 内不能调用本入口。缺少 Spec/Tickets 或 tracker 配置时提示对应前置 skill，然后停止。
 
 ## 并行与隔离
 
