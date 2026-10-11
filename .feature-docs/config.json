@@ -8,7 +8,12 @@
     ".feature-docs/**",
     "AGENTS.md",
     "docs/agents/feature-docs.md",
-    "setup"
+    "setup",
+    "skills/matt-lqy-core/implement-spec-subagent-lqy/**",
+    "skills/matt-lqy-core/to-spec-lqy/**",
+    "skills/matt-lqy-core/to-tickets-lqy/**",
+    "skills/matt-lqy-core/ask-matt-lqy/**",
+    "docs/architecture/spec-implementation.md"
   ],
   "tool": "skills/matt-lqy-core/setup-matt-pocock-skills-lqy/scripts/feature_docs.py",
   "assets": {

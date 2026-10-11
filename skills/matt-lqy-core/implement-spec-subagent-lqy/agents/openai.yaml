@@ -1,0 +1,6 @@
+interface:
+  display_name: implement-spec-subagent-lqy
+  short_description: 显式使用子 agent 并行实施 Spec，独立 worktrees、单一整合者验证交付。
+  default_prompt: 使用 $implement-spec-subagent-lqy 实施指定 Spec；先读取 SKILL.md，遵循任务契约与并行交付规则，保留 Ralph 默认。
+policy:
+  allow_implicit_invocation: false

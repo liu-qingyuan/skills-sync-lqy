@@ -1,6 +1,6 @@
 ---
 name: ask-matt-lqy
-description: "为当前情境推荐 LQY skill 或工作流：Ralph 批量实施、单 Ticket、规划、诊断、复盘和交接。只推荐，不自动启动。"
+description: "推荐 LQY 工作流：默认 Ralph、可选子 agent 并行、单 Ticket、规划、诊断、复盘和交接。只推荐，不自动启动。"
 disable-model-invocation: true
 ---
 
@@ -13,7 +13,8 @@ disable-model-invocation: true
 - 想法未明确：有项目时用 `grill-with-docs-lqy`，否则用 `grill-me-lqy`。
 - 需要可运行的答案：按需 `prototype-lqy`，把验证出的决策带回讨论。
 - 多 Ticket：`to-spec-lqy` 建立父 spec / Git 契约，`to-tickets-lqy` 发布有依赖的实施 Tickets。
-- 批量实施：**Ralph 是标准入口**。用户明确启动 `ralph-plan-lqy` 后，按 branch / worktree 串行消费 ready-for-agent Tickets，交 `implement-lqy` 完成每项。
+- 批量实施：**Ralph 是默认入口**。用户明确启动 `ralph-plan-lqy` 后，按 branch / worktree 串行消费 ready-for-agent Tickets，交 `implement-lqy` 完成每项。
+- 用户选择子 agent 并行：显式调用 `implement-spec-subagent-lqy`，复用同一 Spec/Tickets，独立 worktrees 实现、单一整合者验证交付；不在规划后自动启动。
 - 单 Ticket：`implement-lqy`，公开 Seam 上 TDD、验证、bounded 双轴 review、受限 clean 和完成状态。
 - 写 PR 正文：`pr-lqy`；不要求从直接 commit/push 改成 PR。
 - 会话复盘：用户主动选择 `retro-lqy`；只建议，不自动改环境。

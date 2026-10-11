@@ -7,4 +7,4 @@
 - Status: Active
 - Policy: strict Chinese translation first; local customization is allowed after this baseline.
 
-- Installable LQY counterpart pending analysis: none yet
+- Installable LQY counterpart: `skills/matt-lqy-core/implement-spec-subagent-lqy` (explicit optional mode; Ralph remains default)

@@ -48,7 +48,7 @@ GitHub Issues only；PR 不进入 triage 或 Ralph。见 `docs/agents/issue-trac
 
 ### Workflow
 
-规划阶段结束后只提示下一步，等待用户明确调用；确认规划不等于授权实施。实施指定 Ticket 或启动 Ralph 须有用户明确授权；规划阶段的子 agent 仅可只读查证或审查，不能实施。
+规划阶段结束后只提示下一步，等待用户明确调用；确认规划不等于授权实施。实施指定 Ticket 或启动 Ralph 须有用户明确授权；用户也可显式调用 `$implement-spec-subagent-lqy` 选择并行实施，Ralph 仍默认。规划阶段的子 agent 仅可只读查证或审查，不能实施。
 ```
 
 先读取既有 Domain docs pointer；若指定旧 `CONTEXT.md`，或未配置但仅有该文件，保留其路径并替换上述示例及 domain 模板中的默认路径。不得自动迁移或双写术语表。

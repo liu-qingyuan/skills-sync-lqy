@@ -62,6 +62,10 @@ issue 标题、正文、评论和完成摘要默认使用中文。labels、命�
 - Ralph 只处理当前 branch 的 Tickets，按 issue number 升序选择，并忽略 assignees。
 - `.ralph/` 是每个 worktree 的本地运行状态，不提交。
 
+## 可选子 agent 实施
+
+仅用户显式调用 `implement-spec-subagent-lqy` 时启用。`## Git` 继续指向最终集成分支，父子合同与 blockers 不变；私有 worker 分支/worktree 只是本次执行空间，不是新的 Ticket 目标。整合者在集成 worktree 验证 eligibility，独占该批任务并串行合并、review、验证、push/关闭；worker 仅本地 commit，不能提前释放依赖。不与 Ralph 同时消费同一批 Tickets。
+
 ## 当 skill 说“发布到 issue tracker”时
 
 创建 GitHub issue。若它将进入 Ralph backlog，必须先满足上述 Ralph-ready issue 契约。

@@ -6,7 +6,7 @@
 2. **中文 baseline**：以 `-zh` 结尾的本地化基线，放在 `baselines/matt-zh/`，用于翻译、对比和合并上游变化，不参与安装展示。
 3. **LQY 安装版**：以 `-lqy` 结尾的个人版，放在 `skills/matt-lqy-*/*-lqy`，是 `npx skills@latest add liu-qingyuan/skills-sync-lqy` 当前展示的 Matt 层。
 
-当前来源：active 镜像和 baseline 对齐 `49dd158d1076134a641b33efb035946536778336`，LQY 本轮审阅同此 commit；8 个 Frozen legacy 仍来自 `d574778f94cf620fcc8ce741584093bc650a61d3`。镜像与 baseline 各 46（active 38 + legacy 8），安装 Matt LQY 38（原 35 + `pr`、`retro`、`writing-for-agents`）；全部可安装 53（另有本地/精选/UI 15）。以每项 mirror `UPSTREAM_MATTOCOCK.md` 的 Status/Source commit 为准。本轮复查晚到的 `8267225` 和 `49dd158`：仅涉及未安装的 Wizard 模板及 retro 的 out-of-scope 说明；安装版 retro 已始终加载 writing-for-agents。
+当前来源：active 镜像和 baseline 对齐 `49dd158d1076134a641b33efb035946536778336`，LQY 本轮审阅同此 commit；8 个 Frozen legacy 仍来自 `d574778f94cf620fcc8ce741584093bc650a61d3`。镜像与 baseline 各 46（active 38 + legacy 8），安装 Matt LQY 39（原 35 + `pr`、`retro`、`writing-for-agents`、`implement-spec-subagent`）；全部可安装 54（另有本地/精选/UI 15）。以每项 mirror `UPSTREAM_MATTOCOCK.md` 的 Status/Source commit 为准。本轮复查晚到的 `8267225` 和 `49dd158`：仅涉及未安装的 Wizard 模板及 retro 的 out-of-scope 说明；安装版 retro 已始终加载 writing-for-agents。
 
 ## 命名与目录
 
@@ -37,11 +37,11 @@ skills/matt-lqy-deprecated/              # deprecated 可安装 LQY 版
 
 - 中文 baseline 采用机器辅助的严格中文翻译基线：尽量保留上游流程、结构、检查点和文件约定。
 - LQY 安装版从对应中文 baseline 起步，但必须完整自包含，安装后不能依赖 `baselines/`。
-- `SKILL.md` 的 `name` 必须等于目录名：baseline 用 `<upstream-name>-zh`，安装版用 `<upstream-name>-lqy`。
+- `SKILL.md` 的 `name` 必须等于目录名：baseline 用 `<upstream-name>-zh`，安装版默认用 `<upstream-name>-lqy`；有明确执行语义时保留限定词，例如 `implement-spec-subagent-lqy`。
 - `description` 用中文描述触发场景；Pi 显式调用策略使用 `disable-model-invocation`，Codex 使用 `agents/openai.yaml` policy 并保持同步。本仓库 validator 支持这些 metadata，不能再以系统 `quick_validate.py` 为由省略 flags。
 - 支持文件中的 Markdown 尽量翻译；脚本文件保持原样。
 - 每个 LQY skill 的 `LOCALIZATION.md` 必须同时记录官方 upstream path 和中文 baseline path，并区分原始导入的 Source commit 与本轮 Upstream reviewed commit；后者不表示定制正文逐字来自新源。Frozen legacy 保留原 source，不自动删除；旧个人 skills 仍可显式调用。
-- 新项目 `GLOSSARY.md` 是术语表；旧项目若已明确配置单一 `CONTEXT.md` 则保留该配置。Baseline 忠实翻译上游，不回填 LQY/Ralph 定制；安装版 `implement-lqy` 允许已授权的 Ralph worker 加载，但批量调度仍由 Ralph 负责。
+- 新项目 `GLOSSARY.md` 是术语表；旧项目若已明确配置单一 `CONTEXT.md` 则保留该配置。Baseline 忠实翻译上游，不回填 LQY/Ralph 定制；安装版 `implement-lqy` 允许已授权流程加载；Ralph 默认，用户可显式选择 `implement-spec-subagent-lqy`，两者共用冻结的 Spec/Ticket 契约。
 
 ## 维护规则
 
@@ -67,6 +67,7 @@ skills/matt-lqy-deprecated/              # deprecated 可安装 LQY 版
 - `domain-modeling-lqy`
 - `grill-with-docs-lqy`
 - `implement-lqy`
+- `implement-spec-subagent-lqy`
 - `pr-lqy`
 - `improve-codebase-architecture-lqy`
 - `prototype-lqy`
@@ -111,4 +112,4 @@ skills/matt-lqy-deprecated/              # deprecated 可安装 LQY 版
 - `request-refactor-plan-lqy`
 - `ubiquitous-language-lqy`
 
-此外 `resolving-merge-conflicts-lqy`、`writing-great-skills-lqy`、`edit-article-lqy`、`obsidian-vault-lqy` 也是 Frozen legacy。`wizard` 的 mirror 位于 engineering、baseline 位于 core，但无 LQY 安装版；`chief-of-staff`、`implement-spec` 也不安装。
+此外 `resolving-merge-conflicts-lqy`、`writing-great-skills-lqy`、`edit-article-lqy`、`obsidian-vault-lqy` 也是 Frozen legacy。`wizard` 的 mirror 位于 engineering、baseline 位于 core，但无 LQY 安装版；`chief-of-staff` 不安装；`implement-spec` 已适配为可选的 `implement-spec-subagent-lqy`，不替代默认 Ralph。

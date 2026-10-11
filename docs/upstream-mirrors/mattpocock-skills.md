@@ -74,12 +74,12 @@
 
 ## Frontmatter compatibility
 
-Pi uses `disable-model-invocation` for explicit-only invocation. Codex uses `agents/openai.yaml` policy; keep both in sync where applicable. The local repository validator accepts these metadata fields; do not omit flags to satisfy the system `quick_validate.py`. An authorized Ralph worker may explicitly load the installed `implement-lqy`; batch scheduling remains Ralph's responsibility, not a new skill-level dispatcher.
+Pi uses `disable-model-invocation` for explicit-only invocation. Codex uses `agents/openai.yaml` policy; keep both in sync where applicable. The local repository validator accepts these metadata fields; do not omit flags to satisfy the system `quick_validate.py`. An authorized Ralph worker may explicitly load the installed `implement-lqy`; Ralph remains the default; the explicit implement-spec-subagent-lqy entry can delegate isolated workers using the same frozen Spec/Ticket contracts. No new scheduling platform is added.
 
 ## Installer grouping
 
 The English mirror is intentionally outside top-level `skills/`. `npx skills@latest` recursively discovers installable skills from `skills/`, so moving English upstream copies back under `skills/` will make them visible to users. Keep `.claude-plugin/marketplace.json` in sync for installable LQY/local groups only.
 
-The mirror and baseline each retain 46 skills (38 active, 8 Frozen legacy); 38 Matt LQY skills are installed (35 retained + `pr`, `retro`, `writing-for-agents`). Together with 15 local skills, the installer exposes 53. Do not auto-delete old personal skills: frozen legacy LQY copies remain explicitly invocable. `wizard` (mirror engineering, baseline core), `chief-of-staff`, and `implement-spec` have no LQY install copy.
+The mirror and baseline each retain 46 skills (38 active, 8 Frozen legacy); 39 Matt LQY skills are installable (35 retained + `pr`, `retro`, `writing-for-agents`, `implement-spec-subagent`). Together with 15 local skills, the installer exposes 54. Do not auto-delete old personal skills: frozen legacy LQY copies remain explicitly invocable. `wizard` (mirror engineering, baseline core) and `chief-of-staff` have no LQY install copy; `implement-spec` is adapted as the explicit optional `implement-spec-subagent-lqy`.
 
 When syncing a newer upstream commit, update this mirror first, merge relevant changes into `baselines/matt-zh/matt-zh-*/*-zh`, then selectively adapt the installable `skills/matt-lqy-*/*-lqy` layer. Preserve baseline fidelity to upstream (do not backfill Ralph customizations); preserve local LQY policy and separate original import Source commit from Upstream reviewed commit. Report upstream changes, baseline changes, and any LQY adaptation still needing manual review.

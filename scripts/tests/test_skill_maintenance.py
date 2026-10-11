@@ -48,6 +48,51 @@ class SkillContractTests(unittest.TestCase):
         template = (ralph / "templates" / "issue-backlog-prompt.md").read_text()
         self.assertIn("implement-lqy", template)
 
+    def test_subagent_spec_entry_is_explicit_and_harness_neutral(self) -> None:
+        path = CORE / "implement-spec-subagent-lqy"
+        self.assertTrue((path / "SKILL.md").is_file(), "missing optional subagent implementation entry")
+        self.assertTrue(frontmatter(path / "SKILL.md")["disable-model-invocation"])
+        metadata = yaml.safe_load((path / "agents/openai.yaml").read_text())
+        self.assertFalse(metadata["policy"]["allow_implicit_invocation"])
+        skill = (path / "SKILL.md").read_text()
+        for contract in ("当前会话实际可用", "独立 worktree", "不假设派发自动隔离", "不嵌套派发", "不等待整批"):
+            self.assertIn(contract, skill)
+        descriptions = (
+            skill,
+            metadata["interface"]["short_description"],
+            metadata["interface"]["default_prompt"],
+            (path / "LOCALIZATION.md").read_text(),
+            (ROOT / "docs/architecture/spec-implementation.md").read_text(),
+            (ROOT / "docs/features/ticket-implementation.md").read_text(),
+        )
+        for text in descriptions:
+            for implementation_detail in ("Codex", "Pi", "Claude", "Gemini", "Kimi", "spawn_agent",
+                                          "run_in_background", "isolation:", "Skill tool"):
+                self.assertNotIn(implementation_detail, text)
+
+    def test_subagent_workers_defer_delivery_to_the_integrator(self) -> None:
+        implementation = (CORE / "implement-lqy/SKILL.md").read_text()
+        self.assertIn("受委派 worker", implementation)
+        self.assertIn("私有分支仅本地 commit", implementation)
+        self.assertIn("Review、push 与 issue 收口由整合者执行", implementation)
+        entry = (CORE / "implement-spec-subagent-lqy/SKILL.md").read_text()
+        for contract in ("父子三字段必须一致", "集成 worktree 运行", "check_ready_issue_unblocked.py",
+                         "1/3", "串行合并", "review fixed point", "不能释放依赖", "不等待整批"):
+            self.assertIn(contract, entry)
+
+    def test_planning_exposes_parallelism_without_starting_execution(self) -> None:
+        spec = (CORE / "to-spec-lqy/SKILL.md").read_text()
+        tickets = (CORE / "to-tickets-lqy/SKILL.md").read_text()
+        self.assertIn("合理并行", spec)
+        for contract in ("合理并行", "不按编号或发布顺序制造依赖", "共享写入", "实际文件与资源"):
+            self.assertIn(contract, tickets)
+        self.assertIn("implement-spec-subagent-lqy", tickets)
+        self.assertIn("发布后停止", tickets)
+        self.assertIn("不自动实施或启动循环", tickets)
+        router = (CORE / "ask-matt-lqy/SKILL.md").read_text()
+        self.assertIn("Ralph 是默认", router)
+        self.assertIn("implement-spec-subagent-lqy", router)
+
     def test_planning_skills_preserve_phase_authorization(self) -> None:
         contracts = {
             "setup-matt-pocock-skills-lqy": (

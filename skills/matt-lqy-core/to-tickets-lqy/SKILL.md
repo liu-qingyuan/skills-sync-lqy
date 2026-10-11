@@ -41,6 +41,8 @@ issue 标题、正文、评论和完成摘要默认使用中文。labels、命�
 
 给每个 Ticket 标出它的 **blocking edges**：哪些其他 Ticket 必须先完成，它才能开始。没有 blocker 的 Ticket 可以立即开始。
 
+在真实依赖、纵向切片和独立验收前提下寻找**合理并行**。不按编号或发布顺序制造依赖，也不为了并行按 schema/API/UI 横切。指出共享契约、共享写入及数据库/构建/测试资源冲突；必要风险写入现有 `What to build`，不增加持久契约字段。实施入口仍要核查实际文件与资源，没有 blocker 不等于可安全并发。
+
 **宽 refactor 是 vertical slicing 的例外。** 宽 refactor 指一个机械变化（例如重命名一列、重新定义共享 symbol 类型）影响整个代码库，导致一次编辑会打破成千上万的调用点，没有任何 vertical slice 能保持绿色。不要强行做成 tracer bullet；把它排成 **expand-contract**。先 expand：把新形式放在旧形式旁边，保证现有代码不坏。然后按 blast radius 分批迁移调用点（按 package、目录等），每批一个 Ticket，block 在 expand 之后，并通过旧形式仍存在来保持每批 CI 绿色。最后 contract：所有调用点迁完后删除旧形式，这个 Ticket block 在所有迁移批次之后。如果连单个批次都无法独立保持绿色，仍保留这个顺序，但让这些批次共享一个 integration branch，并全部 block 到最后的 integrate-and-verify Ticket；绿色只在最后承诺。
 
 ### 4. 设计图 Gate
@@ -59,6 +61,7 @@ issue 标题、正文、评论和完成摘要默认使用中文。labels、命�
 - **Blocked by**：哪些其他 Ticket 必须先完成（如有）
 - **What it delivers**：该 Ticket 打通的端到端行为
 - **Mermaid Gate**：该 Ticket 按 `$mermaid-gate-lqy` 的判断
+- 可并行的 frontier，以及需要串行的依赖或资源原因
 
 询问用户：
 
@@ -195,5 +198,5 @@ issue tracker 上 parent issue 的引用（如果来源是已有 issue；否则�
 
 无论哪种形式，都避免写具体文件路径或代码片段；它们很快会过时。例外：如果 prototype 产出的片段比散文更精确地编码了决策（状态机、reducer、schema、type shape），可以内联并简短说明它来自 prototype。只保留决策密集的部分，不要放工作 demo，只放重要部分。
 
-Ralph 是批量实施标准：用户明确启动后，由 worker 一次处理 frontier 上一个 Ticket，并加载 `implement-lqy` 的 SKILL.md。发布后停止；仅提示用户可明确授权实施指定 Ticket 或启动 Ralph，不自动实施或启动循环。
+Ralph 是默认批量实施入口；用户也可显式选择 `$implement-spec-subagent-lqy`，并行处理同一任务图中安全独立的 frontier。发布后停止；提示用户明确选择单 Ticket、Ralph 或子 agent 实施，不自动实施或启动循环。
 </content>

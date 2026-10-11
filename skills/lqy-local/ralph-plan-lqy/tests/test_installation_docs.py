@@ -83,7 +83,8 @@ class InstallationDocsTests(unittest.TestCase):
                 "直接调用即用 Pi + `run_ralph` 执行",
             ),
             REPO_ROOT / "skills" / "matt-lqy-core" / "to-tickets-lqy" / "SKILL.md": (
-                "由 agent 完成可确认的改动",
+                "只处理本阶段已授权的改动",
+                "不得借此实施 Ticket",
                 "commit/push 后重跑 publisher",
                 "禁止 stash",
             ),

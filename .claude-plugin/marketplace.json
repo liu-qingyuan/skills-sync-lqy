@@ -16,6 +16,7 @@
         "./skills/matt-lqy-core/grilling-lqy",
         "./skills/matt-lqy-core/handoff-lqy",
         "./skills/matt-lqy-core/implement-lqy",
+        "./skills/matt-lqy-core/implement-spec-subagent-lqy",
         "./skills/matt-lqy-core/code-review-lqy",
         "./skills/matt-lqy-core/improve-codebase-architecture-lqy",
         "./skills/matt-lqy-core/prototype-lqy",

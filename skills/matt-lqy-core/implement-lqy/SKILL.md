@@ -1,15 +1,19 @@
 ---
 name: implement-lqy
-description: "实现一个指定 Ticket 或已授权 Ralph worker 选中的任务，遵循公开 Seam 的 TDD、预算化双轴 review 和单上下文停止规则。"
+description: "实现一个指定或已授权派发的 Ticket，遵循公开 Seam 的 TDD、预算化双轴 review 和单上下文停止规则。"
 ---
 
-实施用户指定或已获用户授权的 Ralph worker 选定的一个 Ticket。收到编号或 URL 时，先按 tracker 契约获取完整正文、标签和评论，并说明标题；引用有歧义就询问。父 spec 仍需拆分时，提示用户先运行 `$to-tickets-lqy` 或指定子 Ticket，不自动发布或启动循环。
+实施用户指定或已获用户授权的实施流程派发的一个 Ticket。收到编号或 URL 时，先按 tracker 契约获取完整正文、标签和评论，并说明标题；引用有歧义就询问。父 spec 仍需拆分时，提示用户先运行 `$to-tickets-lqy` 或指定子 Ticket，不自动发布或启动循环。
 
 实现前满足当前 Ticket 的 `$mermaid-gate-lqy`。Ticket 改变 Module、Interface、Seam 或知识归属时，先使用 `$codebase-design-lqy`；否则不要为了流程加载完整设计审查。尽可能在商定接缝处读取并执行 `tdd-lqy` 的 `SKILL.md`；沿用 spec 中已确认的 Seam，只有真实歧义才询问。实现中运行聚焦测试，完成后运行相关完整测试套件；同 worktree 并行时，worker 只跑互不干扰的聚焦测试，完整套件与共享构建由整合者统一执行。
 
 ## Feature 当前事实
 
 若有 `.feature-docs/run`，读取并执行 `docs/agents/feature-docs.md`，只维护本任务相关能力；不替代测试或双轴 review。未启用则保持原流程，提示显式 setup。同 worktree 并行须先指定单一整合者与不相交的写入文件；worker 只交回本票文件和验证证据，不执行下方 Git/issue 交付，由整合者执行。
+
+## 受委派 worker
+
+被 `implement-spec-subagent-lqy` 明确派发时，先核对 Ticket、实际 worktree/分支和起点 SHA；只实施本票并聚焦验证。私有分支仅本地 commit，交回 commit SHA、变更范围、测试与阻塞证据。Review、push 与 issue 收口由整合者执行；此合同覆盖下方对应交付步骤，私有分支不要求 remote upstream。worker 不再派发 agents；过大或失败交回现场，不自行改标签、关闭 issue 或启动 Ralph。单票直用及 Ralph worker 保持原流程。
 
 ## Review
 

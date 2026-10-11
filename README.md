@@ -108,7 +108,12 @@ upstream/mattpocock/skills/ # Matt Pocock 官方英文上游镜像，只用于�
 
 ## Git-bound Ralph 工作流
 
-**Ralph 是批量实施标准，`implement-lqy` 仍只处理一个 Ticket。** 说“以 Ralph 为标准”或同步技能不是启动授权；循环只在显式调用或启动请求后运行。
+**Ralph 是默认批量实施入口，`implement-lqy` 仍只处理一个 Ticket。** 说“以 Ralph 为标准”或同步技能不是启动授权；循环只在显式调用或启动请求后运行。
+
+规划仍共用 `to-spec-lqy → to-tickets-lqy`：保留真实依赖，指出安全独立的 frontier 与共享资源风险。实施时可明确选择：
+
+- `$ralph-plan-lqy`：当前 branch/worktree 逐票串行，适合依赖较多或长期循环。
+- `$implement-spec-subagent-lqy <Spec 引用>`：可选子 agent 并行，独立 worktrees；整合者逐票合并、review、验证并交付，空位立即补任务。不与 Ralph 消费同一批票，不因发布 Tickets 自动启动。
 
 `ralph-plan-lqy` 把一个 Ralph worker 绑定到一个 Git branch 和对应 worktree。进入 backlog 的具体 Ticket 必须是 open + `ready-for-agent`，正文最后包含固定的 `## Git` 契约；worker 只消费 `Branch` 精确匹配当前 attached branch 的 Ticket，并在 branch 内按 issue number 升序选择第一个通过 eligibility gate 的任务。
 
@@ -161,10 +166,10 @@ docs/localization/mattpocock-zh-skills.md
 
 ## 本轮选择性适配
 
-审阅来源：`49dd158d1076134a641b33efb035946536778336`（v1.3.1 + main）。mirror 和中文 baseline 各保留 38 个 active 与 8 个 frozen legacy；安装层共 53 个 skills，其中 Matt LQY 38 个。
+审阅来源：`49dd158d1076134a641b33efb035946536778336`（v1.3.1 + main）。mirror 和中文 baseline 各保留 38 个 active 与 8 个 frozen legacy；安装层共 54 个 skills，其中 Matt LQY 39 个。
 
 - 新增 `pr-lqy`（只写正文）、`retro-lqy`（人工触发、只建议）、`writing-for-agents-lqy`（agent 文档纪律）。
-- 不安装 `chief-of-staff`、`implement-spec` 或额外调度层；不自动删除上游退役的个人技能，旧写作 skill 仍可显式选择。
+- 上游 `implement-spec` 适配为显式可选的 `implement-spec-subagent-lqy`，Ralph 保持默认；不安装 `chief-of-staff` 或新增调度平台。不自动删除退役个人技能，旧写作 skill 仍可显式选择。
 - Pi `disable-model-invocation` 与 Codex `allow_implicit_invocation` 同步；已授权 Ralph worker 仍能加载 implement / tdd / review。
 - 隐藏凭据仅影响展示副本，不改原始日志、`.env`、fixture、业务数据或真实复现输入；不增加安全整改。
 - 新项目领域术语表默认 `GLOSSARY.md`；旧项目遵守已指定的同一份文档，不自动迁移或双写。
@@ -245,7 +250,7 @@ uv run --no-project --with pyyaml python scripts/check_matt_zh_skills.py
 这个脚本会检查：
 
 - `skills/` 只暴露可安装版本，Matt 英文官方镜像和中文 baseline 不能漏进安装列表。
-- 38 个 Matt LQY `*-lqy` skills 都有 `LOCALIZATION.md`，并指向有效 `*-zh` baseline 和上游路径。
+- 39 个 Matt LQY `*-lqy` skills 都有 `LOCALIZATION.md`，并指向有效 `*-zh` baseline 和上游路径。
 - 46 个 Matt 中文 `*-zh` baseline（38 active + 8 legacy）都有 `LOCALIZATION.md` 和有效上游路径。
 - `.claude-plugin/marketplace.json` 必须和 `skills/` 下可安装目录一致，并且不能列出 `*-zh`。
 - README 的 Codex setup 用法必须优先写 `$setup-matt-pocock-skills-lqy`。
