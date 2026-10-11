@@ -97,6 +97,17 @@ class SkillContractTests(unittest.TestCase):
             self.assertIn(contract, worker)
         self.assertNotIn("worker 不再派发 agents", worker)
 
+    def test_review_report_budget_preserves_finding_evidence(self) -> None:
+        review = (CORE / "code-review-lqy/SKILL.md").read_text()
+        self.assertNotIn("最多 250 字", review)
+        for contract in ("默认以 1000 字以内为目标", "必要证据较多时可更长", "文件位置", "证据", "影响"):
+            self.assertIn(contract, review)
+        self.assertIn("最多 6 轮", review)
+        self.assertIn("最多 3 轮", review)
+        provenance = (CORE / "code-review-lqy/LOCALIZATION.md").read_text()
+        self.assertIn("Under 400 words", provenance)
+        self.assertIn("local controls, not upstream requirements", provenance)
+
     def test_subagent_workers_defer_delivery_to_the_integrator(self) -> None:
         implementation = (CORE / "implement-lqy/SKILL.md").read_text()
         self.assertIn("受委派 worker", implementation)
