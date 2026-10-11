@@ -1,27 +1,32 @@
 # Spec 实施入口
 
-Ralph 保持默认；显式 `implement-spec-subagent-lqy` 复用同一份 Spec/Tickets，独立 worktree 实现，单一整合者交付。不新增调度平台、配置模式或 Git 契约字段。
+Ralph 默认不变；子 agent 入口复用 Spec/Tickets，根据项目约定与实际风险选择共享工作区或独立 worktree。单一整合者收口，共享写入暂停后验证同一快照。不新增调度平台、配置模式或 Git 字段。
 
-C4：用户与 GitHub 为 Context；目标 Git 仓库与 AI 会话为 Container；规划、实施、review 为 Component；类图仅描述已有文档合同。Module 为新实施 skill，Interface 为 Spec 引用和明确启动；Implementation 隐藏派发、隔离与整合。Seam 是 Ticket/Git 合同和 worker 结果，Adapter 是宿主已有子 agent 工具；复用既有验证与单票纪律获得 Leverage/Locality。test surface 为 skill 文件合同、skill 加载及既有 Git/publisher 回归；指令不等于运行时锁或端到端保证。
+C4：用户/GitHub 为 Context，Git 仓库/AI 会话为 Container，规划/实施/review 为 Component；类图描述文档合同。Module 是实施入口，Interface 是已授权 Spec 和项目规则；Implementation 隐藏派发、协调与交付。Depth 来自复用既有 gate/TDD/review，Seam 是 Ticket 与 worker 证据，Adapter 是已有子 agent 能力；合同集中提供 Leverage/Locality。test surface 为文件合同、加载与 Git/publisher 回归，不宣称模型执行或运行时锁已验证。
 
 ## 架构 / 调用
 
 当前：
 ```mermaid
 flowchart LR
-    User["用户"] --> Plan["Spec 与 Tickets"]
-    Plan --> Ralph["显式 Ralph"] --> Implement["单 Ticket 实施"]
-    Implement --> GitHub["验证后推送与关闭"]
+    User["用户选择入口"] --> Plan["Spec 与 Tickets"]
+    Plan --> Ralph["默认 Ralph"] --> Single["单 Ticket 实施"]
+    Plan --> C["子 agent 整合者"] --> W["仅独立 worktrees"]
+    W --> C --> D["逐票合并 review 与交付"]
 ```
 
 目标：
 ```mermaid
 flowchart LR
-    User["用户选择入口"] --> Plan["同一 Spec 与 Tickets"]
-    Plan --> Ralph["默认 Ralph"] --> Implement["单 Ticket 纪律"]
-    Plan --> Coordinator["显式子 agent 整合者"]
-    Coordinator --> Workers["独立 worktrees"] --> Implement
-    Workers --> Coordinator --> Delivery["串行 review 验证与交付"]
+    User["用户实施授权"] --> Plan["同一 Spec 与 Tickets"]
+    Plan --> Ralph["默认 Ralph"]
+    Plan --> C["承接授权的整合者"]
+    C --> Shared["不相交的小任务共享工作区"]
+    C --> Isolated["独立提交或滚动整合用 worktrees"]
+    Shared --> Quiet["全部写入结束或协调暂停"]
+    Isolated --> Merge["串行合并"]
+    Quiet --> Review["限定交付范围 review 与验证"]
+    Merge --> Review --> Delivery["整合者提交 push 与关闭"]
 ```
 
 ## 时序
@@ -29,28 +34,32 @@ flowchart LR
 当前：
 ```mermaid
 sequenceDiagram
-    participant R as Ralph
-    participant I as Implement
-    R->>I: 一个 eligible Ticket
-    I->>I: TDD 验证与 review
-    I-->>R: 推送并关闭后领取下一票
+    participant C as 整合者
+    participant A as 独立 Worker A
+    participant B as 独立 Worker B
+    C->>A: Ticket 分支与起点 SHA
+    C->>B: Ticket 分支与起点 SHA
+    A-->>C: commit 与证据
+    C->>C: 合并 review 验证并交付 A
+    Note over C,B: B 继续独立写入
 ```
 
 目标：
 ```mermaid
 sequenceDiagram
     participant C as 整合者
-    participant A as Worker A
-    participant B as Worker B
-    par 独立前沿
-        C->>A: Ticket 路径分支与起点 SHA
-    and
-        C->>B: Ticket 路径分支与起点 SHA
-    end
-    A-->>C: 本地 commit 与验证证据
-    C->>C: 串行合并 review 验证并交付 A
-    Note over C,B: 立即补位新前沿 不等待整批
-    B-->>C: 本地 commit 与验证证据
+    participant A as 共享 Worker A
+    participant B as 共享 Worker B
+    participant H as 只读辅助
+    C->>A: Ticket 与不相交写入文件
+    C->>B: Ticket 与不相交写入文件
+    A->>H: 本票查证 不扩大范围
+    H-->>A: 证据
+    A-->>C: 文件与验证结果
+    C->>B: 协调暂停或等待写入结束
+    B-->>C: 已暂停或已交回结果
+    C->>C: 固定授权批次快照 review 验证与交付
+    C->>C: 刷新前沿后继续派发
 ```
 
 ## 状态
@@ -59,9 +68,10 @@ sequenceDiagram
 ```mermaid
 stateDiagram-v2
     [*] --> Eligible
-    Eligible --> Implementing
-    Implementing --> Verified
-    Verified --> Delivered
+    Eligible --> Running
+    Running --> Candidate: 本地 commit
+    Candidate --> Integrated: 串行合并
+    Integrated --> Delivered: review 验证 push 与关闭
     Delivered --> [*]
 ```
 
@@ -69,14 +79,15 @@ stateDiagram-v2
 ```mermaid
 stateDiagram-v2
     [*] --> Eligible
-    Eligible --> Running: 未派发且可独立实施
-    Running --> Candidate: commit 与证据
-    Candidate --> Integrated: 串行合并
-    Integrated --> Delivered: review 测试 push 与关闭
+    Eligible --> Running: 可安全独立实施
+    Running --> Candidate: 文件或 commit 与证据
+    Candidate --> Snapshot: 共享写入结束或暂停
+    Candidate --> Snapshot: 独立提交串行合并
+    Snapshot --> Delivered: 有限 review 验证与交付
+    Snapshot --> Stopped: 范围不明 冲突或门禁失败
     Running --> Stopped: 失败或过大
-    Integrated --> Stopped: 冲突或门禁失败
     Delivered --> [*]
-    Stopped --> [*]: 保留未交付状态与 worktree
+    Stopped --> [*]: 保留未完成状态与现场
 ```
 
 ## 文档合同
@@ -84,17 +95,6 @@ stateDiagram-v2
 当前：
 ```mermaid
 classDiagram
-    class Spec
-    class Ticket
-    class GitContract
-    Spec --> Ticket : blocking_graph
-    Ticket --> GitContract : frozen_target
-```
-
-目标：
-```mermaid
-classDiagram
-    class Spec
     class Ticket
     class GitContract
     class WorkerResult {
@@ -104,9 +104,29 @@ classDiagram
         commit_sha
         tests_and_status
     }
-    Spec --> Ticket : same_blocking_graph
-    Ticket --> GitContract : integration_target_unchanged
-    Ticket --> WorkerResult : temporary_execution
+    Ticket --> GitContract : frozen_target
+    Ticket --> WorkerResult : isolated_execution
 ```
 
-Boundary/Contract/Governance：规划只生成依赖与并行风险，不实施。新入口只处理用户授权 Spec 的 eligible Tickets，整合者在集成 worktree 复用现有 gate；私有工作分支不是 Ticket 新目标。worker 不 push/关闭 issue，不嵌套调度；review 留在主线程，避免依赖子 agent 的再次派发能力。无法并行或隔离则报告阻塞，不静默切换执行入口。与 Ralph/其它整合者的互斥是执行前提，不宣称文档提供 OS 锁；失败保留现场，合入且验证通过后才释放依赖。
+目标：
+```mermaid
+classDiagram
+    class Ticket
+    class GitContract
+    class WorkerResult {
+        ticket
+        workspace_and_files
+        commit_if_isolated
+        tests_and_status
+    }
+    class DeliveryBatch {
+        authorized_tickets
+        actual_files
+        fixed_point
+    }
+    Ticket --> GitContract : target_unchanged
+    Ticket --> WorkerResult : delegated_execution
+    WorkerResult --> DeliveryBatch : one_integrator
+```
+
+Boundary/Contract/Governance：授权可由主流程传递，规划确认仍不等于实施授权。worker 可在范围内做只读辅助委派，不再拆派实施或绕过 review 预算。共享 worker 不操作 Git/index，整合者在写入全部交回或协调暂停后，对明确授权的文件/批次做有限 review、完整验证和交付；其它工作不混入。独立 worktree 可本地 commit，支持逐票滚动整合；项目禁止新工作区时不自行绕过。最终 Git/blocker 合同与 publication gate 不变，不与其它实施流程消费同一批任务。review 是单票或明确批次的既有双轴纪律，不按 worker 数增加预算。

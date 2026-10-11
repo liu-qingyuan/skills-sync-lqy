@@ -52,7 +52,7 @@ issue 标题、正文、评论和完成摘要默认使用中文。labels、命�
 
 ## 可选子 agent 实施
 
-仅用户显式调用 `implement-spec-subagent-lqy` 时启用。`## Git` 继续指向最终集成分支，父子合同与 blockers 不变；私有 worker 分支/worktree 只是本次执行空间，不是新的 Ticket 目标。整合者在集成 worktree 验证 eligibility，独占该批任务并串行合并、review、验证、push/关闭；worker 仅本地 commit，不能提前释放依赖。不与 Ralph 同时消费同一批 Tickets。
+用户授权并行实施后，可由主流程派发 `implement-spec-subagent-lqy`。父子 Git/blocker 合同仍指向最终集成目标；工作区按项目约定选择，临时工作分支不改合同。共享 worker 不操作 Git/index，独立 worktree 可本地 commit；最终 review、验证、push/关闭由单一整合者负责。共享写入结束或协调暂停后才收口，不能提前释放依赖或与 Ralph 消费同一批 Tickets。
 
 ## 当技能说“发布到 issue tracker”时
 

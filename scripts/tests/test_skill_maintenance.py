@@ -55,13 +55,14 @@ class SkillContractTests(unittest.TestCase):
         metadata = yaml.safe_load((path / "agents/openai.yaml").read_text())
         self.assertFalse(metadata["policy"]["allow_implicit_invocation"])
         skill = (path / "SKILL.md").read_text()
-        for contract in ("当前会话实际可用", "独立 worktree", "不假设派发自动隔离", "不嵌套派发", "不等待整批"):
+        for contract in ("当前会话实际可用", "独立 worktree", "不假设派发自动隔离", "不再拆派实施", "不等待整批"):
             self.assertIn(contract, skill)
         descriptions = (
             skill,
             metadata["interface"]["short_description"],
             metadata["interface"]["default_prompt"],
             (path / "LOCALIZATION.md").read_text(),
+            (CORE / "code-review-lqy/SKILL.md").read_text(),
             (ROOT / "docs/architecture/spec-implementation.md").read_text(),
             (ROOT / "docs/features/ticket-implementation.md").read_text(),
         )
@@ -75,6 +76,26 @@ class SkillContractTests(unittest.TestCase):
         self.assertIn("优先从当前对话确定已批准的 Spec", skill)
         self.assertIn("不能唯一确定时才询问", skill)
         self.assertNotIn("$implement-spec-subagent-lqy <", (ROOT / "README.md").read_text())
+
+    def test_subagent_workspace_choice_requires_a_stable_shared_snapshot(self) -> None:
+        entry = (CORE / "implement-spec-subagent-lqy/SKILL.md").read_text()
+        self.assertIn("不相交的小任务可共享 worktree", entry)
+        self.assertIn("独立提交或滚动整合时优先独立 worktree", entry)
+        self.assertIn("全部结束或已协调暂停", entry)
+        self.assertNotIn("每个 worker 使用独立 worktree", entry)
+        review = (CORE / "code-review-lqy/SKILL.md").read_text()
+        self.assertIn("当前 Ticket 或明确授权的交付批次", review)
+        self.assertIn("暂停该工作区的并发写入", review)
+        self.assertIn("其它工作不混入", review)
+
+    def test_delegation_passes_authorization_and_allows_bounded_readonly_help(self) -> None:
+        entry = (CORE / "implement-spec-subagent-lqy/SKILL.md").read_text()
+        self.assertIn("也可由承接授权的主流程派发", entry)
+        self.assertIn("无需逐票重复请求授权", entry)
+        worker = (CORE / "implement-lqy/SKILL.md").read_text()
+        for contract in ("只读查证", "不再拆派实施", "不绕过 review 预算", "共享工作区不操作 Git/index"):
+            self.assertIn(contract, worker)
+        self.assertNotIn("worker 不再派发 agents", worker)
 
     def test_subagent_workers_defer_delivery_to_the_integrator(self) -> None:
         implementation = (CORE / "implement-lqy/SKILL.md").read_text()

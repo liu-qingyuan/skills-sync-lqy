@@ -113,7 +113,7 @@ upstream/mattpocock/skills/ # Matt Pocock 官方英文上游镜像，只用于�
 规划仍共用 `to-spec-lqy → to-tickets-lqy`：保留真实依赖，指出安全独立的 frontier 与共享资源风险。实施时可明确选择：
 
 - `$ralph-plan-lqy`：当前 branch/worktree 逐票串行，适合依赖较多或长期循环。
-- `$implement-spec-subagent-lqy`：可选子 agent 并行，独立 worktrees；整合者逐票合并、review、验证并交付，空位立即补任务。不与 Ralph 消费同一批票，不因发布 Tickets 自动启动。
+- `$implement-spec-subagent-lqy`：获授权后并行处理安全独立的 Tickets，由单一整合者 review、验证并交付。小且不相交的任务可共享工作区；需独立提交或滚动整合时优先独立 worktree。共享写入结束或协调暂停后才验证与交付；不与 Ralph 消费同一批票，不因发布 Tickets 自动启动。
 
 `ralph-plan-lqy` 把一个 Ralph worker 绑定到一个 Git branch 和对应 worktree。进入 backlog 的具体 Ticket 必须是 open + `ready-for-agent`，正文最后包含固定的 `## Git` 契约；worker 只消费 `Branch` 精确匹配当前 attached branch 的 Ticket，并在 branch 内按 issue number 升序选择第一个通过 eligibility gate 的任务。
 

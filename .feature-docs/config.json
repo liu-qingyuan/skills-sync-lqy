@@ -13,7 +13,8 @@
     "skills/matt-lqy-core/to-spec-lqy/**",
     "skills/matt-lqy-core/to-tickets-lqy/**",
     "skills/matt-lqy-core/ask-matt-lqy/**",
-    "docs/architecture/spec-implementation.md"
+    "docs/architecture/spec-implementation.md",
+    "skills/matt-lqy-core/code-review-lqy/**"
   ],
   "tool": "skills/matt-lqy-core/setup-matt-pocock-skills-lqy/scripts/feature_docs.py",
   "assets": {

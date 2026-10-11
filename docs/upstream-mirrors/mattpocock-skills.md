@@ -74,7 +74,7 @@
 
 ## Frontmatter compatibility
 
-Pi uses `disable-model-invocation` for explicit-only invocation. Codex uses `agents/openai.yaml` policy; keep both in sync where applicable. The local repository validator accepts these metadata fields; do not omit flags to satisfy the system `quick_validate.py`. An authorized Ralph worker may explicitly load the installed `implement-lqy`; Ralph remains the default; the explicit implement-spec-subagent-lqy entry can delegate isolated workers using the same frozen Spec/Ticket contracts. No new scheduling platform is added.
+Pi uses `disable-model-invocation` for explicit-only invocation. Codex uses `agents/openai.yaml` policy; keep both in sync where applicable. The local repository validator accepts these metadata fields; do not omit flags to satisfy the system `quick_validate.py`. An authorized Ralph worker may explicitly load the installed `implement-lqy`; Ralph remains the default; the authorized implement-spec-subagent-lqy entry can delegate safe frontier work using shared or isolated workspaces under project rules and the same frozen Spec/Ticket contracts. No new scheduling platform is added.
 
 ## Installer grouping
 

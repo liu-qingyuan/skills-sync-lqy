@@ -13,7 +13,9 @@ description: "实现一个指定或已授权派发的 Ticket，遵循公开 Seam
 
 ## 受委派 worker
 
-被 `implement-spec-subagent-lqy` 明确派发时，先核对 Ticket、实际 worktree/分支和起点 SHA；只实施本票并聚焦验证。私有分支仅本地 commit，交回 commit SHA、变更范围、测试与阻塞证据。Review、push 与 issue 收口由整合者执行；此合同覆盖下方对应交付步骤，私有分支不要求 remote upstream。worker 不再派发 agents；过大或失败交回现场，不自行改标签、关闭 issue 或启动 Ralph。单票直用及 Ralph worker 保持原流程。
+主流程已获实施授权、明确派发本票并约定由整合者收口时，核对任务、工作区和写入范围，按 TDD 实现并聚焦验证。可在本票范围内委派只读查证，不再拆派实施、不扩大范围、不绕过 review 预算。
+
+共享工作区不操作 Git/index，交回实际文件与证据；独立 worktree 的私有分支仅本地 commit，另交回起点与 commit SHA，不要求 remote upstream。Review、push 与 issue 收口由整合者执行，此合同覆盖下方对应交付步骤。过大或失败交回现场与未完成状态，不自行改标签或关闭 issue。单票直用及未另设整合者的 Ralph worker 保持原流程。
 
 ## Review
 

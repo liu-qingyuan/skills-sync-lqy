@@ -14,7 +14,7 @@ disable-model-invocation: true
 - 需要可运行的答案：按需 `prototype-lqy`，把验证出的决策带回讨论。
 - 多 Ticket：`to-spec-lqy` 建立父 spec / Git 契约，`to-tickets-lqy` 发布有依赖的实施 Tickets。
 - 批量实施：**Ralph 是默认入口**。用户明确启动 `ralph-plan-lqy` 后，按 branch / worktree 串行消费 ready-for-agent Tickets，交 `implement-lqy` 完成每项。
-- 用户选择子 agent 并行：显式调用 `implement-spec-subagent-lqy`，复用同一 Spec/Tickets，独立 worktrees 实现、单一整合者验证交付；不在规划后自动启动。
+- 用户授权子 agent 并行实施：使用 `implement-spec-subagent-lqy`，复用同一 Spec/Tickets，按项目约定与风险选择共享工作区或独立 worktree；由单一整合者在稳定快照上验证交付，不在规划后自动启动。
 - 单 Ticket：`implement-lqy`，公开 Seam 上 TDD、验证、bounded 双轴 review、受限 clean 和完成状态。
 - 写 PR 正文：`pr-lqy`；不要求从直接 commit/push 改成 PR。
 - 会话复盘：用户主动选择 `retro-lqy`；只建议，不自动改环境。
