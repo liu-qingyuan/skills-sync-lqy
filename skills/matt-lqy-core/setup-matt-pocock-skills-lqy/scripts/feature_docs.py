@@ -395,10 +395,10 @@ def main(argv=None):
             if not re.fullmatch(r'[a-z0-9]+(?:-[a-z0-9]+)*', args.feature):
                 raise GateError('INVALID_FEATURE_ID ' + args.feature)
             current = snapshot(root) if args.staged else files
-            records = features(current)
-            if args.feature not in records:
+            path = f'docs/features/{args.feature}.md'
+            if path not in current:
                 raise GateError('UNKNOWN_FEATURE ' + args.feature)
-            path, _, meta, body = records[args.feature]
+            _, _, meta, body = features({path: current[path]})[args.feature]
             field = 'fingerprint' if 'fingerprint' in meta else 'reviewed_code'
             meta[field], _ = evidence(meta, files)
             destination = root / path

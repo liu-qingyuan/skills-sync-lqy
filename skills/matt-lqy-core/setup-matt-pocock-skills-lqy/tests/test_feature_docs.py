@@ -1,6 +1,7 @@
 """Public CLI and real-Git contracts; no private implementation imports."""
 from __future__ import annotations
 
+from concurrent.futures import ThreadPoolExecutor
 import json
 import os
 from pathlib import Path
@@ -115,6 +116,70 @@ class FeatureDocsContract(unittest.TestCase):
         self.git('add', '.')
         self.git('commit', '-m', 'existing three-field record')
         self.success('check', '--ref', 'HEAD')
+
+    def test_review_of_one_feature_is_not_blocked_by_another_unfinished_page(self):
+        self.baseline()
+        unfinished = self.repo / 'docs/features/second.md'
+        unfinished.write_text('---\n{"paths": [')
+        original = unfinished.read_bytes()
+        source = self.repo / 'lib/export.js'
+        source.write_text(source.read_text() + '// first worker change\n')
+        self.success('review', 'export', '--confirm')
+        self.assertEqual(unfinished.read_bytes(), original)
+        self.assertIn('INVALID_FRONT_MATTER docs/features/second.md', self.cli('check').stderr)
+        self.git('add', 'lib/export.js', 'docs/features/export.md')
+        self.success('check', '--staged')
+        self.git('commit', '-m', 'integrator delivers only the complete feature')
+        self.success('check', '--ref', 'HEAD')
+        self.assertEqual(unfinished.read_bytes(), original)
+
+    def second_feature(self):
+        (self.repo / 'lib/second.js').write_text('export const value = 2;\n')
+        (self.repo / 'qa/second.spec.js').write_text('// second feature test entry\n')
+        doc = record(self.repo, 'second', code=['lib/second.js'], tests=['qa/second.spec.js'])
+        self.success('review', 'second', '--confirm')
+        self.git('add', 'lib/second.js', 'qa/second.spec.js', 'docs/features/second.md')
+        self.git('commit', '-m', 'second independent feature')
+        return doc
+
+    def test_parallel_reviews_of_independent_features_preserve_both_workers_facts(self):
+        self.baseline()
+        second = self.second_feature()
+        for doc, text in ((self.doc, 'first worker fact'), (second, 'second worker fact')):
+            doc.write_text(doc.read_text().replace('返回约定的导出结果。', text))
+        for name in ('lib/export.js', 'qa/export.spec.js', 'lib/second.js', 'qa/second.spec.js'):
+            path = self.repo / name
+            path.write_text(path.read_text() + '// owned worker change\n')
+        with ThreadPoolExecutor(max_workers=2) as pool:
+            results = list(pool.map(lambda feature: self.cli('review', feature, '--confirm'), ('export', 'second')))
+        for result in results:
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn('first worker fact', self.doc.read_text())
+        self.assertIn('second worker fact', second.read_text())
+        self.success('check')
+        self.git('add', 'lib', 'qa', 'docs/features')
+        self.success('check', '--staged')
+        self.git('commit', '-m', 'single integrator delivers both features')
+        self.success('check', '--ref', 'HEAD')
+
+    def test_single_integrator_can_deliver_one_feature_while_another_is_unstaged(self):
+        self.baseline()
+        self.second_feature()
+        second = self.repo / 'lib/second.js'
+        second.write_text(second.read_text() + '// second worker is still editing\n')
+        pending = second.read_bytes()
+        first = self.repo / 'lib/export.js'
+        first.write_text(first.read_text() + '// first worker is complete\n')
+        self.success('review', 'export', '--confirm')
+        self.assertIn('STALE second', self.cli('check').stderr)
+        self.git('add', 'lib/export.js', 'docs/features/export.md')
+        self.success('check', '--staged')
+        self.git('commit', '-m', 'integrator delivers first feature only')
+        self.success('check', '--ref', 'HEAD')
+        changed = self.git('diff-tree', '--no-commit-id', '--name-only', '-r', 'HEAD').stdout.splitlines()
+        self.assertEqual(set(changed), {'lib/export.js', 'docs/features/export.md'})
+        self.assertEqual(second.read_bytes(), pending)
+        self.assertIn('STALE second', self.cli('check').stderr)
 
     def test_install_is_idempotent_and_preserves_project_records(self):
         before = self.doc.read_bytes()

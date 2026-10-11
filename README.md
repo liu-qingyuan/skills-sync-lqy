@@ -104,7 +104,7 @@ upstream/mattpocock/skills/ # Matt Pocock 官方英文上游镜像，只用于�
 ./.feature-docs/run list
 ```
 
-本仓库只先纳管 setup、单 Ticket 实施、skills 同步三个能力。门禁检查 Git 快照，不替代业务测试；未纳管目录不受保护，hooks 可绕过。维护规则见 [docs/agents/feature-docs.md](docs/agents/feature-docs.md)。
+本仓库只先纳管 setup、单 Ticket 实施、skills 同步三个能力。独立文件可在同 worktree 并行实现，由单一整合者串行 Git 交付；门禁不是写锁或调度器。维护与保证边界见 [docs/agents/feature-docs.md](docs/agents/feature-docs.md)。
 
 ## Git-bound Ralph 工作流
 

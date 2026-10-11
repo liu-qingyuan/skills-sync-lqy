@@ -10,4 +10,4 @@
 - LQY policy: delegate the complete review lifecycle to `$code-review-lqy` as the single source of truth; oversized work ships a green increment and returns for re-splitting.
 - Authorized Ralph worker may explicitly load this skill; Ralph alone schedules batches, without a new dispatch layer.
 - Design gate: invoke `$codebase-design-lqy` only when a Ticket changes Module, Interface, Seam, or knowledge ownership.
-- Enabled projects follow the shared Feature pointer and index/commit gate; uninitialized projects keep their workflow. Freshness does not replace tests or review.
+- Enabled projects follow the shared Feature pointer and index/commit gate; independent parallel workers hand off scoped files/evidence to one Git integrator. Uninitialized projects keep their workflow; freshness does not replace tests or review.

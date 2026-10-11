@@ -8,4 +8,4 @@
 - Upstream reviewed commit: `49dd158d1076134a641b33efb035946536778336` (selective LQY adaptation; not a verbatim copy)
 - Policy: installable personal LQY layer, copied from the Chinese baseline and self-contained. Keep this file updated when upstream or zh baseline changes.
 - LQY policy: zero-question defaults only — GitHub Issues, canonical triage labels, single-context domain docs, Chinese output, root `AGENTS.md`, and local Feature records. Use upstream setup for tracker/layout customization.
-- Feature tooling is self-contained; records use paths/fingerprint, with purpose and limits in Markdown and read-compatible legacy records. Explicit setup preserves records, scope, and custom hooks; gates do not replace tests.
+- Feature tooling is self-contained; paths/fingerprint bind facts, not review results. Independent workers may review separate pages in one worktree; one integrator owns shared Git/build writes. Legacy records, scope, and custom hooks are preserved; gates are not locks or business tests.
