@@ -9,7 +9,13 @@ description: "实现一个指定或已授权派发的 Ticket，遵循公开 Seam
 
 ## Feature 当前事实
 
-若有 `.feature-docs/run`，读取并执行 `docs/agents/feature-docs.md`，只维护本任务相关能力；不替代测试或双轴 review。未启用则保持原流程，提示显式 setup。同 worktree 并行须先指定单一整合者与不相交的写入文件；worker 只交回本票文件和验证证据，不执行下方 Git/issue 交付，由整合者执行。
+先读取项目 `docs/agents/feature-docs.md`（若存在），不把安装 skill 或旧版“未启用”说明当成授权：
+
+- 有 `.feature-docs/run` 时按已启用流程维护，只处理本任务相关能力，不替代测试或双轴 review。
+- 未启用但项目状态段明确记录 `启用状态：待启用（已授权）` 时，首个真实能力及其测试通过后，由单票交付者或整合者在进入双轴 review 前，按该文档接续首次启用；记录和门禁资产纳入本次 review 与交付，不重跑完整 setup。
+- 无延后授权或项目明确停用时保持原流程，仅提示显式启用；尚无真实能力或测试未通过时不提前安装。
+
+同 worktree 并行须先指定单一整合者与不相交的写入文件；worker 只交回本票文件、就绪状态和验证证据，不安装 hooks、改共享配置或执行下方 Git/issue 交付，由整合者执行。
 
 ## 受委派 worker
 

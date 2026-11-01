@@ -183,6 +183,36 @@ class SkillContractTests(unittest.TestCase):
             self.assertIn(pointer, implementation)
         self.assertIn("不替代测试", implementation)
 
+    def test_empty_setup_records_deferred_feature_gate_authorization(self) -> None:
+        setup = (CORE / "setup-matt-pocock-skills-lqy/SKILL.md").read_text()
+        policy = (CORE / "setup-matt-pocock-skills-lqy/feature-docs.md").read_text()
+        self.assertIn("显式调用同时授权首次启用及空仓库的延后接续", setup)
+        self.assertIn("不授权业务实施或启动 Ralph", setup)
+        for contract in ("## 项目启用状态", "启用状态：待启用（已授权）",
+                         "不创建虚假能力记录、不安装 hooks", "明确停用决定优先"):
+            self.assertIn(contract, policy)
+        self.assertNotRegex(policy, r"(?m)^" + re.escape("启用状态：待启用（已授权）") + r"$")
+
+    def test_first_capability_delivery_consumes_only_explicit_deferred_authorization(self) -> None:
+        implementation = (CORE / "implement-lqy/SKILL.md").read_text()
+        entry = (CORE / "implement-spec-subagent-lqy/SKILL.md").read_text()
+        policy = (CORE / "setup-matt-pocock-skills-lqy/feature-docs.md").read_text()
+        for contract in ("项目状态段", "启用状态：待启用（已授权）", "进入双轴 review 前",
+                         "单票交付者或整合者", "无延后授权"):
+            self.assertIn(contract, implementation)
+        self.assertIn("implement-lqy` 的“Feature 当前事实”", entry)
+        self.assertIn("由整合者处理已授权的首次启用", entry)
+        for contract in ("不执行完整 setup、不修改 GitHub 标签", "worker 只交回",
+                         "未启用（冲突）", "尚无真实能力时继续待启用", "同步模板"):
+            self.assertIn(contract, policy)
+        self.assertNotIn("未启用则保持原流程，提示显式 setup", implementation)
+
+    def test_failed_initial_validation_keeps_authorization_and_workers_wait_for_installation(self) -> None:
+        policy = (CORE / "setup-matt-pocock-skills-lqy/feature-docs.md").read_text()
+        self.assertIn("业务测试未通过时保留待启用授权", policy)
+        self.assertIn("仅已启用项目的 worker 再执行", policy)
+        self.assertIn("待启用项目的 worker 只交回就绪证据", policy)
+
     def test_installed_skill_sync_keeps_feature_data_and_carries_portable_tool(self) -> None:
         with tempfile.TemporaryDirectory(prefix="project sync ") as directory:
             project = Path(directory)
@@ -194,9 +224,15 @@ class SkillContractTests(unittest.TestCase):
             record.parent.mkdir(parents=True)
             record.write_text("项目自有事实，不应随 skills 升级覆盖。\n")
             before = record.read_bytes()
+            policy = project / "docs/agents/feature-docs.md"
+            policy.parent.mkdir(parents=True)
+            policy.write_text("# Feature 记录\n\n## 当前启用状态\n未启用。\n")
+            policy_before = policy.read_bytes()
             result = subprocess.run([sys.executable, str(ROOT / "scripts/sync_installed_project_skills.py"),
                                      str(project)], capture_output=True, text=True)
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            self.assertEqual(policy.read_bytes(), policy_before)
+            self.assertFalse((project / ".feature-docs").exists())
             tool = installed / "scripts/feature_docs.py"
             self.assertEqual(tool.read_bytes(), (CORE / "setup-matt-pocock-skills-lqy/scripts/feature_docs.py").read_bytes())
             result = subprocess.run(["git", "-C", str(project), "init", "-b", "main"], capture_output=True, text=True)

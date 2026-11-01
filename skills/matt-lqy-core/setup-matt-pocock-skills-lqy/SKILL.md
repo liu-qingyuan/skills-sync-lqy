@@ -71,10 +71,10 @@ CLAUDE.md
 
 ## 3. Feature 记录门禁
 
-按 [feature-docs.md](feature-docs.md) 在当前 worktree 安装 [工具](scripts/feature_docs.py)，用 [模板](templates/feature.md) 先纳管一个真实能力。确认 `list` / `check` 通过、`core.hooksPath` 有效，提交记录与门禁资产；无真实能力/测试入口或有冲突时报告未启用。
+本次显式调用同时授权首次启用及空仓库的延后接续，不授权业务实施或启动 Ralph；用户明确停用决定优先。按 [feature-docs.md](feature-docs.md) 的“首次启用与延后接续”处理：首次启用前先在项目说明中保存延后授权，已有真实能力且业务测试通过时安装；尚无能力或测试失败则保留待启用，测试通过后由交付者接续，无需重跑完整 setup。工具和模板均由本 skill 提供，不创建虚假记录或覆盖冲突 hooks。
 
 ## 4. 标签与验证
 
 只有用户明确执行此 setup 时，读取 GitHub 现有标签并用 `gh label create` 补齐上述五个固定标签中缺失的项；不删除、重命名或覆盖已有标签，不顺手标记 issues 或启动 Ralph。创建失败时说明权限或错误，不擅自改 token / 凭据配置。
 
-确认四个约定文档存在、`AGENTS.md` 只有一个 `## Agent skills` 区块、PR policy 为 Issues-only，且 `.gitignore` 包含四条规则。报告修改文件、门禁是否真正启用及其纳管范围；不将指纹一致报告成业务测试通过。
+确认四个约定文档存在、`AGENTS.md` 只有一个 `## Agent skills` 区块、PR policy 为 Issues-only，且 `.gitignore` 包含四条规则。报告修改文件及门禁的实际状态：已启用及纳管范围、待启用（已授权），或未启用及原因；不将延后授权报告成已安装，也不将指纹一致报告成业务测试通过。

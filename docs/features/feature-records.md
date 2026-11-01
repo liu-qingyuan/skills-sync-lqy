@@ -8,7 +8,7 @@
     "skills/matt-lqy-core/setup-matt-pocock-skills-lqy/tests/test_feature_docs.py",
     "scripts/tests/test_skill_maintenance.py"
   ],
-  "fingerprint": "sha256:9e1a0e6820bce2a6d74a0f82e63358c78607297f7a1d1cb588b5d2f700cda7ff"
+  "fingerprint": "sha256:d7e038302b3cfb278d36a163fd2dc806681e9a4664021bff11c7e4b681c6523a"
 }
 ---
 
@@ -16,8 +16,8 @@
 
 ## 当前行为
 
-单个标准库工具提供 install/list/check/review；paths/fingerprint 绑定当前事实，旧格式兼容。review 只解析指定页，不被其他未完成页阻断；独立文件与页面可并行复核，整合者串行交付。pre-commit 查完整 index，pre-push 查实际 tip，缺失／未归属／过期阻断交付。安装只追加范围，保留事实并拒绝覆盖定制 hooks/资产。
+单个标准库工具提供 install/list/check/review；paths/fingerprint 绑定当前事实，旧格式兼容。显式 setup 为尚无真实能力或业务测试未通过的项目保存延后首次启用授权，不造记录或安装 hooks；首个能力及测试通过后，由单票交付者或整合者在 review 前接续安装并将资产一并交付。无授权或明确停用的项目不自动启用。review 只解析指定页，不被其他未完成页阻断；独立页面可并行复核，整合者串行交付。pre-commit 查完整 index，pre-push 查实际 tip，缺失／未归属／过期阻断交付。安装只追加范围，保留事实并拒绝覆盖定制 hooks/资产。
 
 ## 限制与剩余
 
-不判断散文真假、不跑业务测试或硬限制 issue 关闭；不提供写锁，同文件和共享 Git/build 不能并发写。hooks 可绕过。clone 需恢复安装；只在 macOS 验证，只纳管索引列出的能力。
+延后授权由 skills 读取项目状态执行，CLI 不判断授权或自动调度安装；合同测试和真实 Git 流程测试不等于真实模型接续 smoke。不判断散文真假、不跑业务测试或硬限制 issue 关闭；不提供写锁，同文件和共享 Git/build 不能并发写。hooks 可绕过。clone 需恢复安装；只在 macOS 验证，只纳管索引列出的能力。

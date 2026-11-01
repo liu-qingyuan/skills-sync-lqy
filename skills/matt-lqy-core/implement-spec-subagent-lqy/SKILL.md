@@ -26,7 +26,7 @@ disable-model-invocation: true
 
 4. 收完整结果并核对真实变更：Ticket、实际文件、验证命令/结果、阻塞状态；独立提交还须核对分支、起点与 commit SHA。失败或 Oversized 保留现场与未完成状态，不盲目重复派发或扩建。整合者明确本次交付的 Tickets/文件，并记录 review fixed point；其它工作不混入本批次。
 
-5. 独立 worktree 的候选由整合者**串行合并**；共享工作区的写入须**全部结束或已协调暂停**，然后固定交付批次快照。在同一快照上读取并执行 `code-review-lqy`、运行相关完整测试/构建、Feature 门禁和验收；保留其双轴预算与停止规则。review、修复、验证及 Git 交付期间不得恢复该工作区的并发写入。冲突、范围不明或门禁失败时停止交付，不 reset/rebase/force-push。
+5. 独立 worktree 的候选由整合者**串行合并**；共享工作区的写入须**全部结束或已协调暂停**，然后固定交付批次快照。先运行相关完整测试/构建，读取并执行 `implement-lqy` 的“Feature 当前事实”，由整合者处理已授权的首次启用；新增记录与门禁资产纳入本批次并重新固定快照。再在同一快照上读取并执行 `code-review-lqy`、Feature 门禁和验收；保留其双轴预算与停止规则。review、修复、验证及 Git 交付期间不得恢复该工作区的并发写入。冲突、范围不明或门禁失败时停止交付，不 reset/rebase/force-push。
 
 6. 通过后由整合者 commit/push、评论证据并关闭对应 Tickets；未验证或未 push 不能释放依赖。刷新 frontier 后补空闲名额；独立工作区不等待整批，共享工作区收口后再恢复写入。全部 Tickets 交付并通过 Spec 整体验收才关闭父 Spec；仍有 open Tickets 而无可执行前沿时报告阻塞，不另启无预算的最终 review。
 
