@@ -97,7 +97,7 @@ upstream/mattpocock/skills/ # Matt Pocock 官方英文上游镜像，只用于�
 
 复用 setup / implement。`docs/features/` 描述功能用途与限制，仅保留 `paths/fingerprint` 做文件关联与版本绑定；先看索引，再按需读正文。
 
-空仓库显式 setup 会保存“待启用（已授权）”，不创建虚假记录或安装 hooks。首个真实能力及测试通过后，由单票交付者或整合者在 review 前接续启用，无需重跑完整 setup；只更新 skills 不会给旧项目补授启用权限。
+Feature 门禁默认开启，无需单独激活或授权标记。空仓库或业务测试未通过时暂缓，不造记录或安装 hooks；具备真实能力并通过测试后，由单票交付者或整合者在 review 前接续启用，包括尚未安装门禁的旧项目。明确关闭决定和 hooks 冲突优先处理；仅同步 skills 不会直接安装 hooks。
 
 ```bash
 ./.feature-docs/run install  # clone 后恢复 hooks

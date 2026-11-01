@@ -58,7 +58,7 @@ sequenceDiagram
     A-->>C: 文件与验证结果
     C->>B: 协调暂停或等待写入结束
     B-->>C: 已暂停或已交回结果
-    C->>C: 完整测试后按项目授权首次启用 Feature 门禁
+    C->>C: 完整测试后默认首次启用 Feature 门禁
     C->>C: 纳入新增资产后固定授权批次快照 review 与交付
     C->>C: 刷新前沿后继续派发
 ```
@@ -130,4 +130,4 @@ classDiagram
     WorkerResult --> DeliveryBatch : one_integrator
 ```
 
-Boundary/Contract/Governance：授权可由主流程传递，规划确认仍不等于实施授权。worker 可在范围内做只读辅助委派，不再拆派实施或绕过 review 预算。共享 worker 不操作 Git/index，整合者在写入全部交回或协调暂停后，对明确授权的文件/批次做完整验证；若项目有 setup 留下的延后首次启用授权，在 review 前接续并将记录/门禁资产纳入批次，再做有限 review 和交付；无授权时不安装，其它工作不混入。独立 worktree 可本地 commit，支持逐票滚动整合；项目禁止新工作区时不自行绕过。最终 Git/blocker 合同与 publication gate 不变，不与其它实施流程消费同一批任务。review 是单票或明确批次的既有双轴纪律，不按 worker 数增加预算。
+Boundary/Contract/Governance：授权可由主流程传递，规划确认仍不等于实施授权。worker 可在范围内做只读辅助委派，不再拆派实施或绕过 review 预算。共享 worker 不操作 Git/index，整合者在写入全部交回或协调暂停后，对明确授权的文件/批次做完整验证；记录门禁默认开启，尚未安装且未明确关闭时，在 review 前首次启用并将记录/门禁资产纳入批次，再做有限 review 和交付；不要求 setup 授权标记，其它工作不混入。独立 worktree 可本地 commit，支持逐票滚动整合；项目禁止新工作区时不自行绕过。最终 Git/blocker 合同与 publication gate 不变，不与其它实施流程消费同一批任务。review 是单票或明确批次的既有双轴纪律，不按 worker 数增加预算。

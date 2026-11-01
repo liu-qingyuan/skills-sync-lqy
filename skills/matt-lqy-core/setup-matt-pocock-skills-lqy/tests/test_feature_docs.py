@@ -83,15 +83,11 @@ class FeatureDocsContract(unittest.TestCase):
                 self.success('review', 'export', '--confirm')
                 self.success('check')
 
-    def test_first_capability_can_enable_gate_after_empty_setup_commit(self):
-        # Skills own the authorization/status transition; the CLI does not infer it.
+    def test_first_capability_can_enable_gate_without_setup_or_authorization_marker(self):
+        # Skills orchestrate default activation; the CLI does not schedule it.
         for name in ('lib', 'qa', 'docs'):
             shutil.rmtree(self.repo / name)
-        policy = self.repo / 'docs/agents/feature-docs.md'
-        policy.parent.mkdir(parents=True)
-        policy.write_text('# Feature 记录\n\n## 项目启用状态\n启用状态：待启用（已授权）\n')
-        self.git('add', '.')
-        self.git('commit', '-m', 'empty setup defers the first gate installation')
+        self.git('commit', '--allow-empty', '-m', 'empty repository without setup or activation marker')
         self.assertFalse((self.repo / '.feature-docs').exists())
         self.assertFalse((self.repo / 'docs/features').exists())
         self.assertEqual(self.git('config', '--get', 'core.hooksPath', ok=False).returncode, 1)
@@ -106,7 +102,7 @@ class FeatureDocsContract(unittest.TestCase):
             '    def test_value(self):\n        self.assertEqual(value(), 2)\n')
         failed = run([sys.executable, '-m', 'unittest', 'discover', '-s', 'qa'], self.repo)
         self.assertNotEqual(failed.returncode, 0)
-        self.assertIn('待启用（已授权）', policy.read_text())
+        self.assertFalse((self.repo / 'docs/agents/feature-docs.md').exists())
         self.assertFalse((self.repo / '.feature-docs').exists())
         self.assertFalse((self.repo / 'docs/features').exists())
         test.write_text(test.read_text().replace('value(), 2', 'value(), 1'))
@@ -115,13 +111,15 @@ class FeatureDocsContract(unittest.TestCase):
         self.assertIn('Ran 1 test', tested.stderr)
         self.assertFalse((self.repo / '.feature-docs').exists())
 
+        policy = self.repo / 'docs/agents/feature-docs.md'
+        policy.parent.mkdir(parents=True)
+        policy.write_bytes((TOOL.parent.parent / 'feature-docs.md').read_bytes())
         record(self.repo, code=['lib/export.py'], tests=['qa/test_export.py'])
         self.success('install', '--scope', 'lib/**', '--scope', 'qa/**')
         self.success('review', 'export', '--confirm')
         self.assertIn('export\t示例能力\tfresh', self.success('list').stdout)
         self.success('check')
         self.assertEqual(self.git('config', '--get', 'core.hooksPath').stdout.strip(), '.feature-docs/hooks')
-        policy.write_text(policy.read_text().replace('待启用（已授权）', '已启用'))
         self.git('add', '.')
         self.success('check', '--staged')
         self.git('commit', '-m', 'first tested capability enables the gate in its delivery')

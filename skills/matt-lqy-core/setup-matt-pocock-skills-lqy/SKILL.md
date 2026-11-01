@@ -44,7 +44,7 @@ GitHub Issues only；PR 不进入 triage 或 Ralph。见 `docs/agents/issue-trac
 
 ### Feature records
 
-已启用时先执行 `./.feature-docs/run list`，只读相关记录；维护与交付见 `docs/agents/feature-docs.md`。
+默认开启，真实能力通过测试后在交付时接续；已启用时先执行 `./.feature-docs/run list`，只读相关记录。启用、维护与交付见 `docs/agents/feature-docs.md`。
 
 ### Workflow
 
@@ -71,10 +71,10 @@ CLAUDE.md
 
 ## 3. Feature 记录门禁
 
-本次显式调用同时授权首次启用及空仓库的延后接续，不授权业务实施或启动 Ralph；用户明确停用决定优先。按 [feature-docs.md](feature-docs.md) 的“首次启用与延后接续”处理：首次启用前先在项目说明中保存延后授权，已有真实能力且业务测试通过时安装；尚无能力或测试失败则保留待启用，测试通过后由交付者接续，无需重跑完整 setup。工具和模板均由本 skill 提供，不创建虚假记录或覆盖冲突 hooks。
+Feature 门禁默认开启，不另行要求激活或授权标记。按 [feature-docs.md](feature-docs.md) 的“首次启用与延后接续”处理：已有真实能力且业务测试通过时安装；尚未具备则暂缓，后续实施交付直接接续，无需重跑完整 setup。工具和模板均由本 skill 提供；明确关闭决定优先，不创建虚假记录或覆盖冲突 hooks。此默认值不授权业务实施或启动 Ralph。
 
 ## 4. 标签与验证
 
 只有用户明确执行此 setup 时，读取 GitHub 现有标签并用 `gh label create` 补齐上述五个固定标签中缺失的项；不删除、重命名或覆盖已有标签，不顺手标记 issues 或启动 Ralph。创建失败时说明权限或错误，不擅自改 token / 凭据配置。
 
-确认四个约定文档存在、`AGENTS.md` 只有一个 `## Agent skills` 区块、PR policy 为 Issues-only，且 `.gitignore` 包含四条规则。报告修改文件及门禁的实际状态：已启用及纳管范围、待启用（已授权），或未启用及原因；不将延后授权报告成已安装，也不将指纹一致报告成业务测试通过。
+确认四个约定文档存在、`AGENTS.md` 只有一个 `## Agent skills` 区块、PR policy 为 Issues-only，且 `.gitignore` 包含四条规则。报告修改文件及门禁的实际状态：已启用及纳管范围、待启用及缺少的条件，或明确关闭/冲突；不将暂缓报告成已安装，也不将指纹一致报告成业务测试通过。

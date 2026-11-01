@@ -8,7 +8,7 @@
     "skills/matt-lqy-core/setup-matt-pocock-skills-lqy/tests/test_feature_docs.py",
     "scripts/tests/test_skill_maintenance.py"
   ],
-  "fingerprint": "sha256:d7e038302b3cfb278d36a163fd2dc806681e9a4664021bff11c7e4b681c6523a"
+  "fingerprint": "sha256:f27ad2b1b196f9f04101cc1dd1d358b40d97b40d9f215e3f9062126e6435d488"
 }
 ---
 
@@ -16,8 +16,8 @@
 
 ## 当前行为
 
-单个标准库工具提供 install/list/check/review；paths/fingerprint 绑定当前事实，旧格式兼容。显式 setup 为尚无真实能力或业务测试未通过的项目保存延后首次启用授权，不造记录或安装 hooks；首个能力及测试通过后，由单票交付者或整合者在 review 前接续安装并将资产一并交付。无授权或明确停用的项目不自动启用。review 只解析指定页，不被其他未完成页阻断；独立页面可并行复核，整合者串行交付。pre-commit 查完整 index，pre-push 查实际 tip，缺失／未归属／过期阻断交付。安装只追加范围，保留事实并拒绝覆盖定制 hooks/资产。
+单个标准库工具提供 install/list/check/review；paths/fingerprint 绑定当前事实，旧格式兼容。记录门禁默认开启，不要求预先运行 setup 或写授权标记，包括尚未安装门禁的旧项目。尚无真实能力或业务测试未通过时暂缓，不造记录或装 hooks；条件具备后由单票交付者或整合者在 review 前首次启用并将资产一并交付。明确关闭和 hooks 冲突优先处理。review 只解析指定页，不被其他未完成页阻断；独立页面可并行复核，整合者串行交付。pre-commit 查完整 index，pre-push 查实际 tip，缺失／未归属／过期阻断交付。安装只追加范围，保留事实并拒绝覆盖定制 hooks/资产。
 
 ## 限制与剩余
 
-延后授权由 skills 读取项目状态执行，CLI 不判断授权或自动调度安装；合同测试和真实 Git 流程测试不等于真实模型接续 smoke。不判断散文真假、不跑业务测试或硬限制 issue 关闭；不提供写锁，同文件和共享 Git/build 不能并发写。hooks 可绕过。clone 需恢复安装；只在 macOS 验证，只纳管索引列出的能力。
+默认启用由 skills 在 setup 或已授权实施交付时执行，CLI 不自动调度安装；只读调查和仅同步 skills 不安装 hooks。合同测试和真实 Git 流程测试不等于真实模型接续 smoke。不判断散文真假、不跑业务测试或硬限制 issue 关闭；不提供写锁，同文件和共享 Git/build 不能并发写。hooks 可绕过。clone 需恢复安装；只在 macOS 验证，只纳管索引列出的能力。

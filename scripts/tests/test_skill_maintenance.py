@@ -183,33 +183,34 @@ class SkillContractTests(unittest.TestCase):
             self.assertIn(pointer, implementation)
         self.assertIn("不替代测试", implementation)
 
-    def test_empty_setup_records_deferred_feature_gate_authorization(self) -> None:
+    def test_feature_gate_defaults_to_enabled_without_an_activation_marker(self) -> None:
         setup = (CORE / "setup-matt-pocock-skills-lqy/SKILL.md").read_text()
         policy = (CORE / "setup-matt-pocock-skills-lqy/feature-docs.md").read_text()
-        self.assertIn("显式调用同时授权首次启用及空仓库的延后接续", setup)
+        self.assertIn("默认开启", setup)
         self.assertIn("不授权业务实施或启动 Ralph", setup)
-        for contract in ("## 项目启用状态", "启用状态：待启用（已授权）",
-                         "不创建虚假能力记录、不安装 hooks", "明确停用决定优先"):
+        for contract in ("不需要单独激活或授权标记", "旧版“未启用”不等于明确关闭",
+                         "不创建虚假能力记录、不安装 hooks", "明确关闭决定优先"):
             self.assertIn(contract, policy)
-        self.assertNotRegex(policy, r"(?m)^" + re.escape("启用状态：待启用（已授权）") + r"$")
+        self.assertNotIn("待启用（已授权）", setup + policy)
 
-    def test_first_capability_delivery_consumes_only_explicit_deferred_authorization(self) -> None:
+    def test_first_capability_delivery_bootstraps_gate_without_prior_setup(self) -> None:
         implementation = (CORE / "implement-lqy/SKILL.md").read_text()
         entry = (CORE / "implement-spec-subagent-lqy/SKILL.md").read_text()
         policy = (CORE / "setup-matt-pocock-skills-lqy/feature-docs.md").read_text()
-        for contract in ("项目状态段", "启用状态：待启用（已授权）", "进入双轴 review 前",
-                         "单票交付者或整合者", "无延后授权"):
+        for contract in ("默认开启", "读取已安装 setup skill 的", "进入双轴 review 前",
+                         "单票交付者或整合者", "项目明确关闭"):
             self.assertIn(contract, implementation)
         self.assertIn("implement-lqy` 的“Feature 当前事实”", entry)
-        self.assertIn("由整合者处理已授权的首次启用", entry)
+        self.assertIn("由整合者处理默认首次启用", entry)
         for contract in ("不执行完整 setup、不修改 GitHub 标签", "worker 只交回",
-                         "未启用（冲突）", "尚无真实能力时继续待启用", "同步模板"):
+                         "未启用（冲突）", "只读调查或仅同步 skills 不安装 hooks"):
             self.assertIn(contract, policy)
-        self.assertNotIn("未启用则保持原流程，提示显式 setup", implementation)
+        self.assertNotIn("待启用（已授权）", implementation)
+        self.assertNotIn("无延后授权", implementation)
 
-    def test_failed_initial_validation_keeps_authorization_and_workers_wait_for_installation(self) -> None:
+    def test_failed_initial_validation_defers_installation_and_workers_wait(self) -> None:
         policy = (CORE / "setup-matt-pocock-skills-lqy/feature-docs.md").read_text()
-        self.assertIn("业务测试未通过时保留待启用授权", policy)
+        self.assertIn("尚无真实能力或业务测试未通过时暂缓", policy)
         self.assertIn("仅已启用项目的 worker 再执行", policy)
         self.assertIn("待启用项目的 worker 只交回就绪证据", policy)
 
