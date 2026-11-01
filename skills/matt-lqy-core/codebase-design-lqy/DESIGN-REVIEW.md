@@ -5,13 +5,16 @@
 ## 审查纪律
 
 - **Complexity is incremental（复杂性渐进累积）**：不要因为单个有证据的 dependency 或 obscurity 很小就忽略它；当前任务能以最小改动消除时处理，否则只说明影响。不得借此扩展到无关清理、推测性抽象或 optional hardening。
-- **Working code isn’t enough（能运行还不够）**：测试通过是必要条件；当前 feature 还应落入长期清晰的 Module、Interface 和知识归属，而不是形成 one-off patch。解决真实需求暴露的设计问题，但不要预测未来或预先设计完整系统。
+- **Working code isn’t enough / Tactical Patch（能运行还不够 / 战术补丁）**：测试通过是必要条件；当前 feature 还应落入长期清晰的 Module、Interface 和知识归属，而不是形成 one-off patch。通用实现中新增用例专用分支时，检查策略是否放错了 Module；解决真实需求暴露的设计问题，不预测未来或扩展范围。
 
 ## Module 与抽象
 
 - **Different layers, different abstractions（不同层使用不同抽象）**：相邻 layers 如果暴露并转交几乎相同的抽象，检查每层是否拥有独立合同、知识或显著行为；没有就删除或合并。多个 sibling implementations 可以满足同一 Interface，不要仅为制造差异而改名、增加 wrapper 或新增 layer。
 - **Pass-Through Method（透传方法）**：方法若只向相似 Interface 转交参数，会增加 Interface complexity 和签名依赖，却不增加功能。检查职责归属，并优先直接暴露下层、重新分配职责或合并 Module；只有该层贡献显著且独立的行为，例如有意义的 dispatch，才保留相似 Interface。
 - **Repetition（重复）**：非平凡代码因同一知识或变化原因反复出现，可能说明缺少正确抽象。只有合并后能降低总复杂度时才提取或集中实现；琐碎、偶然的重复，或需要复杂 Interface 才能复用的代码，可以保留。
+- **Logical Cohesion（逻辑内聚）**：仅因都是“校验”“打印”或“转换”就合并，却包含不同知识和变化原因。判断它们是否真的共享格式、协议或不变量；不要把表面相似当成同一职责，也不因名字通用就拆散真实共享知识。
+- **Train Wreck / Demeter（穿越内部结构）**：如 `a.getB().getC().do()` 使调用方依赖其他 Module 的内部布局或调用顺序，检查能否把有语义的操作交回知识所有者。链长不等于违规：fluent Interface、不可变值和公开数据访问链未必泄漏内部结构；不要仅为缩短链条新增透传方法。
+- **Common Environment Coupling（公共环境耦合）**：多个 Module 各自解释或修改共享可变状态，导致不变量、事务或恢复规则没有明确所有者。共用数据库本身不证明违规；核对实际读写方、Contract 和规则归属，不机械禁止共享数据或新增存储层。
 - **Conjoined Methods（耦合方法）**：如果理解一段代码必须在多个方法之间来回跳转，拆分没有形成独立抽象。不要按代码长度拆方法；只有子任务完整且可独立理解时才提取。拆成多个 public 入口时，大多数调用方应只需其中一个，否则应考虑重新合并。
 
 ## 文档
@@ -30,4 +33,4 @@
 
 ## 错误与特例
 
-- **Define errors and special cases out of existence（通过语义消除错误与特例）**：先判断能否用自然的操作语义或不变量把条件纳入正常路径，并减少处理点。只有调用方不需要该区别时才能消除、mask 或聚合；调用方需要据此决策的错误必须进入 Interface。不得静默吞错、擅自 fallback/retry，或把 crash 当作通用策略。
+- **Define errors and special cases out of existence（通过语义消除错误与特例）**：按 [SKILL.md](SKILL.md) 的 Contract 约束核对语义。例如删除不存在的资源，只有约定关注最终“不存在”状态时才可成功无操作；调用方需要知道是否实际删除时，应保留该区别。不要用 catch-all、自动重试或 crash 代替必要的错误合同。

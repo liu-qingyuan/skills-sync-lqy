@@ -26,6 +26,33 @@ def frontmatter(path: Path) -> dict:
 
 
 class SkillContractTests(unittest.TestCase):
+    def test_codebase_design_expresses_contracts_and_change_costs(self) -> None:
+        skill = (CORE / "codebase-design-lqy/SKILL.md").read_text()
+        for contract in ("Contract（契约）", "Preconditions", "Postconditions", "Invariants",
+                         "Change Amplification", "Cognitive Load", "Unknown Unknowns",
+                         "Orthogonality", "保持 Contract 不变", "Pull Complexity Downward",
+                         "Define Errors Out of Existence", "不规定固定时间比例"):
+            self.assertIn(contract, skill)
+        self.assertNotRegex(skill, r"10%|20%|坚决禁止.*链式调用")
+
+    def test_design_review_requires_evidence_not_syntactic_or_storage_bans(self) -> None:
+        review = (CORE / "codebase-design-lqy/DESIGN-REVIEW.md").read_text()
+        for contract in ("Tactical Patch", "Logical Cohesion", "Train Wreck / Demeter",
+                         "Common Environment Coupling", "链长不等于违规", "fluent Interface",
+                         "共用数据库本身不证明违规", "不要仅为缩短链条新增透传方法"):
+            self.assertIn(contract, review)
+        self.assertIn("Red Flag 是调查信号，不是重构结论", review)
+
+    def test_deepening_preserves_contracts_and_unique_test_coverage(self) -> None:
+        guide = (CORE / "codebase-design-lqy/DEEPENING.md").read_text()
+        alternatives = (CORE / "codebase-design-lqy/DESIGN-IT-TWICE.md").read_text()
+        for contract in ("加深前确认 Contract", "不擅自加强前置条件或削弱后置条件",
+                         "仅删除已被新测试替代的", "Adapter 的独立合同测试"):
+            self.assertIn(contract, guide)
+        self.assertIn("前置条件、后置条件", alternatives)
+        self.assertNotIn("总是可以深化", guide)
+        self.assertNotIn("只要替身存在，就可以深化", guide)
+
     def test_original_personal_skills_remain_available(self) -> None:
         names = {p.parent.name for p in (ROOT / "skills").glob("*/*/SKILL.md")}
         self.assertTrue(LEGACY <= names)
