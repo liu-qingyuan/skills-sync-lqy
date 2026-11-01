@@ -21,7 +21,7 @@ MARKETPLACE = ROOT / ".claude-plugin" / "marketplace.json"
 EXPECTED_MATT_LQY_COUNT = 39
 EXPECTED_MATT_ZH_COUNT = 46  # 38 current upstream identities + 8 retained legacy identities
 EXPECTED_UPSTREAM_COUNT = 46
-EXPECTED_INSTALLABLE_COUNT = 54
+EXPECTED_INSTALLABLE_COUNT = 51
 POLLUTION_PATTERNS = [
     "这是 Matt Pocock",
     "中文本地化版本",

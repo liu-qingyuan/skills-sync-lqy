@@ -47,7 +47,6 @@ skills/                    # 只放 npx 安装器应该展示的版本
   matt-lqy-misc/           # Matt Pocock LQY 版：misc
   matt-lqy-in-progress/    # Matt Pocock LQY 版：in-progress
   matt-lqy-deprecated/     # Matt Pocock LQY 版：deprecated
-  amis-ui/                 # AMIS UI 相关：设计变量、Figma 还原等
   lqy-local/               # 我自己写/优化并长期使用的 skills
   lqy-curated/             # 我从外部素材整理/改造后维护的 skills
 
@@ -70,7 +69,6 @@ upstream/mattpocock/skills/ # Matt Pocock 官方英文上游镜像，只用于�
 `npx skills@latest` 的交互列表会按 `.claude-plugin/marketplace.json` 里的分组显示：
 
 - `Matt Pocock LQY Core`：当前可安装的个人版主力层，合并 Engineering + Productivity。
-- `AMIS UI`：AMIS UI / Figma 相关。
 - `LQY Local`：我自己写/优化的本地 skills。
 - `LQY Curated`：我整理/改造后维护的通用 skills。
 - `Matt Pocock LQY Personal / Misc / In Progress / Deprecated`
@@ -126,12 +124,6 @@ upstream/mattpocock/skills/ # Matt Pocock 官方英文上游镜像，只用于�
 - 当前 branch 没有可领取 Ticket 时，只结束该 branch worker；其他 branch 的 backlog 不阻止它完成。
 - 完成后不会自动合并、删除 branch 或清理 worktree；这些操作由维护者显式决定。
 
-### AMIS UI
-
-- `amis-test`：运行、检查和复现 Amis macOS 自动化，并验证保留的 `.xcresult`。
-- `amis-variables`：把当前 `Amis V1.0 色卡` 的 48 个 Figma 语义变量映射到 SwiftUI tokens。
-- `amis-pixel-implementation`：基于 Figma 在 Amis macOS SwiftUI 中实现并验证视觉、交互和无障碍契约。
-
 ### Lqy Curated
 
 - `c4-architecture`
@@ -166,7 +158,7 @@ docs/localization/mattpocock-zh-skills.md
 
 ## 本轮选择性适配
 
-审阅来源：`49dd158d1076134a641b33efb035946536778336`（v1.3.1 + main）。mirror 和中文 baseline 各保留 38 个 active 与 8 个 frozen legacy；安装层共 54 个 skills，其中 Matt LQY 39 个。
+审阅来源：`49dd158d1076134a641b33efb035946536778336`（v1.3.1 + main）。mirror 和中文 baseline 各保留 38 个 active 与 8 个 frozen legacy；安装层共 51 个 skills，其中 Matt LQY 39 个。
 
 - 新增 `pr-lqy`（只写正文）、`retro-lqy`（人工触发、只建议）、`writing-for-agents-lqy`（agent 文档纪律）。
 - 上游 `implement-spec` 适配为显式可选的 `implement-spec-subagent-lqy`，Ralph 保持默认；不安装 `chief-of-staff` 或新增调度平台。不自动删除退役个人技能，旧写作 skill 仍可显式选择。
@@ -235,11 +227,10 @@ upstream/
 5. 当前可安装 Matt LQY 版放 `skills/matt-lqy-*/*-lqy`，必须自包含，并用 `LOCALIZATION.md` 记录对应 `*-zh` baseline 和官方上游。
 6. 官方英文同步版和中文 baseline 都不加入 `.claude-plugin/marketplace.json`。
 7. 新增或移动可安装 skill 后，必须同步更新 `.claude-plugin/marketplace.json`，否则交互列表分类会不对。
-8. AMIS UI 相关技能放 `skills/amis-ui/`。
-9. 本地自写技能放 `skills/lqy-local/`。
-10. 外部整理/改造版放 `skills/lqy-curated/`。
-11. 只记录外部链接、不准备维护安装版的内容，放 `docs/external-skill-links/`，不要放进 `skills/`。
-12. 如果同步 Matt 上游，先 clone / fetch `https://github.com/mattpocock/skills.git`，对照它的 `skills/<category>/<name>` 结构更新到本仓库 `upstream/mattpocock/skills/<category>/<name>`；再合并变化到对应 `*-zh` baseline，最后检查对应 `*-lqy` 安装版是否需要适配。
+8. 本地自写技能放 `skills/lqy-local/`。
+9. 外部整理/改造版放 `skills/lqy-curated/`。
+10. 只记录外部链接、不准备维护安装版的内容，放 `docs/external-skill-links/`，不要放进 `skills/`。
+11. 如果同步 Matt 上游，先 clone / fetch `https://github.com/mattpocock/skills.git`，对照它的 `skills/<category>/<name>` 结构更新到本仓库 `upstream/mattpocock/skills/<category>/<name>`；再合并变化到对应 `*-zh` baseline，最后检查对应 `*-lqy` 安装版是否需要适配。
 
 AI 可以用下面命令做内部验证；这些不是用户日常安装命令。优先运行仓库级检查：
 
