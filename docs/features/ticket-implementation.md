@@ -10,7 +10,7 @@
     "docs/architecture/spec-implementation.md",
     "scripts/tests/test_skill_maintenance.py"
   ],
-  "fingerprint": "sha256:de76d870af81eabcc9936c0ff18e177966a7c80452c593b5c6d053c16b4c8e57"
+  "fingerprint": "sha256:21b845881241e55619d3d8a465cb5e36110053d2fbfa72b9c67194e10b8451fe"
 }
 ---
 
