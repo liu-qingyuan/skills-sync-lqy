@@ -1,7 +1,6 @@
 interface:
   display_name: to-tickets-lqy
-  short_description: 把计划、spec 或当前对话拆成一组 tracer-bullet Ticket；每个 Ticket 声明 blocking
-    ed
+  short_description: 把已有计划、spec 或对话拆为最小充分、可独立验证的 Ticket，声明真实依赖并发布到 issue tracker。
   default_prompt: 使用 $to-tickets-lqy 完成本次任务；先读取 SKILL.md，遵守现有范围与合同。
 policy:
   allow_implicit_invocation: false

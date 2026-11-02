@@ -1,10 +1,12 @@
 ---
 name: to-spec-lqy
 disable-model-invocation: true
-description: 把当前对话上下文整理成 spec 并发布到项目 issue tracker；不重新访谈，只综合已有讨论。
+description: 把已有讨论整理为最小充分的 spec 并发布到项目 issue tracker；不重新访谈。
 ---
 
 该 skill 会基于当前对话上下文和对代码库的理解产出一份 spec。不要重新访谈用户，只综合你已经知道的信息。
+
+以**最小充分**为准：只写会影响范围、取舍或验收的信息，不以篇幅或故事数量为目标。目标、关键业务假设、必要契约与验证边界清楚后停止扩写；未确认的事实保留为未知，不补写成承诺。
 
 issue tracker 和 triage 标签词汇表应该已经提供；如果没有，提示用户显式运行 `$setup-matt-pocock-skills-lqy`。
 
@@ -20,9 +22,9 @@ issue 标题、正文、评论和完成摘要默认使用中文。labels、命�
 
 3. 按 `$mermaid-gate-lqy` 判断整份 spec 的上级设计图 gate。这里记录跨 Ticket 的整体架构、接口、流程或状态变化；不替代每个 Ticket 自己的 Mermaid Gate。
 
-4. 使用下面的模板编写 spec。issue 标题必须使用 `Spec: <短标题>`，表示这是父级 spec，不是可直接实现的 Ticket。
+4. 使用下面的模板编写 spec。各节只写当前相关内容，确无内容写“无”或“不适用”，不为填满模板扩写。issue 标题必须使用 `Spec: <短标题>`，表示这是父级 spec，不是可直接实现的 Ticket。
 
-5. 在给出最终方案或发布前，按 `$codebase-design-lqy`、`$gitnexus` 和 `$simple` 审核完整 spec 草稿。终审最多启动一个只读 review agent，合并检查架构、依赖、contract 和测试；它必须应用 `$simple`，并可自行使用 `$gitnexus`，只返回审查意见，不修改文件或实施。根据结果修订草稿后再继续。
+5. 在给出最终方案或发布前，按 `$codebase-design-lqy`、`$gitnexus` 和 `$simple` 审核完整 spec 草稿。终审最多启动一个只读 review agent，合并检查范围、业务假设与验证证据、架构、依赖、contract 和测试；它必须应用 `$simple`，并可自行使用 `$gitnexus`，只返回审查意见，不修改文件或实施。根据结果修订草稿后再继续。
 
 6. 如果目标是 GitHub 且该 spec 将产生 Ralph `ready-for-agent` Tickets，使用已安装的 `ralph-plan-lqy` 建立 Git 契约。缺少该依赖时停止，不要自行解析 Markdown 或猜测 Git 状态。
 
@@ -74,36 +76,27 @@ issue 标题、正文、评论和完成摘要默认使用中文。labels、命�
 
 ## Problem Statement
 
-从用户视角描述用户面对的问题。
+从用户视角说明问题、当前影响与成功结果；区分已有事实和会改变方案的关键业务假设。
 
 ## Solution
 
-从用户视角描述问题的解决方案。
+从用户视角描述当前范围内的最小解决方案，以及它依赖哪些关键业务假设；会改变范围、取舍或验收的未知先澄清。
 
 ## User Stories
 
-一份很长的编号用户故事列表。每条用户故事格式为：
+只列支撑当前目标和验收的必要故事，合并同一参与者、目标与收益的重复表述：
 
-1. As an <actor>, I want a <feature>, so that <benefit>
+1. 作为 <参与者>，我希望 <能力>，以便 <收益>。
 
-<user-story-example>
-1. As a mobile bank customer, I want to see balance on my accounts, so that I can make better informed decisions about my spending
-</user-story-example>
-
-这份用户故事列表应该非常广，覆盖该功能的所有方面。
+不枚举假想角色或未来功能。纯技术维护可说明保护的已有行为，不虚构终端用户故事。
 
 ## Implementation Decisions
 
-已做出的实现决策列表。可以包括：
+只列影响当前范围的已确认决策，按实际变化选写，不逐项补全：
 
-- 将构建或修改的模块
-- 将修改的模块接口
+- 模块职责、接口及必要的 schema、API contract 或交互变化
 - 合理并行的模块职责、必须先明确的共享契约及串行原因；不为并行硬拆模块，执行方式留到实施阶段由用户选择
-- 开发者给出的技术澄清
-- 架构决策
-- schema 变更
-- API contract
-- 具体交互
+- 关键技术澄清与架构取舍
 
 不要包含具体文件路径或代码片段。它们很快可能过时。
 
@@ -111,11 +104,14 @@ issue 标题、正文、评论和完成摘要默认使用中文。labels、命�
 
 ## Testing Decisions
 
-已做出的测试决策列表。包括：
+只列本次相关的验证决策，不铺开测试用例清单：
 
-- 什么构成好的测试：只测试外部行为，不测试实现细节
-- 哪些模块会被测试
-- 测试先例：代码库中类似类型的测试
+- 通过哪些公开 seam 验证外部行为、必要合同与失败路径；按需引用已有测试先例，不测试实现细节
+- 关键业务假设的验证方式与可观察判据
+- 验证输入的来源、代表性及未覆盖情形；区分合成、回放和真实业务样本
+- 验证配置与拟上线配置的关键差异、可复用项及必要切换条件；验证专用样本、限额或开关不能默认为上线默认值
+
+技术验证通过不等于业务验收或可上线。代表性或拟上线配置未验证时，明确写出“未验证”、还缺什么证据，以及它对当前验收结论或上线的限制；技术切片可只承诺已验证条件下的行为。
 
 ## Mermaid Gate
 
@@ -127,7 +123,7 @@ issue 标题、正文、评论和完成摘要默认使用中文。labels、命�
 
 ## Further Notes
 
-该功能的任何进一步说明。
+只补充会影响实施或验收、且前文未表达的信息；否则写“无”。
 
 </spec-template>
 

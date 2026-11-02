@@ -145,6 +145,32 @@ class SkillContractTests(unittest.TestCase):
                          "1/3", "串行合并", "review fixed point", "不能释放依赖", "不等待整批"):
             self.assertIn(contract, entry)
 
+    def test_planning_requires_sufficient_scope_instead_of_exhaustive_output(self) -> None:
+        spec = (CORE / "to-spec-lqy/SKILL.md").read_text()
+        tickets = (CORE / "to-tickets-lqy/SKILL.md").read_text()
+        for skill in (spec, tickets):
+            self.assertIn("最小充分", skill)
+        for contract in ("不以篇幅或故事数量为目标", "关键业务假设", "停止扩写"):
+            self.assertIn(contract, spec)
+        for removed in ("一份很长的编号用户故事列表", "这份用户故事列表应该非常广"):
+            self.assertNotIn(removed, spec)
+        for contract in ("不按用户故事、章节或技术层机械拆票", "实际涉及的层", "不复制整份 spec"):
+            self.assertIn(contract, tickets)
+        for removed in ("贯穿每一层", "任何 prefactoring 都应该先完成"):
+            self.assertNotIn(removed, tickets)
+
+    def test_planning_bounds_business_claims_by_inputs_and_configuration(self) -> None:
+        for name in ("to-spec-lqy", "to-tickets-lqy"):
+            skill = (CORE / name / "SKILL.md").read_text()
+            with self.subTest(skill=name):
+                for contract in ("验证输入", "代表性", "验证配置", "拟上线配置", "未验证",
+                                 "技术验证通过不等于业务验收或可上线"):
+                    self.assertTrue(contract in skill, f"{name} 缺少约束：{contract}")
+        tickets = (CORE / "to-tickets-lqy/SKILL.md").read_text()
+        self.assertIn("不要求每个 Ticket 都做真实业务采样或上线操作", tickets)
+        self.assertIn("不新增 section 或持久契约字段", tickets)
+        self.assertIn("引用父 spec", tickets)
+
     def test_planning_exposes_parallelism_without_starting_execution(self) -> None:
         spec = (CORE / "to-spec-lqy/SKILL.md").read_text()
         tickets = (CORE / "to-tickets-lqy/SKILL.md").read_text()

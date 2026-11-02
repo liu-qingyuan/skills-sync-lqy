@@ -9,3 +9,4 @@
 - Policy: installable personal LQY layer, copied from the Chinese baseline and self-contained. Keep this file updated when upstream or zh baseline changes.
 - LQY extension: GitHub Ralph-ready parent specs provision the exact branch worktree/upstream and allowlisted local `.codex/config.toml` before issue creation, then publish without a label, validate the readback, and apply `ready-for-agent` last. Other tracker and non-Ralph flows retain upstream behavior.
 - LQY extension: before presenting or publishing, review the complete draft with `codebase-design-lqy`, GitNexus evidence, and `simple`, then apply the findings.
+- LQY adaptation: minimally sufficient scope replaces exhaustive story lists. Record critical business assumptions, input representativeness, validation/deployment configuration differences, and evidence limits within existing sections; technical success alone is not business acceptance or production readiness.

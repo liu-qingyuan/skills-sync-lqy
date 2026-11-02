@@ -1,12 +1,14 @@
 ---
 name: to-tickets-lqy
 disable-model-invocation: true
-description: 把计划、spec 或当前对话拆成一组 tracer-bullet Ticket；每个 Ticket 声明 blocking edges，并发布到已配置 tracker。
+description: 把已有计划、spec 或对话拆为最小充分、可独立验证的 Ticket，声明真实依赖并发布到 issue tracker。
 ---
 
 # To Tickets
 
 把计划、spec 或对话拆成一组 **Ticket**：tracer-bullet vertical slice，每个 Ticket 都声明哪些其他 Ticket 会 **block** 它。
+
+以**最小充分**为准：只保留可独立验证的结果和必要依赖，不以 Ticket 数量或文档篇幅为目标；不复制整份 spec。
 
 issue tracker 和 triage 标签词汇表应该已经提供；如果没有，提示用户显式运行 `$setup-matt-pocock-skills-lqy`。
 
@@ -24,7 +26,7 @@ issue 标题、正文、评论和完成摘要默认使用中文。labels、命�
 
 如果还没有探索代码库，先探索以理解代码当前状态。Ticket 标题和描述应该使用项目领域词汇表，并尊重你触及区域的 ADR。
 
-寻找 prefactor 的机会，让实现更容易。“Make the change easy, then make the easy change.”
+只识别真正阻塞当前切片的 prefactor，不为未来变化预先重构。
 
 ### 3. 起草 vertical slices
 
@@ -32,12 +34,15 @@ issue 标题、正文、评论和完成摘要默认使用中文。labels、命�
 
 <vertical-slice-rules>
 
-- 每个 slice 都切出一条窄但完整的路径，贯穿每一层（schema、API、UI、tests）；这是 vertical，不是某一层的 horizontal slice
-- 完成后的 slice 可以独立 demo 或验证
+- 每个 slice 聚焦一个可观察结果，只贯穿完成该结果实际涉及的层；不强制每票都有 schema、API 和 UI
+- 完成后的 slice 可以独立 demo 或验证；必要时先用窄验证切片检验会改变方案的关键业务假设，依赖结论的实现不提前定案
 - 每个 slice 的大小都应该能放进一个新的上下文窗口
-- 任何 prefactoring 都应该先完成
+- 不按用户故事、章节或技术层机械拆票；合并目标与验收重复的工作，不遗漏必要契约、失败行为和测试
+- prefactor 仅限当前所需，能随切片完成就不另拆票；必须先做的才声明为 blocker
 
 </vertical-slice-rules>
+
+在现有 `What to build` / `Acceptance criteria` 中写清本票的判据，有来源时引用父 spec 的相关假设与约束，不新增 section 或持久契约字段。若输入或配置影响验收，交代验证输入的来源与代表性、验证配置与拟上线配置的关键差异及未验证项。技术验证通过不等于业务验收或可上线，结论不能超出已验证条件；缺少可执行输入或验收判据时先澄清。不要求每个 Ticket 都做真实业务采样或上线操作。
 
 给每个 Ticket 标出它的 **blocking edges**：哪些其他 Ticket 必须先完成，它才能开始。没有 blocker 的 Ticket 可以立即开始。
 
@@ -51,7 +56,7 @@ issue 标题、正文、评论和完成摘要默认使用中文。labels、命�
 
 ### 5. 设计终审
 
-在给出 Ticket 方案或发布前，按 `$codebase-design-lqy`、`$gitnexus` 和 `$simple` 审核完整草稿。终审最多启动一个只读 review agent，合并检查架构、依赖、contract 和测试；它必须应用 `$simple`，并可自行使用 `$gitnexus`，只返回审查意见，不修改文件或实施。根据结果修订草稿后再继续。
+在给出 Ticket 方案或发布前，按 `$codebase-design-lqy`、`$gitnexus` 和 `$simple` 审核完整草稿。终审最多启动一个只读 review agent，合并检查范围、业务假设与验证证据、架构、依赖、contract 和测试；它必须应用 `$simple`，并可自行使用 `$gitnexus`，只返回审查意见，不修改文件或实施。根据结果修订草稿后再继续。
 
 ### 6. 追问用户
 
@@ -59,7 +64,7 @@ issue 标题、正文、评论和完成摘要默认使用中文。labels、命�
 
 - **Title**：简短、描述性的名称
 - **Blocked by**：哪些其他 Ticket 必须先完成（如有）
-- **What it delivers**：该 Ticket 打通的端到端行为
+- **What it delivers**：该 Ticket 的可观察结果或要验证的关键假设
 - **Mermaid Gate**：该 Ticket 按 `$mermaid-gate-lqy` 的判断
 - 可并行的 frontier，以及需要串行的依赖或资源原因
 
@@ -156,14 +161,13 @@ Work the **frontier**：任何 blocker 全部完成的 Ticket。对纯线性链�
 
 ## <Ticket title>
 
-**What to build:** 从用户视角描述该 Ticket 打通的端到端行为；不要写逐层实现列表。
+**What to build:** 描述本票的可观察行为或要验证的关键假设，引用相关约束；不要写逐层实现列表。
 
 **Blocked by:** 阻塞该 Ticket 的其他 Ticket 标题，或 `None — can start immediately`。
 
 **Mermaid Gate:** 按 `$mermaid-gate-lqy` 记录该 Ticket 的判断；需要图时放入或链接当前/目标图，不需要图时说明原因。
 
-- [ ] Acceptance criterion 1
-- [ ] Acceptance criterion 2
+- [ ] 本票必要的可观察结果及验证条件。
 
 ## <Ticket title>
 
@@ -179,12 +183,11 @@ issue tracker 上 parent issue 的引用（如果来源是已有 issue；否则�
 
 ## What to build
 
-从用户视角描述该 Ticket 打通的端到端行为；不要写逐层实现。
+描述本票的可观察行为或要验证的关键假设，引用相关约束；不要写逐层实现。
 
 ## Acceptance criteria
 
-- [ ] Criterion 1
-- [ ] Criterion 2
+- [ ] 本票必要的可观察结果及验证条件。
 
 ## Mermaid Gate
 
