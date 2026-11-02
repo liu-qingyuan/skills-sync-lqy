@@ -6,9 +6,7 @@ description: 把已有计划、spec 或对话拆为最小充分、可独立验�
 
 # To Tickets
 
-把计划、spec 或对话拆成一组 **Ticket**：tracer-bullet vertical slice，每个 Ticket 都声明哪些其他 Ticket 会 **block** 它。
-
-以**最小充分**为准：只保留可独立验证的结果和必要依赖，不以 Ticket 数量或文档篇幅为目标；不复制整份 spec。
+把已有计划拆为**最小充分**的 tracer-bullet Ticket：每票一个可观察结果与真实 blocking edges，不以数量或篇幅为目标，不复制整份 spec。
 
 issue tracker 和 triage 标签词汇表应该已经提供；如果没有，提示用户显式运行 `$setup-matt-pocock-skills-lqy`。
 
@@ -18,15 +16,13 @@ issue 标题、正文、评论和完成摘要默认使用中文。labels、命�
 
 ### 1. 收集上下文
 
-从对话上下文中已有的信息开始。如果用户把引用作为参数传入（spec 路径、issue 编号或 URL），从 issue tracker 获取它并完整阅读正文和评论。
+从对话开始；给出 spec、issue 或 URL 引用时，完整读取对应正文和评论。
 
 如果目标是 GitHub 且 Tickets 将进入 Ralph `ready-for-agent` backlog，必须引用一个标题以 `Spec:` 开头、正文最后包含有效 `## Git` 的父 spec。没有父 spec 时停止并要求先运行 `$to-spec-lqy`；不要从对话或当前 checkout 自行发明 Git 契约。
 
 ### 2. 探索代码库
 
-如果还没有探索代码库，先探索以理解代码当前状态。Ticket 标题和描述应该使用项目领域词汇表，并尊重你触及区域的 ADR。
-
-只识别真正阻塞当前切片的 prefactor，不为未来变化预先重构。
+按需查阅代码现状、项目术语表与相关 ADR，沿用领域词汇；只识别真正阻塞当前切片的 prefactor。
 
 ### 3. 起草 vertical slices
 
@@ -34,21 +30,21 @@ issue 标题、正文、评论和完成摘要默认使用中文。labels、命�
 
 <vertical-slice-rules>
 
-- 每个 slice 聚焦一个可观察结果，只贯穿完成该结果实际涉及的层；不强制每票都有 schema、API 和 UI
-- 完成后的 slice 可以独立 demo 或验证；必要时先用窄验证切片检验会改变方案的关键业务假设，依赖结论的实现不提前定案
-- 每个 slice 的大小都应该能放进一个新的上下文窗口
-- 不按用户故事、章节或技术层机械拆票；合并目标与验收重复的工作，不遗漏必要契约、失败行为和测试
-- prefactor 仅限当前所需，能随切片完成就不另拆票；必须先做的才声明为 blocker
+- 每票一个可观察结果，只贯穿实际涉及的层，不强制 schema/API/UI。
+- 可独立 demo 或验证；影响方案的关键业务假设先窄验证，依赖结论的实现不提前定案。
+- 每票能放进一个新的上下文窗口。
+- 不按用户故事、章节或技术层机械拆票；合并重复工作，保留必要契约、失败行为和测试。
+- 仅做必要 prefactor；能随切片完成就不另拆票，必须先做的才是 blocker。
 
 </vertical-slice-rules>
 
-在现有 `What to build` / `Acceptance criteria` 中写清本票的判据，有来源时引用父 spec 的相关假设与约束，不新增 section 或持久契约字段。若输入或配置影响验收，交代验证输入的来源与代表性、验证配置与拟上线配置的关键差异及未验证项。技术验证通过不等于业务验收或可上线，结论不能超出已验证条件；缺少可执行输入或验收判据时先澄清。不要求每个 Ticket 都做真实业务采样或上线操作。
+验收复用已有约束，仅补本票判据。按需注明输入代表性、验证与上线配置差异及未验证项；技术跑通不等于业务或上线验收，关键缺口先澄清。
 
-给每个 Ticket 标出它的 **blocking edges**：哪些其他 Ticket 必须先完成，它才能开始。没有 blocker 的 Ticket 可以立即开始。
+标出真实 **blocking edges**，不按编号或发布顺序制造依赖；没有 blocker 不等于可安全并发。
 
-在真实依赖、纵向切片和独立验收前提下寻找**合理并行**。不按编号或发布顺序制造依赖，也不为了并行按 schema/API/UI 横切。指出共享契约、共享写入及数据库/构建/测试资源冲突；必要风险写入现有 `What to build`，不增加持久契约字段。实施入口仍要核查实际文件与资源，没有 blocker 不等于可安全并发。
+在纵向切片和独立验收前提下识别**合理并行**：核查共享契约、共享写入及数据库/构建/测试冲突，风险写入现有 `What to build`，不新增契约字段。实施时仍核查实际文件与资源，不为并行横切技术层。
 
-**宽 refactor 是 vertical slicing 的例外。** 宽 refactor 指一个机械变化（例如重命名一列、重新定义共享 symbol 类型）影响整个代码库，导致一次编辑会打破成千上万的调用点，没有任何 vertical slice 能保持绿色。不要强行做成 tracer bullet；把它排成 **expand-contract**。先 expand：把新形式放在旧形式旁边，保证现有代码不坏。然后按 blast radius 分批迁移调用点（按 package、目录等），每批一个 Ticket，block 在 expand 之后，并通过旧形式仍存在来保持每批 CI 绿色。最后 contract：所有调用点迁完后删除旧形式，这个 Ticket block 在所有迁移批次之后。如果连单个批次都无法独立保持绿色，仍保留这个顺序，但让这些批次共享一个 integration branch，并全部 block 到最后的 integrate-and-verify Ticket；绿色只在最后承诺。
+**宽 refactor 例外：** 机械变更影响大量调用点、无法保持纵向切片绿色时，用 **expand-contract**：先并存新旧形式，再按 blast radius（package/目录）分批迁移，最后删除旧形式。每批一票，依赖 expand；contract 依赖全部迁移，每批 CI 保持绿色。若单批也无法保持绿色，各批共享 integration branch，最终 integrate-and-verify Ticket 依赖全部批次，只在最终验收承诺绿色。
 
 ### 4. 设计图 Gate
 
@@ -56,7 +52,7 @@ issue 标题、正文、评论和完成摘要默认使用中文。labels、命�
 
 ### 5. 设计终审
 
-在给出 Ticket 方案或发布前，按 `$codebase-design-lqy`、`$gitnexus` 和 `$simple` 审核完整草稿。终审最多启动一个只读 review agent，合并检查范围、业务假设与验证证据、架构、依赖、contract 和测试；它必须应用 `$simple`，并可自行使用 `$gitnexus`，只返回审查意见，不修改文件或实施。根据结果修订草稿后再继续。
+在给出 Ticket 方案或发布前，按 `$codebase-design-lqy`、`$gitnexus` 和 `$simple` 审核并修订草稿，检查范围、假设、架构、依赖、契约与验证。最多启动一个只读 review agent，应用 `$simple`，只返回审查意见，不修改文件或实施。
 
 ### 6. 追问用户
 
@@ -68,13 +64,7 @@ issue 标题、正文、评论和完成摘要默认使用中文。labels、命�
 - **Mermaid Gate**：该 Ticket 按 `$mermaid-gate-lqy` 的判断
 - 可并行的 frontier，以及需要串行的依赖或资源原因
 
-询问用户：
-
-- 粒度是否合适？太粗还是太细？
-- blocking edges 是否正确，每个 Ticket 是否只依赖真正阻塞它的 Ticket？
-- 是否应该合并或进一步拆分任何 Ticket？
-
-迭代到用户批准拆分。
+核实粒度、真实依赖及合并/拆分，迭代到用户批准。
 
 ### 7. 发布 Ticket 到已配置 tracker
 
@@ -199,7 +189,7 @@ issue tracker 上 parent issue 的引用（如果来源是已有 issue；否则�
 
 </issue-template>
 
-无论哪种形式，都避免写具体文件路径或代码片段；它们很快会过时。例外：如果 prototype 产出的片段比散文更精确地编码了决策（状态机、reducer、schema、type shape），可以内联并简短说明它来自 prototype。只保留决策密集的部分，不要放工作 demo，只放重要部分。
+不写具体文件路径或代码；仅当 prototype 的状态机、schema、type shape 等比文字更精确时，内联决策片段并注明来源，不放 demo。
 
-Ralph 是默认批量实施入口；用户也可显式选择 `$implement-spec-subagent-lqy`，并行处理同一任务图中安全独立的 frontier。发布后停止；提示用户明确选择单 Ticket、Ralph 或子 agent 实施，不自动实施或启动循环。
+Ralph 是默认批量入口；用户可显式选择 `$implement-spec-subagent-lqy` 处理安全独立的 frontier。发布后停止；提示用户选择单 Ticket、Ralph 或子 agent 实施，不自动实施或启动循环。
 </content>

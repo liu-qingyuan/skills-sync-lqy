@@ -160,16 +160,14 @@ class SkillContractTests(unittest.TestCase):
             self.assertNotIn(removed, tickets)
 
     def test_planning_bounds_business_claims_by_inputs_and_configuration(self) -> None:
-        for name in ("to-spec-lqy", "to-tickets-lqy"):
+        for name, boundary in (
+            ("to-spec-lqy", "技术验证通过不等于业务验收或可上线"),
+            ("to-tickets-lqy", "技术跑通不等于业务或上线验收"),
+        ):
             skill = (CORE / name / "SKILL.md").read_text()
             with self.subTest(skill=name):
-                for contract in ("验证输入", "代表性", "验证配置", "拟上线配置", "未验证",
-                                 "技术验证通过不等于业务验收或可上线"):
+                for contract in ("代表性", "配置", "上线", "未验证", boundary):
                     self.assertTrue(contract in skill, f"{name} 缺少约束：{contract}")
-        tickets = (CORE / "to-tickets-lqy/SKILL.md").read_text()
-        self.assertIn("不要求每个 Ticket 都做真实业务采样或上线操作", tickets)
-        self.assertIn("不新增 section 或持久契约字段", tickets)
-        self.assertIn("引用父 spec", tickets)
 
     def test_planning_exposes_parallelism_without_starting_execution(self) -> None:
         spec = (CORE / "to-spec-lqy/SKILL.md").read_text()
