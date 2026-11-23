@@ -234,7 +234,7 @@ upstream/
 10. 只记录外部链接、不准备维护安装版的内容，放 `docs/external-skill-links/`，不要放进 `skills/`。
 11. 如果同步 Matt 上游，先 clone / fetch `https://github.com/mattpocock/skills.git`，对照它的 `skills/<category>/<name>` 结构更新到本仓库 `upstream/mattpocock/skills/<category>/<name>`；再合并变化到对应 `*-zh` baseline，最后检查对应 `*-lqy` 安装版是否需要适配。
 
-AI 可以用下面命令做内部验证；这些不是用户日常安装命令。优先运行仓库级检查：
+AI 可以用下面命令做内部验证；这些不是用户日常安装命令。PR 与推送到 main 时，GitHub Actions 会运行同一份仓库检查和维护契约测试。本地可直接复现仓库检查：
 
 ```bash
 uv run --no-project --with pyyaml python scripts/check_matt_zh_skills.py
