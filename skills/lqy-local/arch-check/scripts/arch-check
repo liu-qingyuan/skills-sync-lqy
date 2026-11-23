@@ -1,0 +1,28 @@
+#!/bin/sh
+# Anchor the tool to the installed checkout, not to code inside the project being read.
+set -eu
+usage() {
+  echo 'arch-check guide | prepare TARGET NEW_FACTS | publish FACTS REPORT NEW_VIEW | compare BEFORE AFTER | lint TARGET DECLARATIONS RULES' >&2
+  exit 2
+}
+home=${ARCH_CHECK_HOME:-"$HOME/work/arch-check"}
+case "$home" in /*) ;; *) echo 'ARCH_CHECK_HOME must be an absolute trusted arch-check checkout' >&2; exit 2;; esac
+entry="$home/arch_check/gitnexus.mjs"
+guide="$home/docs/agents/architecture-analysis.md"
+if [ ! -f "$entry" ] || [ ! -f "$guide" ]; then
+  echo 'arch-check checkout missing: set ARCH_CHECK_HOME to the trusted tool repository (not the analysis target).' >&2
+  exit 2
+fi
+[ "$#" -gt 0 ] || usage
+action=$1; shift
+# Resolve user-relative operands against the original caller before switching tool roots.
+abs() { case "$1" in /*) printf '%s\n' "$1";; *) printf '%s/%s\n' "$PWD" "$1";; esac; }
+unset NODE_OPTIONS NODE_PATH
+case "$action:$#" in
+  guide:0) exec cat "$guide";;
+  prepare:2) exec node "$entry" --root "$(abs "$1")" --out "$(abs "$2")";;
+  publish:3) exec node "$entry" --project "$(abs "$1")" --analysis "$(abs "$2")" --out "$(abs "$3")";;
+  compare:2) a=$(abs "$1"); b=$(abs "$2"); cd "$home"; exec python3 -B -s -E -m arch_check compare --before "$a" --after "$b" --json;;
+  lint:3) target=$(abs "$1"); cd "$home"; exec python3 -B -s -E -m arch_check.lint --root "$target" --declarations "$2" --rules "$3";;
+  *) usage;;
+esac

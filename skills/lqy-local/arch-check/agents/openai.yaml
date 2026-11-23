@@ -1,0 +1,4 @@
+interface:
+  display_name: "arch-check 架构检查"
+  short_description: "只读生成可交互的项目架构图，区分已检查的约束、复杂度信号与证据缺口"
+  default_prompt: "用 $arch-check 分析当前项目，生成可打开的架构图，告诉我哪些问题有证据、哪些还没有验证。"

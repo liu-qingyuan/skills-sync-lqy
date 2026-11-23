@@ -78,6 +78,7 @@
       "skills": [
         "./skills/lqy-local/clean",
         "./skills/lqy-local/simple",
+        "./skills/lqy-local/arch-check",
         "./skills/lqy-local/gitnexus",
         "./skills/lqy-local/mermaid-gate-lqy",
         "./skills/lqy-local/ralph-plan-lqy",

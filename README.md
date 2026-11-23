@@ -86,6 +86,7 @@ upstream/mattpocock/skills/ # Matt Pocock 官方英文上游镜像，只用于�
 
 ### Lqy Local
 
+- `arch-check`：在任意项目中调用 `$arch-check 分析当前项目`，生成带源码依据的可交互架构图。使用本机可信的 arch-check checkout（默认 `~/work/arch-check`，可设 `ARCH_CHECK_HOME`）及其支持的 GitNexus，不运行被分析项目。
 - `clean`：锁定行为与范围后，清理死代码、重复、脆弱回退、无意义包装和过度抽象，并参考 `$simple` 与 `$codebase-design-lqy` 选择最小完整修复。
 - `simple`：简化代码、文档、prompt、配置、计划或规格，同时保留意图和必要行为。
 - `gitnexus`：GitNexus 代码图谱工具路由与使用指南。
@@ -160,7 +161,7 @@ docs/localization/mattpocock-zh-skills.md
 
 ## 本轮选择性适配
 
-审阅来源：`49dd158d1076134a641b33efb035946536778336`（v1.3.1 + main）。mirror 和中文 baseline 各保留 38 个 active 与 8 个 frozen legacy；安装层共 51 个 skills，其中 Matt LQY 39 个。
+审阅来源：`49dd158d1076134a641b33efb035946536778336`（v1.3.1 + main）。mirror 和中文 baseline 各保留 38 个 active 与 8 个 frozen legacy；安装层共 52 个 skills，其中 Matt LQY 39 个。
 
 - 新增 `pr-lqy`（只写正文）、`retro-lqy`（人工触发、只建议）、`writing-for-agents-lqy`（agent 文档纪律）。
 - 上游 `implement-spec` 适配为显式可选的 `implement-spec-subagent-lqy`，Ralph 保持默认；不安装 `chief-of-staff` 或新增调度平台。不自动删除退役个人技能，旧写作 skill 仍可显式选择。
