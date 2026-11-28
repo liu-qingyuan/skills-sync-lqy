@@ -75,6 +75,105 @@ class ProducerToolAdapterTests(unittest.TestCase):
 
         self.assertEqual(["<unset>", str(self.repo.resolve())], output.splitlines())
 
+    def test_issue_calls_bind_origin_despite_upstream_and_wrong_environment(self) -> None:
+        subprocess.run(
+            ["git", "-C", str(self.repo), "remote", "add", "upstream", "https://github.com/upstream/project.git"],
+            check=True,
+        )
+        adapter = ProducerToolAdapter(self.repo, skill_dir=self.skill_dir)
+        bin_dir = self.root / "bin"
+        bin_dir.mkdir()
+        gh = bin_dir / "gh"
+        gh.write_text(
+            "#!/usr/bin/env python3\n"
+            "import json, os, pathlib, sys\n"
+            "args = sys.argv[1:]\n"
+            "target = args[args.index('--repo') + 1] if '--repo' in args else 'upstream/project'\n"
+            "print(json.dumps({'target': target, 'cwd': str(pathlib.Path.cwd()), "
+            "'environment_repo': os.environ.get('GH_REPO')}))\n",
+            encoding="utf-8",
+        )
+        gh.chmod(0o755)
+        with patch.dict(os.environ, {"GH_REPO": "wrong/project", "PATH": f"{bin_dir}{os.pathsep}{os.environ['PATH']}"}):
+            result = json.loads(adapter.gh("issue", "list", "--state", "open"))
+        self.assertEqual("github.com/example/project", result["target"])
+        self.assertEqual(str(self.repo.resolve()), result["cwd"])
+        self.assertIsNone(result["environment_repo"])
+
+    def test_first_create_verifies_bound_target_once_before_mutating(self) -> None:
+        bin_dir = self.root / "bin"
+        bin_dir.mkdir()
+        gh = bin_dir / "gh"
+        gh.write_text(
+            "#!/usr/bin/env python3\n"
+            "import json, os, pathlib, sys\n"
+            "args = sys.argv[1:]\n"
+            "with pathlib.Path(os.environ['TEST_GH_LOG']).open('a') as log:\n"
+            "    log.write(json.dumps(args) + '\\n')\n"
+            "if args[:2] == ['repo', 'view']:\n"
+            "    print(os.environ['TEST_VIEW_RESPONSE'])\n"
+            "elif args[:2] == ['issue', 'create']:\n"
+            "    print('https://github.com/example/project/issues/42')\n"
+            "else:\n"
+            "    raise SystemExit(2)\n",
+            encoding="utf-8",
+        )
+        gh.chmod(0o755)
+        log_file = self.root / "gh.log"
+        with patch.dict(os.environ, {
+            "PATH": f"{bin_dir}{os.pathsep}{os.environ['PATH']}",
+            "TEST_GH_LOG": str(log_file),
+            "TEST_VIEW_RESPONSE": json.dumps({"nameWithOwner": "Example/Project"}),
+        }):
+            self.adapter.gh("issue", "create", "--title", "First")
+            self.adapter.gh("issue", "create", "--title", "Second")
+        calls = [json.loads(line) for line in log_file.read_text().splitlines()]
+        self.assertEqual(
+            [
+                ["repo", "view", "github.com/example/project", "--json", "nameWithOwner"],
+                ["issue", "create", "--title", "First", "--repo", "github.com/example/project"],
+                ["issue", "create", "--title", "Second", "--repo", "github.com/example/project"],
+            ],
+            calls,
+        )
+
+    def test_failed_target_check_never_creates_and_is_retried(self) -> None:
+        for response in ("{}", "[]", '{"nameWithOwner": 7}', '{"nameWithOwner": "upstream/project"}', "not-json"):
+            with self.subTest(response=response):
+                adapter = ProducerToolAdapter(self.repo, skill_dir=self.skill_dir)
+                result = subprocess.CompletedProcess([], 0, response, "")
+                with patch("producer_adapter.subprocess.run", return_value=result) as run:
+                    for _ in range(2):
+                        with self.assertRaises(ProducerToolError):
+                            adapter.gh("issue", "create", "--title", "Unsafe")
+                self.assertEqual(2, run.call_count)
+                self.assertTrue(all(call.args[0] == ["gh", "repo", "view", "github.com/example/project", "--json", "nameWithOwner"] for call in run.call_args_list))
+        adapter = ProducerToolAdapter(self.repo, skill_dir=self.skill_dir)
+        with patch("producer_adapter.subprocess.run", return_value=subprocess.CompletedProcess([], 1, "", "not reachable")) as run:
+            with self.assertRaisesRegex(ProducerToolError, "not reachable"):
+                adapter.gh("issue", "create")
+        run.assert_called_once()
+        self.assertEqual("repo", run.call_args.args[0][1])
+
+    def test_repository_binding_supports_https_ssh_and_unambiguous_remote(self) -> None:
+        for remote_url in ("https://github.com/example/project.git", "git@github.com:example/project.git", "ssh://git@github.com/example/project.git"):
+            with self.subTest(remote_url=remote_url):
+                subprocess.run(["git", "-C", str(self.repo), "remote", "set-url", "origin", remote_url], check=True)
+                adapter = ProducerToolAdapter(self.repo, skill_dir=self.skill_dir)
+                with patch("producer_adapter.subprocess.run", return_value=subprocess.CompletedProcess([], 0, "ok", "")) as run:
+                    self.assertEqual("ok", adapter.gh("issue", "list"))
+                self.assertEqual(["gh", "issue", "list", "--repo", "github.com/example/project"], run.call_args.args[0])
+        subprocess.run(["git", "-C", str(self.repo), "remote", "rename", "origin", "fork"], check=True)
+        self.assertEqual("github.com/example/project", ProducerToolAdapter(self.repo, skill_dir=self.skill_dir).github_repository)
+        subprocess.run(["git", "-C", str(self.repo), "remote", "add", "upstream", "https://github.com/upstream/project.git"], check=True)
+        with self.assertRaisesRegex(ProducerContractError, "multiple remotes"):
+            ProducerToolAdapter(self.repo, skill_dir=self.skill_dir)
+
+    def test_unresolvable_publication_target_is_rejected(self) -> None:
+        subprocess.run(["git", "-C", str(self.repo), "remote", "set-url", "origin", str(self.root / "local.git")], check=True)
+        with self.assertRaises(ProducerContractError):
+            ProducerToolAdapter(self.repo, skill_dir=self.skill_dir)
+
     def test_repository_context_requires_a_git_remote(self) -> None:
         plain_directory = self.root / "plain"
         plain_directory.mkdir()

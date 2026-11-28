@@ -161,15 +161,17 @@ docs/localization/mattpocock-zh-skills.md
 
 ## 本轮选择性适配
 
-审阅来源：`49dd158d1076134a641b33efb035946536778336`（v1.3.1 + main）。mirror 和中文 baseline 各保留 38 个 active 与 8 个 frozen legacy；安装层共 52 个 skills，其中 Matt LQY 39 个。
+审阅来源：`bbadaa631c37af594e5a05c9cefacd9956136b18`（v1.3.2 + main，2026-11-27）。mirror 和中文 baseline 各保留 39 个 active 与 8 个 frozen legacy；安装层共 54 个 skills，其中 Matt LQY 41 个。
 
-- 新增 `pr-lqy`（只写正文）、`retro-lqy`（人工触发、只建议）、`writing-for-agents-lqy`（agent 文档纪律）。
-- 上游 `implement-spec` 适配为显式可选的 `implement-spec-subagent-lqy`，Ralph 保持默认；不安装 `chief-of-staff` 或新增调度平台。不自动删除退役个人技能，旧写作 skill 仍可显式选择。
+- 新增 `software-factory-lqy`（软件工厂设计语言与服务调研）、`chief-of-staff-lqy`（新上下文委派与历史 wiki），均按上游显式调用；完整跟进英文、中文及支持文件，不以安装代替运行。
+- chief 按上游抽样调用独立的 `retro-lqy`，并自行筛选、跟进候选；retro 单独运行仍只提建议，不给 chief 额外套本地审批。
+- grilling 默认一轮问完整个 frontier，事实交给新上下文 subagent 查证；保留共识不等于实施授权的 LQY 收口规则。吸收术语交叉引用、Parent 标题与引用、GitHub 操作修复及相关新上下文规则。
+- 上游 `implement-spec` 适配为显式可选的 `implement-spec-subagent-lqy`，Ralph 保持默认；每票派新的实施 agent，不新增调度平台。不自动删除退役个人技能，旧写作 skill 仍可显式选择。
 - Pi `disable-model-invocation` 与 Codex `allow_implicit_invocation` 同步；已授权 Ralph worker 仍能加载 implement / tdd / review。
 - 隐藏凭据仅影响展示副本，不改原始日志、`.env`、fixture、业务数据或真实复现输入；不增加安全整改。
 - 新项目领域术语表默认 `GLOSSARY.md`；旧项目遵守已指定的同一份文档，不自动迁移或双写。
 
-验证与安装记录：[交付报告](docs/reports/mattpocock-sync-2026-10-09.md)。
+验证与安装记录：[本轮交付报告](docs/reports/mattpocock-sync-2026-11-28.md)；[前次记录](docs/reports/mattpocock-sync-2026-10-09.md)保留历史快照。
 
 ## Matt Pocock 上游同步
 
@@ -244,8 +246,8 @@ uv run --no-project --with pyyaml python scripts/check_matt_zh_skills.py
 这个脚本会检查：
 
 - `skills/` 只暴露可安装版本，Matt 英文官方镜像和中文 baseline 不能漏进安装列表。
-- 39 个 Matt LQY `*-lqy` skills 都有 `LOCALIZATION.md`，并指向有效 `*-zh` baseline 和上游路径。
-- 46 个 Matt 中文 `*-zh` baseline（38 active + 8 legacy）都有 `LOCALIZATION.md` 和有效上游路径。
+- 41 个 Matt LQY `*-lqy` skills 都有 `LOCALIZATION.md`，并指向有效 `*-zh` baseline 和上游路径。
+- 47 个 Matt 中文 `*-zh` baseline（39 active + 8 legacy）都有 `LOCALIZATION.md` 和有效上游路径。
 - `.claude-plugin/marketplace.json` 必须和 `skills/` 下可安装目录一致，并且不能列出 `*-zh`。
 - README 的 Codex setup 用法必须优先写 `$setup-matt-pocock-skills-lqy`。
 - 所有可安装 skill 通过本仓库 YAML / 命名 / description / 调用策略校验；不依赖或修改用户系统 `quick_validate.py`。

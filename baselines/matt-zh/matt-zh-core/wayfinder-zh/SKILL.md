@@ -112,7 +112,7 @@ out-of-scope work 永远不会毕业；frontier 会停在 destination。因此�
 2. **Map the frontier.** 再次 grilling，但这次 **breadth-first**：横向展开整个空间，而不是在某一条线深挖，浮现开放决策和现在可行动的第一步。**如果这没有浮现 fog**，说明通往 destination 的路已经清楚，整个旅程小到一个会话能处理；你不需要 map。停止并询问用户想如何继续。
 3. **Create the map**（标签 `wayfinder:map`）：填好 Destination 和 Notes，Decisions-so-far 为空，把 fog 草绘到 **Not yet specified**。
 4. **Create the tickets you can specify now**，作为 map 的 child issues；然后在**第二遍**连接 blocking edges（issues 需要先有 id 才能互相引用）。同一遍写交叉引用时要填入真实 id，不要用 `#<n>` 占位，它可能自动链接到无关 Issue。连接会把它们分成前沿与受阻项；暂不能说明的内容留在 **Not yet specified**。
-5. **启动研究 subagent。** 对每个刚创建的 `research` Ticket，并行启动调用 Skill 工具并指定 `research-zh` 的 subagent；将发现记在可丢弃的 `research/<name>` 分支，Ticket 中保留上下文指针。推送分支，但不要建 PR；此分支不会合并。
+5. **启动研究 subagent。** 对每个刚创建的 `research` Ticket，并行启动使用全新上下文窗口、调用 Skill 工具并指定 `research-zh` 的 subagent；将发现记在可丢弃的 `research/<name>` 分支，Ticket 中保留上下文指针。推送分支，但不要建 PR；此分支不会合并。
 6. 停止：绘图占一个会话，不亲自解决 Ticket。
 
 ### Work through the map

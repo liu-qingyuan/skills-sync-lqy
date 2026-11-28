@@ -5,6 +5,7 @@
 - **Model-invoked**：描述面向模型，说明不同触发分支；公共纪律可以由用户或已授权流程加载。
 - **User-invoked**：Pi 的 `disable-model-invocation: true` 与 Codex `agents/openai.yaml` 的 `policy.allow_implicit_invocation: false` 同步。用户是入口；其它 skill 缺少其前置条件时提示用户显式调用，不擅自启动。
 - Ralph worker 已获授权实施 Ticket，可以加载 `implement-lqy`、tdd 与 review。不要把上游 user-only 分类机械套到这个授权链。
+- 用户显式运行 `chief-of-staff-lqy` 后，其已授权任务可按该 skill 的过程调用 retro、spec、tickets 和子 agent 实施入口；retro 最后一步遵循 chief 写明的替代规则。这是授权调用链，不改变各入口的显式调用 metadata。
 
 需要执行另一份纪律时，明确“读取并执行 `<name>` 的 SKILL.md”，按当前 skills 列表的实际路径定位；不假设存在 Claude `Skill` tool，也不把裸 `/name` 当作已经加载。
 

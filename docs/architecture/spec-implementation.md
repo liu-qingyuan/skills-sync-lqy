@@ -1,10 +1,10 @@
 # Spec 实施入口
 
-Ralph 默认不变；子 agent 入口复用 Spec/Tickets，根据项目约定与实际风险选择共享工作区或独立 worktree。单一整合者收口，共享写入暂停后验证同一快照。不新增调度平台、配置模式或 Git 字段。
+Ralph 默认不变；子 agent 入口复用 Spec/Tickets，每个 Ticket 派新的实施 agent 并使用全新上下文，根据项目约定与实际风险选择共享工作区或独立 worktree。单一整合者收口，共享写入暂停后验证同一快照。不新增调度平台、配置模式或 Git 字段。
 
 C4：用户/GitHub 为 Context，Git 仓库/AI 会话为 Container，规划/实施/review 为 Component；类图描述文档合同。Module 是规划与实施入口，Interface 是 Spec/Ticket 正文与授权规则；Implementation 隐藏拆分、派发、协调与交付。Depth 来自复用既有 gate/TDD/review，Seam 是 Ticket 与 worker 证据，Adapter 是已有 publisher 与子 agent 能力；合同集中提供 Leverage/Locality。test surface 为文件合同、加载与 Git/publisher 回归，不宣称模型执行或运行时锁已验证。
 
-规划以最小充分为准：Spec 拥有目标、关键业务假设及输入/配置的验证边界，Ticket 只引用相关约束并声明可观察验收，不按篇幅、故事数或技术层扩写拆票。技术验证不自动证明业务有效或可上线；未验证项限制验收结论，技术切片不强制真实采样或上线。不新增 Markdown section、Git 字段或 publisher 语义校验。
+规划以最小充分为准：Spec 拥有目标、关键业务假设及输入/配置的验证边界，Ticket 只引用相关约束并声明可观察验收，不按篇幅、故事数或技术层扩写拆票。技术验证不自动证明业务有效或可上线；未验证项限制验收结论，技术切片不强制真实采样或上线。不新增 Markdown section、Git 字段或 publisher 语义校验。Parent 展示父 issue 标题与引用，旧的仅编号格式仍参与冻结合同识别，父标题变化不改变归属；publication gate 先独立评论成功再关闭。现有 GitHub adapter 从 origin 或唯一 remote 绑定目标，issue/API 调用显式定位该目标，首次创建前核对可达性与仓库名，不依赖 fork 默认仓库。新安装 chief 与 retro 的调用关系见[本轮局部设计](../reports/mattpocock-sync-2026-11-28.md#局部设计-gate)，不新增运行时调度层。
 
 ## 架构 / 调用
 
@@ -54,6 +54,7 @@ sequenceDiagram
     participant A as 共享 Worker A
     participant B as 共享 Worker B
     participant H as 只读辅助
+    Note over C,B: 每票新实施 agent 全新上下文
     C->>A: Ticket 与不相交写入文件
     C->>B: Ticket 与不相交写入文件
     A->>H: 本票查证 不扩大范围

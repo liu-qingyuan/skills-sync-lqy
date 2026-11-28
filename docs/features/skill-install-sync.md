@@ -5,7 +5,7 @@
     "setup",
     "scripts/tests/test_skill_maintenance.py"
   ],
-  "fingerprint": "sha256:e5f7379d7dda5bf091af1f1fc351122d5d502e0f070e38ab81cf6df3427ac9d9"
+  "fingerprint": "sha256:08d834c4d6445e64024ab9a2693196f80d94349fe33a4b6570942a8c0025cfee"
 }
 ---
 

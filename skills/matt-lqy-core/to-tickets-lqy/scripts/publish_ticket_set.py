@@ -71,7 +71,10 @@ def list_child_issues(tools: ProducerToolAdapter, parent_number: int) -> list[Is
     expected_reference = f"#{parent_number}"
     for issue in tools.list_issues():
         parent_sections = PARENT_SECTION_PATTERN.findall(issue.body)
-        if len(parent_sections) == 1 and parent_sections[0].strip() == expected_reference:
+        if len(parent_sections) == 1 and re.fullmatch(
+            rf"(?:\S[^\r\n]* — )?{re.escape(expected_reference)}",
+            parent_sections[0].strip(),
+        ):
             children.append(issue)
     return sorted(children, key=lambda issue: issue.number)
 
@@ -241,6 +244,7 @@ def render_ticket_body(
     draft: TicketDraft,
     *,
     parent_number: int,
+    parent_title: str,
     internal_numbers: dict[str, int],
     external_numbers: dict[str, int],
     contract: GitContract,
@@ -254,7 +258,7 @@ def render_ticket_body(
     if not blockers:
         blockers = "- None — can start immediately"
     return (
-        f"## Parent\n\n#{parent_number}\n\n"
+        f"## Parent\n\n{parent_title} — #{parent_number}\n\n"
         f"{draft.body}\n\n"
         f"## Blocked by\n\n{blockers}\n\n"
         f"{render_git_contract(contract)}\n"
@@ -391,6 +395,7 @@ def publish(
         gate_body = render_ticket_body(
             gate_draft,
             parent_number=parent_number,
+            parent_title=parent.title,
             internal_numbers={},
             external_numbers={},
             contract=parent_contract,
@@ -401,6 +406,7 @@ def publish(
             body = render_ticket_body(
                 draft,
                 parent_number=parent_number,
+                parent_title=parent.title,
                 internal_numbers=internal_numbers,
                 external_numbers=external_numbers,
                 contract=parent_contract,
@@ -413,13 +419,8 @@ def publish(
     validate_published_set(tools, [publication_gate, *published], contract=parent_contract)
     apply_ready_labels(tools, published)
     validate_ready_labels(tools, published)
-    tools.gh(
-        "issue",
-        "close",
-        str(publication_gate.number),
-        "--comment",
-        "Ticket frontier 已完整验证并发布。",
-    )
+    tools.gh("issue", "comment", str(publication_gate.number), "--body", "Ticket frontier 已完整验证并发布。")
+    tools.gh("issue", "close", str(publication_gate.number))
     return {
         "label": READY_LABEL,
         "parent": parent_number,

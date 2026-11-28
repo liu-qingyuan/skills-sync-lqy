@@ -5,13 +5,15 @@
 ## 惯例
 
 - **创建 issue**：`gh issue create --title "..." --body "..."`。
-- **读取 issue**：`gh issue view <number> --comments`。
+- **读取 issue**：`gh issue view <number> --json number,title,body,labels,comments`，读取完整标题、正文、标签和评论。
 - **列出 issue**：使用 `gh issue list`，并显式指定需要的 state、label 和 JSON 字段。
 - **评论**：`gh issue comment <number> --body "..."`。
 - **修改标签**：`gh issue edit <number> --add-label "..."` / `--remove-label "..."`。
-- **关闭**：`gh issue close <number> --comment "..."`。
+- **关闭**：先用 `gh issue comment <number> --body "..."` 发布说明，成功后再运行 `gh issue close <number>`。已关闭 issue 的 `close --comment` 会丢弃评论却仍返回成功。
+- **Blocking**：使用 GitHub 原生 issue dependencies。`gh` 2.94+ 可用 `gh issue create --blocked-by <n>,<n> ...` 或 `gh issue edit <child> --add-blocked-by <blocker>`；旧版本使用 `gh api --method POST repos/<owner>/<repo>/issues/<child>/dependencies/blocked_by -F issue_id=<blocker-db-id>`。database id 用 `gh api repos/<owner>/<repo>/issues/<n> --jq .id` 获取，不是 `#number` 或 `node_id`。原生依赖不可用时回退到正文 `Blocked by`；Ralph-ready 正文仍须保留下方固定契约。
+- **统计开放 blockers**：`gh api repos/<owner>/<repo>/issues/<n> --jq .issue_dependencies_summary.blocked_by` 只统计开放 blockers，0 表示无开放 blocker。`gh issue view <n> --json blockedBy` 也含已关闭项，须过滤：`--jq '[.blockedBy.nodes[] | select(.state == "OPEN")] | length'`。
 
-从 `git remote -v` 推断仓库；在 clone 或 worktree 内运行时，`gh` 会使用对应的 GitHub 远程。
+从 `git remote -v` 推断仓库。fork 中 `gh` 可能默认指向上游；每个会话首次 `gh issue create` 前，用 `gh repo view --json nameWithOwner` 核对实际目标。只向用户指定的目标仓库发布；若目标不符，先请用户确认，不向 skill 来源仓库误发业务 issue。
 
 ## 语言约定
 
@@ -72,7 +74,7 @@ issue 标题、正文、评论和完成摘要默认使用中文。labels、命�
 
 ## 当 skill 说“获取相关 Ticket”时
 
-运行 `gh issue view <number> --comments`，并读取完整正文、标签和评论。
+运行 `gh issue view <number> --json number,title,body,labels,comments`，并读取完整正文、标签和评论。
 
 ## Wayfinding operations
 
@@ -80,6 +82,6 @@ issue 标题、正文、评论和完成摘要默认使用中文。labels、命�
 
 - **Map**：带 `wayfinder:map` 标签的 issue，正文保存 Notes、Decisions-so-far 和 Fog。
 - **Child Ticket**：创建 map 取得 id 后，使用当前 gh 支持的 `gh issue create --parent <map-id>`；不可用时，在 map body 用真实 child ids 的 task list，并在 child body 引用 map。
-- **Blocking**：优先使用 GitHub 原生 issue dependencies；不可用时回退到正文 blocker 表达。
+- **Blocking**：见上方惯例中的 Blocking 与“统计开放 blockers”；原生依赖不可用时回退到正文 blocker 表达。
 - **Claim**：Wayfinder 可以把 child Ticket assign 给驱动它的 dev。Ralph backlog 不使用 assignee claim。
 - **Resolve**：评论结果、关闭 child，并在 map 的 Decisions-so-far 中追加 context pointer。

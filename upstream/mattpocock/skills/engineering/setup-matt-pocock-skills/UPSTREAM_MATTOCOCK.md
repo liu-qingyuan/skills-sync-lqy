@@ -1,7 +1,7 @@
 # Matt Pocock upstream mirror
 
 - Source repository: https://github.com/mattpocock/skills
-- Source commit: `49dd158d1076134a641b33efb035946536778336`
+- Source commit: `bbadaa631c37af594e5a05c9cefacd9956136b18`
 - Source path: `skills/engineering/setup-matt-pocock-skills`
 - Local path: `upstream/mattpocock/skills/engineering/setup-matt-pocock-skills`
 - Status: Active

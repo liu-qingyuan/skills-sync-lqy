@@ -1,0 +1,6 @@
+interface:
+  display_name: "chief-of-staff-lqy"
+  short_description: "委派给全新上下文的 subagent，在注明日期的 wiki 中保存经验"
+  default_prompt: "使用 $chief-of-staff-lqy 完成本次任务；读取并执行 SKILL.md。"
+policy:
+  allow_implicit_invocation: false

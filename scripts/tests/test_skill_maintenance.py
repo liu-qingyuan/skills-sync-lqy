@@ -57,7 +57,34 @@ class SkillContractTests(unittest.TestCase):
         names = {p.parent.name for p in (ROOT / "skills").glob("*/*/SKILL.md")}
         self.assertTrue(LEGACY <= names)
         self.assertTrue({"clean", "simple", "ralph-plan-lqy", "handoff-out", "gitnexus", "mermaid-gate-lqy"} <= names)
-        self.assertFalse({"chief-of-staff-lqy", "implement-spec-lqy", "setup-ts-deep-modules-lqy"} & names)
+        self.assertFalse({"implement-spec-lqy", "setup-ts-deep-modules-lqy"} & names)
+
+    def test_factory_and_chief_are_separate_explicit_installable_skills(self) -> None:
+        base = ROOT / "skills/matt-lqy-in-progress"
+        marketplace = json.loads((ROOT / ".claude-plugin/marketplace.json").read_text())
+        listed = {name for plugin in marketplace["plugins"] for name in plugin["skills"]}
+        for name in ("software-factory-lqy", "chief-of-staff-lqy"):
+            with self.subTest(skill=name):
+                path = base / name
+                self.assertTrue((path / "SKILL.md").is_file(), f"missing {name}")
+                self.assertIn(f"./skills/matt-lqy-in-progress/{name}", listed)
+                self.assertTrue(frontmatter(path / "SKILL.md")["disable-model-invocation"])
+                metadata = yaml.safe_load((path / "agents/openai.yaml").read_text())
+                self.assertFalse(metadata["policy"]["allow_implicit_invocation"])
+        factory = base / "software-factory-lqy"
+        source = ROOT / "upstream/mattpocock/skills/in-progress/software-factory"
+        baseline = ROOT / "baselines/matt-zh/matt-zh-in-progress/software-factory-zh"
+        for path in source.glob("*.md"):
+            if path.name in {"SKILL.md", "UPSTREAM_MATTOCOCK.md"}:
+                continue
+            with self.subTest(support=path.name):
+                self.assertEqual((factory / path.name).read_bytes(), (baseline / path.name).read_bytes())
+        chief = (base / "chief-of-staff-lqy/SKILL.md").read_text()
+        for dependency in ("retro-lqy", "to-spec-lqy", "to-tickets-lqy", "implement-spec-subagent-lqy"):
+            self.assertIn(dependency, chief)
+        self.assertIn("按当前 skills 列表", chief)
+        self.assertNotIn("Call the Skill tool", chief)
+        self.assertNotIn("../retro/", chief)
 
     def test_new_skills_have_matching_harness_invocation_policy(self) -> None:
         for name, explicit_only in (("pr-lqy", False), ("retro-lqy", True), ("writing-for-agents-lqy", False)):
@@ -67,6 +94,15 @@ class SkillContractTests(unittest.TestCase):
                 metadata = yaml.safe_load((path / "agents" / "openai.yaml").read_text())
                 self.assertEqual(skill.get("disable-model-invocation", False), explicit_only)
                 self.assertEqual(metadata.get("policy", {}).get("allow_implicit_invocation", True), not explicit_only)
+
+    def test_retro_preserves_standalone_mode_and_authorized_chief_override(self) -> None:
+        retro = (CORE / "retro-lqy/SKILL.md").read_text()
+        for contract in ("chief-of-staff-lqy", "独立运行", "最后一步", "复盘只提出建议"):
+            self.assertIn(contract, retro)
+        mechanics = (CORE / "writing-for-agents-lqy/SKILL-MECHANICS.md").read_text()
+        self.assertIn("chief-of-staff-lqy", mechanics)
+        self.assertIn("已授权", mechanics)
+        self.assertTrue(frontmatter(CORE / "retro-lqy/SKILL.md")["disable-model-invocation"])
 
     def test_ralph_stays_explicit_but_its_worker_can_load_implement(self) -> None:
         ralph = ROOT / "skills" / "lqy-local" / "ralph-plan-lqy"
@@ -97,6 +133,25 @@ class SkillContractTests(unittest.TestCase):
             for implementation_detail in ("Codex", "Pi", "Claude", "Gemini", "Kimi", "spawn_agent",
                                           "run_in_background", "isolation:", "Skill tool"):
                 self.assertNotIn(implementation_detail, text)
+
+    def test_new_dispatches_start_fresh_without_replacing_local_execution_rules(self) -> None:
+        for path in (
+            CORE / "code-review-lqy/SKILL.md",
+            CORE / "codebase-design-lqy/DESIGN-IT-TWICE.md",
+            CORE / "improve-codebase-architecture-lqy/SKILL.md",
+            CORE / "wayfinder-lqy/SKILL.md",
+            CORE / "implement-spec-subagent-lqy/SKILL.md",
+        ):
+            with self.subTest(path=str(path)):
+                self.assertIn("全新上下文", path.read_text())
+        entry = (CORE / "implement-spec-subagent-lqy/SKILL.md").read_text()
+        self.assertIn("每个 Ticket 派一个新的实施 agent", entry)
+        self.assertIn("收尾修复", entry)
+        review = (CORE / "code-review-lqy/SKILL.md").read_text()
+        self.assertIn("并行 resume 原来的 agents", review)
+        self.assertIn("总 review Agent 调用上限为 4", review)
+        wayfinder = (CORE / "wayfinder-lqy/SKILL.md").read_text()
+        self.assertNotIn("skills 进行对话，一次一个问题", wayfinder)
 
     def test_subagent_entry_resolves_spec_from_context(self) -> None:
         skill = (CORE / "implement-spec-subagent-lqy/SKILL.md").read_text()
@@ -182,6 +237,13 @@ class SkillContractTests(unittest.TestCase):
         self.assertIn("Ralph 是默认", router)
         self.assertIn("implement-spec-subagent-lqy", router)
 
+    def test_grilling_uses_whole_frontier_and_fresh_fact_finding(self) -> None:
+        skill = (CORE / "grilling-lqy/SKILL.md").read_text()
+        for contract in ("一轮问完整个前沿", "全新上下文", "不继承当前对话", "只有依赖它的下游问题"):
+            self.assertIn(contract, skill)
+        self.assertNotIn("默认维持一次一个问题", skill)
+        self.assertNotIn("不为每个事实强制创建 subagent", skill)
+
     def test_planning_skills_preserve_phase_authorization(self) -> None:
         contracts = {
             "setup-matt-pocock-skills-lqy": (
@@ -213,6 +275,31 @@ class SkillContractTests(unittest.TestCase):
         for contract in ("仅在展示副本", "原始日志", "fixture", "真实凭据", "不新增安全依赖", "先向用户说明"):
             self.assertIn(contract, skill)
         self.assertNotIn("Call the Skill tool", skill)
+
+    def test_github_operations_keep_comments_targets_and_open_blockers(self) -> None:
+        for path in (
+            CORE / "setup-matt-pocock-skills-lqy/issue-tracker-github.md",
+            ROOT / "docs/agents/issue-tracker.md",
+        ):
+            with self.subTest(path=str(path)):
+                text = path.read_text()
+                self.assertNotIn('gh issue close <number> --comment', text)
+                self.assertIn('gh issue comment <number> --body', text)
+                self.assertIn('gh issue close <number>', text)
+                self.assertIn('gh repo view --json nameWithOwner', text)
+                self.assertIn('gh issue edit <child> --add-blocked-by <blocker>', text)
+                self.assertIn('issue_dependencies_summary.blocked_by', text)
+                self.assertIn('select(.state == "OPEN")', text)
+                self.assertIn('## Blocked by', text)
+                self.assertIn('## Git', text)
+
+    def test_setup_checks_remote_without_initializing_or_migrating(self) -> None:
+        setup = (CORE / "setup-matt-pocock-skills-lqy/SKILL.md").read_text()
+        self.assertIn("没有 GitHub remote 时停止", setup)
+        self.assertIn("gh repo view --json nameWithOwner", setup)
+        self.assertIn("不得自动迁移或双写术语表", setup)
+        self.assertNotIn("git init", setup)
+        self.assertNotIn("git remote add", setup)
 
     def test_setup_seed_matches_current_branch_contract(self) -> None:
         seed = (CORE / "setup-matt-pocock-skills-lqy" / "issue-tracker-github.md").read_text()
@@ -295,6 +382,15 @@ class SkillContractTests(unittest.TestCase):
             self.assertTrue((project / ".feature-docs/tool.py").is_file())
             self.assertEqual(record.read_bytes(), before)
 
+    def test_glossary_relationships_and_parent_titles_are_documented(self) -> None:
+        glossary = (CORE / "domain-modeling-lqy/GLOSSARY-FORMAT.md").read_text()
+        for contract in ("**Order**", "**Customer**", "关系", "加粗"):
+            self.assertIn(contract, glossary)
+        tickets = (CORE / "to-tickets-lqy/SKILL.md").read_text()
+        self.assertIn("父 issue 的标题", tickets)
+        self.assertIn("标题 — #编号", tickets)
+        self.assertIn("先单独发表评论", tickets)
+
     def test_glossary_is_the_single_root_source(self) -> None:
         self.assertTrue((ROOT / "GLOSSARY.md").is_file())
         self.assertFalse((ROOT / "CONTEXT.md").exists())
@@ -324,9 +420,16 @@ class BaselineTranslationContractTests(unittest.TestCase):
         self.assertIn("gh issue create --parent <parent>", github)
         self.assertIn("gh issue edit <parent> --add-sub-issue <child>", github)
         self.assertIn("gh api --paginate", github)
+        for command in ("gh issue edit <child> --add-blocked-by <blocker>",
+                        'select(.state == "OPEN")', "gh repo view --json nameWithOwner"):
+            self.assertIn(command, github)
+        self.assertNotIn('gh issue close <number> --comment', github)
         gitlab = (setup / "issue-tracker-gitlab.md").read_text()
         self.assertIn("glab issue list -O json", gitlab)
         self.assertIn("projects/:id/issues/<child-iid>/links", gitlab)
+        self.assertIn("glab mr list -O json", gitlab)
+        self.assertIn("glab issue create --linked-issues <map> --link-type relates_to", gitlab)
+        self.assertIn("glab api projects/:id/issues/<map>/links", gitlab)
         local = (setup / "issue-tracker-local.md").read_text()
         self.assertIn(".scratch/<feature-slug>/spec.md", local)
         self.assertNotIn(".scratch/<feature-slug>/PRD.md", local)

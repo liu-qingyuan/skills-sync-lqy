@@ -1,0 +1,6 @@
+interface:
+  display_name: "software-factory-lqy"
+  short_description: "用共同术语设计软件工厂的任务和服务槽位"
+  default_prompt: "使用 $software-factory-lqy 完成本次任务；读取并执行 SKILL.md。"
+policy:
+  allow_implicit_invocation: false

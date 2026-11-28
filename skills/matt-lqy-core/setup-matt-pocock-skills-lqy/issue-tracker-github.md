@@ -10,10 +10,12 @@
 - **对问题发表评论**：`gh issue comment <number> --body "..."`
 - **应用/删除标签**：`gh issue edit <number> --add-label "..."` / `gh issue edit <number> --remove-label "..."`
 - **缺失标签**：仅用户显式运行 setup 时补齐配置缺项；不删除、重命名或覆盖已有标签，不顺手标记 issues 或启动 Ralph。
-- **关闭**：`gh issue close <number> --comment "..."`
+- **关闭**：先用 `gh issue comment <number> --body "..."` 发布说明，成功后再运行 `gh issue close <number>`。已关闭 issue 的 `close --comment` 会丢弃评论却仍返回成功。
+- **Blocking**：使用 GitHub 原生 issue dependencies。`gh` 2.94+ 可用 `gh issue create --blocked-by <n>,<n> ...` 或 `gh issue edit <child> --add-blocked-by <blocker>`；旧版本使用 `gh api --method POST repos/<owner>/<repo>/issues/<child>/dependencies/blocked_by -F issue_id=<blocker-db-id>`。database id 用 `gh api repos/<owner>/<repo>/issues/<n> --jq .id` 获取，不是 `#number` 或 `node_id`。原生依赖不可用时回退到正文 `Blocked by`；Ralph-ready 正文仍须保留下方固定契约。
+- **统计开放 blockers**：`gh api repos/<owner>/<repo>/issues/<n> --jq .issue_dependencies_summary.blocked_by` 只统计开放 blockers，0 表示无开放 blocker。`gh issue view <n> --json blockedBy` 也含已关闭项，须过滤：`--jq '[.blockedBy.nodes[] | select(.state == "OPEN")] | length'`。
 - **Pull requests**：不进入 issue triage 状态机，不应用 triage 标签，也不进入 Ralph backlog；继续使用正常 review 流程。
 
-从 `git remote -v` 推断仓库 — `gh` 在克隆内运行时会自动执行此操作。
+从 `git remote -v` 推断仓库。fork 中 `gh` 可能默认指向上游；每个会话首次 `gh issue create` 前，用 `gh repo view --json nameWithOwner` 核对实际目标。只向用户指定的目标仓库发布；若目标不符，先请用户确认，不向 skill 来源仓库误发业务 issue。
 
 ## 语言约定
 
@@ -68,7 +70,7 @@ issue 标题、正文、评论和完成摘要默认使用中文。labels、命�
 
 - **Map**：一个带 `wayfinder:map` 标签的 issue，正文保存 Notes / Decisions-so-far / Fog。使用 `gh issue create --label wayfinder:map`。
 - **Child Ticket**：map 已取得 id 后，使用支持的 `gh issue create --parent <map-id>`。不可用时用真实 child ids 的 task list，并在 child body 引用真实 map id。Labels：`wayfinder:<type>`（`research`/`prototype`/`grilling`/`task`），不写占位链接。被 claim 后，把 Ticket assign 给驱动它的 dev。
-- **Blocking**：GitHub 原生 issue dependencies，是 canonical 且 UI 可见的表示。使用 `gh api --method POST repos/<owner>/<repo>/issues/<child>/dependencies/blocked_by -F issue_id=<blocker-db-id>` 添加边，其中 `<blocker-db-id>` 是 blocker 的 numeric **database id**（`gh api repos/<owner>/<repo>/issues/<n> --jq .id`，不是 `#number` 或 `node_id`）。GitHub 报告 `issue_dependencies_summary.blocked_by`（仅 open blockers，这是 live gate）。如果 dependencies 不可用，回退到 child body 顶部的 `Blocked by: #<n>, #<n>` 行。每个 blocker 都关闭后，Ticket 才 unblocked。
-- **Frontier query**：列出 map 的 open children（`gh issue list --state open`，scope 到 map 的 sub-issues / task list），丢掉有 open blocker 的项（`issue_dependencies_summary.blocked_by > 0`，或 `Blocked by` 行里有 open issue）或已有 assignee 的项；map 顺序里的第一个胜出。
+- **Blocking**：见上方惯例中的 Blocking。每个 blocker 都关闭后，Ticket 才 unblocked。
+- **Frontier query**：列出 map 的 open children（`gh issue list --state open`，scope 到 map 的 sub-issues / task list），丢掉有 open blocker 的项（见“统计开放 blockers”，或正文 `Blocked by` 行里有 open issue）或已有 assignee 的项；map 顺序里的第一个胜出。
 - **Claim**：`gh issue edit <n> --add-assignee @me`，这是该会话的第一个 write。
 - **Resolve**：`gh issue comment <n> --body "<answer>"`，然后 `gh issue close <n>`，再向 map 的 Decisions-so-far 追加 context pointer（gist + link）。

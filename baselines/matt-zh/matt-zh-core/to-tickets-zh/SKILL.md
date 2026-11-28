@@ -85,7 +85,7 @@ issue tracker 和 triage 标签词汇表应该已经提供；如果没有，请�
 
 ## Parent
 
-issue tracker 上 parent issue 的引用（如果来源是已有 issue；否则省略此节）。
+parent issue 的标题，后接其在 issue tracker 上的引用。
 
 ## What to build
 

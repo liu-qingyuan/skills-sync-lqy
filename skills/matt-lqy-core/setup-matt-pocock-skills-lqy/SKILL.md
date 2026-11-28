@@ -20,6 +20,7 @@ description: 使用固定 LQY 默认值配置当前 GitHub 仓库的 issue track
 读取 `git remote -v`、`.git/config`、`AGENTS.md`、`docs/agents/` 和 `.gitignore`。
 
 - 没有 GitHub remote 时停止。
+- 已有 GitHub remote 时，运行 `gh repo view --json nameWithOwner` 核对目标仓库与可达性；失败则停止并说明缺项，不自动初始化或修改 remote。
 - 存在 `GLOSSARY-MAP.md` 或未迁移的 `CONTEXT-MAP.md` 时停止；它需要 multi-context setup。
 - 不要求用户确认默认值。
 

@@ -128,12 +128,12 @@ python3 ~/.agents/skills/to-tickets-lqy/scripts/publish_ticket_set.py \
 publisher 负责完整事务：
 
 - 回读 open 父 spec，并通过 `ralph-plan-lqy` 的共享 contract validator 验证唯一且最终的 `## Git`。
-- 读取同一父 spec 的既有子 Tickets；若已有 ready 子 Ticket，则用它确认冻结 contract，并要求父 spec 与全部既有子 Tickets 完整一致。没有 ready 子 Ticket 时使用父 spec 当前 contract。
+- 读取同一父 spec 的既有子 Tickets，兼容旧 `#编号` 和新 `标题 — #编号` 的 Parent；父标题更名不改变子 Ticket 的归属。若已有 ready 子 Ticket，则用它确认冻结 contract，并要求父 spec 与全部既有子 Tickets 完整一致。没有 ready 子 Ticket 时使用父 spec 当前 contract。
 - 验证每个外部 blocker 具有有效 Git 契约且 `Branch` 与冻结 contract exact match；同 branch 下不同 `Base branch` 或 `Base commit` 可以形成依赖。跨 branch blocker、未知或逆序的内部 blocker 都在写入前停止。
 - 调用共享 provisioner fetch `Base branch`、检查 base drift，并创建或复用 branch/worktree/upstream。provision 失败时不创建 Ticket。
-- 先创建一个无 ready label 的同 branch publication gate issue，再按依赖顺序创建全部无 ready label 的 Tickets；publisher 统一生成 `## Parent`、包含 publication gate 和真实依赖的 `## Blocked by`，以及最终 `## Git`。
+- 先创建一个无 ready label 的同 branch publication gate issue，再按依赖顺序创建全部无 ready label 的 Tickets；publisher 统一生成含父 issue 的标题和引用的 `## Parent`、包含 publication gate 和真实依赖的 `## Blocked by`，以及最终 `## Git`。
 - 回读并验证 gate 与整组 Ticket 的标题、正文、open 状态、Mermaid Gate 和 Git 契约；全部通过后才按反向依赖顺序应用 `ready-for-agent` 并回读确认。
-- 所有 ready 状态确认后，最后关闭 publication gate，使整组 frontier 同时变为可领取。任何创建、回读、label 或 label rollback API 失败都会让 gate 保持 open；即使部分 Ticket 已带 ready label，Ralph 仍会因 open gate 跳过它们。
+- 所有 ready 状态确认后，先单独发表评论，成功后再关闭 publication gate，使整组 frontier 同时变为可领取。任何创建、回读、label、label rollback 或评论 API 失败都会让 gate 保持 open；即使部分 Ticket 已带 ready label，Ralph 仍会因 open gate 跳过它们。
 
 如果 provisioner 报告 `base drift`，停止并向用户展示记录的旧 SHA、远程新 SHA 和相关提交摘要，等待明确选择。选择保留旧 SHA 时，在用户明确批准后从头重新运行 publisher 并添加 `--allow-base-drift`；该路径仍只接受 clean、base-ancestor、upstream/remote 同步的目标 branch。选择新 SHA 时先由用户明确批准更新父 spec 的 `Base commit`，然后不带 flag 从头重新验证。不要静默刷新父 spec，也不要默认绕过 drift gate。
 
@@ -169,7 +169,7 @@ Work the **frontier**：任何 blocker 全部完成的 Ticket。对纯线性链�
 
 ## Parent
 
-issue tracker 上 parent issue 的引用（如果来源是已有 issue；否则省略此节）。
+父 issue 的标题，后接 issue tracker 上的引用，例如 `支持批量导入用户 — #123`。
 
 ## What to build
 

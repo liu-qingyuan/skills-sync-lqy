@@ -14,7 +14,9 @@
     "skills/matt-lqy-core/to-tickets-lqy/**",
     "skills/matt-lqy-core/ask-matt-lqy/**",
     "docs/architecture/spec-implementation.md",
-    "skills/matt-lqy-core/code-review-lqy/**"
+    "skills/matt-lqy-core/code-review-lqy/**",
+    "skills/lqy-local/ralph-plan-lqy/scripts/producer_adapter.py",
+    "skills/lqy-local/ralph-plan-lqy/tests/test_producer_adapter.py"
   ],
   "tool": "skills/matt-lqy-core/setup-matt-pocock-skills-lqy/scripts/feature_docs.py",
   "assets": {

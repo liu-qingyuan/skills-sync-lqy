@@ -22,7 +22,7 @@ disable-model-invocation: true
 
 - `git remote -v` 和 `.git/config`：是否为 GitHub 仓库？对应哪个仓库？
 - 根目录的 `AGENTS.md`、`CLAUDE.md`：存在吗？是否已有 `## Agent skills`？
-- 根目录的 `GLOSSARY.md`、`GLOSSARY-MAP.md`。
+- 根目录的 `GLOSSARY.md`、`GLOSSARY-MAP.md`，以及旧版 `CONTEXT.md` / `CONTEXT-MAP.md`。若旧文件存在，提出用 `git mv` 将其迁移到对应的 `GLOSSARY` 名称，并改写 `docs/agents/domain.md` 中的这些名称。
 - `docs/adr/` 和所有 `src/*/docs/adr/` 目录。
 - `docs/agents/`：此前是否已运行过本 Skill？
 - `.scratch/`：是否已有本地 Markdown Issue tracker 约定？
@@ -45,6 +45,8 @@ disable-model-invocation: true
 - **其他**（Jira、Linear 等）：请用户用一段话描述流程，作为自由文本记录。
 
 将选择记入 `docs/agents/issue-tracker.md`。GitHub/GitLab 模板包含“PR 作为请求入口”开关，默认**关闭**。保持关闭，不主动向用户提出此选择；想将外部 PR 纳入 triage 队列的用户之后可以自行修改文件。
+
+GitHub 或 GitLab tracker 必须对应可访问的仓库。用户选定其一后，若没有指向该平台的 `git remote`，向用户获取仓库 URL，并在继续前配置好（必要时 `git init`，然后 `git remote add origin <url>`）。完成条件：在本目录运行 `gh repo view` / `glab repo view` 能显示该项目；否则停止并告知用户缺少什么。
 
 **B：Triage 标签。**若未安装 `triage-zh`，完全跳过；未安装的 Skill 不需要标签。否则只问一个问题：
 

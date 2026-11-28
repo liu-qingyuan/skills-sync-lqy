@@ -8,7 +8,7 @@ description: 从固定点（commit、branch、tag 或 merge-base）开始沿两�
 - **Standards** — 代码是否符合此仓库记录的 coding standards？
 - **Spec** — 代码是否忠实实现了来源 issue / spec？
 
-两个轴都作为**并行 sub-agent**运行，避免彼此污染上下文；然后此 skill 聚合它们的发现。
+两个轴都作为**并行 sub-agent**运行，避免彼此污染上下文；然后此 skill 聚合它们的发现。每个 sub-agent 都从全新的上下文窗口启动。
 
 issue tracker 应该已经提供；如果没有，请告诉用户运行 `/setup-matt-pocock-skills-zh`。
 

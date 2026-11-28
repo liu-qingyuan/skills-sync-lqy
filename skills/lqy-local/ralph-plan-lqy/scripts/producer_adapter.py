@@ -10,6 +10,7 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
+from urllib.parse import urlsplit
 
 
 FULL_SHA_PATTERN = re.compile(r"^[0-9a-fA-F]{40}$")
@@ -75,8 +76,17 @@ class ProducerToolAdapter:
         remotes = remote_result.stdout.splitlines()
         if not remotes:
             raise ProducerContractError(f"target repository has no configured remote: {repository_root}")
-        if not any(self._remote_url(repository_root, remote) for remote in remotes):
+        if "origin" in remotes:
+            remote = "origin"
+        elif len(remotes) == 1:
+            remote = remotes[0]
+        else:
+            raise ProducerContractError("multiple remotes require an origin remote to bind GitHub publication")
+        remote_url = self._remote_url(repository_root, remote)
+        if remote_url is None:
             raise ProducerContractError(f"target repository has no resolvable remote: {repository_root}")
+        self.github_repository = self._github_repository(remote_url)
+        self._verified_repository = False
         self.repository = repository_root
         self.skill_dir = skill_dir.expanduser().resolve()
 
@@ -118,10 +128,31 @@ class ProducerToolAdapter:
         return payload
 
     def gh(self, *args: str) -> str:
+        if args[:2] == ("issue", "create") and not self._verified_repository:
+            source = "gh repo view"
+            payload = self._gh_json("repo", "view", "--json", "nameWithOwner", source=source)
+            if not isinstance(payload, dict):
+                raise ProducerToolError(f"{source} returned a non-object JSON value")
+            actual = self._strings(payload, ("nameWithOwner",), source=source)["nameWithOwner"]
+            expected = self.github_repository.split("/", 1)[1]
+            if actual.casefold() != expected.casefold():
+                raise ProducerToolError(
+                    f"{source} target mismatch: expected {expected}, got {actual}"
+                )
+            self._verified_repository = True
         environment = os.environ.copy()
         environment.pop("GH_REPO", None)
+        # repo view takes a positional repository; issue producers use --repo.
+        if args[:2] == ("repo", "view"):
+            command = ["gh", "repo", "view", self.github_repository, *args[2:]]
+        elif args[:1] == ("api",):
+            host, owner, repo = self.github_repository.split("/")
+            endpoint = args[1].replace("{owner}", owner).replace("{repo}", repo)
+            command = ["gh", "api", endpoint, *args[2:], "--hostname", host]
+        else:
+            command = ["gh", *args, "--repo", self.github_repository]
         result = subprocess.run(
-            ["gh", *args],
+            command,
             cwd=self.repository,
             env=environment,
             text=True,
@@ -166,6 +197,21 @@ class ProducerToolAdapter:
             self._issue_snapshot(item, source=f"{source} entry {index}")
             for index, item in enumerate(payload, start=1)
         )
+
+    @staticmethod
+    def _github_repository(remote_url: str) -> str:
+        if "://" not in remote_url:
+            scp = re.fullmatch(r"(?:[^/@:]+@)?([^/:]+):(.+)", remote_url)
+            if scp is None:
+                raise ProducerContractError("publication remote must identify a GitHub host and owner/repository")
+            remote_url = f"ssh://{scp.group(1)}/{scp.group(2)}"
+        parsed = urlsplit(remote_url)
+        path = parsed.path.strip("/").removesuffix(".git")
+        if (parsed.scheme not in {"https", "http", "ssh", "git"} or not parsed.hostname
+                or re.fullmatch(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+", path) is None
+                or any(part in {".", ".."} for part in path.split("/"))):
+            raise ProducerContractError("publication remote must identify a GitHub host and owner/repository")
+        return f"{parsed.hostname}/{path}"
 
     @staticmethod
     def _remote_url(repository: Path, remote: str) -> str | None:

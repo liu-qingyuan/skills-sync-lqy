@@ -76,9 +76,9 @@ Blocking 使用 tracker 的**原生**依赖关系，这很重要，因为它会�
 
 每个 Ticket 要么是 **HITL**（human in the loop，由能代表自己发言的人参与完成），要么是 **AFK**（agent 独自驱动）。HITL Ticket 只能通过实时交流解决；agent 不能替人回答人的那一边（一个自己回答自己问题的 grilling agent 已经坏了）。
 
-- **Research** (AFK)：阅读一手文档、API 或本地资料，保留带来源的 Markdown findings 并从 Ticket 引用。可用时委派独立只读调查，否则自己查；不强制多 agent 或 branch。用户明确选择研究分支时，它不合入 main、不提 PR，push 仍按用户授权。
+- **Research** (AFK)：阅读一手文档、API 或本地资料，保留带来源的 Markdown findings 并从 Ticket 引用。可用时委派使用全新上下文的独立只读调查，不继承当前对话；否则自己查，不强制多 agent 或 branch。用户明确选择研究分支时，它不合入 main、不提 PR，push 仍按用户授权。
 - **Prototype** (HITL)：通过制作便宜、粗糙、具体的 artifact 来提高讨论保真度，例如 outline、rough take、stub，或通过 `/prototype-lqy` 创建 UI/logic code。把 prototype 作为 asset 链接。关键问题是“它应该看起来如何”或“它应该如何表现”时使用。
-- **Grilling** (HITL)：通过 `/grilling-lqy` 和 `/domain-modeling-lqy` skills 进行对话，一次一个问题。默认类型。
+- **Grilling** (HITL)：通过 `/grilling-lqy` 和 `/domain-modeling-lqy` skills 进行对话，按当前前沿分轮追问。默认类型。
 - **Task** (HITL or AFK)：在做出**决策**前必须完成的手工工作；本身没有要决定、prototype 或 research 的内容，但讨论被它阻塞。例如注册服务以便评估 API、配置访问权限、迁移数据以便观察其形状。这是唯一一种“做事”而不是“做决策”的类型；它只有在 unblock 一个决策时才值得存在，而不是因为它交付 destination。agent 能独自驱动时就 AFK；否则给人一份精确 checklist。工作完成时 resolve；答案记录完成了什么，以及后续 Ticket 依赖的事实（credential 位置、新 URL、row count 等）。
 
 ## Fog of war

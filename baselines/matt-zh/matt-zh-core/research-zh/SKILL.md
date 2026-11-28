@@ -3,7 +3,7 @@ name: research-zh
 description: 针对高信任 primary sources 调查一个问题，并把 findings 作为 Markdown 文件保存到仓库。用于用户想调研主题、收集 docs/API 事实，或把阅读工作交给后台 agent 时。
 ---
 
-启动一个**后台 agent** 来做 research，这样你可以在它阅读时继续工作。
+启动一个使用全新上下文窗口的**后台 agent** 来做 research，这样你可以在它阅读时继续工作。
 
 它的职责：
 

@@ -1,9 +1,9 @@
 # Matt Pocock upstream mirror
 
 - Repository: https://github.com/mattpocock/skills
-- Active source commit: `49dd158d1076134a641b33efb035946536778336`
+- Active source commit: `bbadaa631c37af594e5a05c9cefacd9956136b18` (v1.3.2 + main, 2026-11-27)
 - Frozen legacy source commit: `d574778f94cf620fcc8ce741584093bc650a61d3`
-- Mirrored skills: 46 (38 active, 8 frozen legacy). The per-skill `UPSTREAM_MATTOCOCK.md` Status and Source commit are authoritative; legacy copies are retained, not silently upgraded. Reviewed late commits `8267225` and `49dd158`: only the uninstalled Wizard template and retro's out-of-scope note changed; installed retro already always loads writing-for-agents.
+- Mirrored skills: 47 (39 active, 8 frozen legacy). All 109 active source files match the pinned checkout byte-for-byte. The per-skill `UPSTREAM_MATTOCOCK.md` Status and Source commit are authoritative; legacy copies retain their original source. Chinese baselines translate the original procedures; LQY exceptions are recorded separately.
 - Directory policy: keep Matt Pocock's two-level layout under `upstream/mattpocock/skills/<category>/<skill-name>` so the English mirror is not displayed by `npx skills@latest add liu-qingyuan/skills-sync-lqy`.
 
 ## Mirrored skills
@@ -61,6 +61,7 @@
 - `claude-handoff` ← `upstream/mattpocock/skills/in-progress/claude-handoff`
 - `loop-me` ← `upstream/mattpocock/skills/in-progress/loop-me`
 - `setup-ts-deep-modules` ← `upstream/mattpocock/skills/in-progress/setup-ts-deep-modules`
+- `software-factory` ← `upstream/mattpocock/skills/in-progress/software-factory`
 - `writing-beats` ← `upstream/mattpocock/skills/in-progress/writing-beats`
 - `writing-fragments` ← `upstream/mattpocock/skills/in-progress/writing-fragments`
 - `writing-shape` ← `upstream/mattpocock/skills/in-progress/writing-shape`
@@ -80,6 +81,6 @@ Pi uses `disable-model-invocation` for explicit-only invocation. Codex uses `age
 
 The English mirror is intentionally outside top-level `skills/`. `npx skills@latest` recursively discovers installable skills from `skills/`, so moving English upstream copies back under `skills/` will make them visible to users. Keep `.claude-plugin/marketplace.json` in sync for installable LQY/local groups only.
 
-The mirror and baseline each retain 46 skills (38 active, 8 Frozen legacy); 39 Matt LQY skills are installable (35 retained + `pr`, `retro`, `writing-for-agents`, `implement-spec-subagent`). Together with 15 local skills, the installer exposes 54. Do not auto-delete old personal skills: frozen legacy LQY copies remain explicitly invocable. `wizard` (mirror engineering, baseline core) and `chief-of-staff` have no LQY install copy; `implement-spec` is adapted as the explicit optional `implement-spec-subagent-lqy`.
+The mirror and baseline each retain 47 skills (39 active, 8 Frozen legacy); 41 Matt LQY skills are installable. Together with 13 local/curated skills, the installer exposes 54. Do not auto-delete old personal skills: frozen legacy LQY copies remain explicitly invocable. `wizard` (mirror engineering, baseline core) has no LQY install copy. `chief-of-staff-lqy` and `software-factory-lqy` are installed as explicit-only skills, preserving upstream behavior and support files. Chief calls the separate retro procedure with its upstream last-step override; standalone retro still presents suggestions. `implement-spec` remains adapted as the explicit optional `implement-spec-subagent-lqy`, with a fresh implementer per Ticket.
 
 When syncing a newer upstream commit, update this mirror first, merge relevant changes into `baselines/matt-zh/matt-zh-*/*-zh`, then selectively adapt the installable `skills/matt-lqy-*/*-lqy` layer. Preserve baseline fidelity to upstream (do not backfill Ralph customizations); preserve local LQY policy and separate original import Source commit from Upstream reviewed commit. Report upstream changes, baseline changes, and any LQY adaptation still needing manual review.

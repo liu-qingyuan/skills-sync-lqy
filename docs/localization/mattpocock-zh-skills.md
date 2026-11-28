@@ -6,7 +6,7 @@
 2. **中文 baseline**：以 `-zh` 结尾的本地化基线，放在 `baselines/matt-zh/`，用于翻译、对比和合并上游变化，不参与安装展示。
 3. **LQY 安装版**：以 `-lqy` 结尾的个人版，放在 `skills/matt-lqy-*/*-lqy`，是 `npx skills@latest add liu-qingyuan/skills-sync-lqy` 当前展示的 Matt 层。
 
-当前来源：active 镜像和 baseline 对齐 `49dd158d1076134a641b33efb035946536778336`，LQY 本轮审阅同此 commit；8 个 Frozen legacy 仍来自 `d574778f94cf620fcc8ce741584093bc650a61d3`。镜像与 baseline 各 46（active 38 + legacy 8），安装 Matt LQY 39（原 35 + `pr`、`retro`、`writing-for-agents`、`implement-spec-subagent`）；全部可安装 54（另有本地/精选/UI 15）。以每项 mirror `UPSTREAM_MATTOCOCK.md` 的 Status/Source commit 为准。本轮复查晚到的 `8267225` 和 `49dd158`：仅涉及未安装的 Wizard 模板及 retro 的 out-of-scope 说明；安装版 retro 已始终加载 writing-for-agents。
+当前来源：active 镜像和 baseline 对齐 `bbadaa631c37af594e5a05c9cefacd9956136b18`（v1.3.2 + main），active LQY 本轮审阅同此 commit；8 个 Frozen legacy 仍来自 `d574778f94cf620fcc8ce741584093bc650a61d3`。镜像与 baseline 各 47（active 39 + legacy 8），安装 Matt LQY 41，全部可安装 54（另有本地/精选 13）。新增 `software-factory-lqy` 与 `chief-of-staff-lqy`，新 skill 保留上游过程及支持材料，只适配中文、命名和真实宿主调用。以各项 provenance 的 Status/Source commit 为准；原始导入 SHA 不因 reviewed SHA 前移而改写。
 
 ## 命名与目录
 
@@ -52,7 +52,7 @@ skills/matt-lqy-deprecated/              # deprecated 可安装 LQY 版
 3. 对比上游变化和当前中文 `*-zh` baseline。
 4. 把上游新增或修改的流程合并进中文 baseline。
 5. 再检查对应 `*-lqy` 安装版是否需要适配。
-6. 如果 LQY 版本已有本地优化，优先保留本地意图，再吸收 upstream / baseline 变化。
+6. LQY 仅保留用户已确认的个人差异和必要的宿主适配；其余尽量与上游一致，不擅自删减过程或添加审批、调度与安全流程。
 7. 不要用英文上游直接覆盖中文 baseline 或 LQY 安装版。
 8. 输出同步报告：上游哪些地方变了、中文 baseline 如何处理、LQY 安装版是否已适配或需要人工审核。
 
@@ -100,6 +100,8 @@ skills/matt-lqy-deprecated/              # deprecated 可安装 LQY 版
 
 ### In Progress
 
+- `chief-of-staff-lqy`
+- `software-factory-lqy`
 - `loop-me-lqy`
 - `writing-beats-lqy`
 - `writing-fragments-lqy`
@@ -112,4 +114,4 @@ skills/matt-lqy-deprecated/              # deprecated 可安装 LQY 版
 - `request-refactor-plan-lqy`
 - `ubiquitous-language-lqy`
 
-此外 `resolving-merge-conflicts-lqy`、`writing-great-skills-lqy`、`edit-article-lqy`、`obsidian-vault-lqy` 也是 Frozen legacy。`wizard` 的 mirror 位于 engineering、baseline 位于 core，但无 LQY 安装版；`chief-of-staff` 不安装；`implement-spec` 已适配为可选的 `implement-spec-subagent-lqy`，不替代默认 Ralph。
+此外 `resolving-merge-conflicts-lqy`、`writing-great-skills-lqy`、`edit-article-lqy`、`obsidian-vault-lqy` 也是 Frozen legacy。`wizard` 的 mirror 位于 engineering、baseline 位于 core，但无 LQY 安装版；`chief-of-staff` 与 `software-factory` 均有显式调用的 LQY 安装版；chief 调用 retro 时按上游替代最后一步，不改变 retro 的独立性。`implement-spec` 已适配为可选的 `implement-spec-subagent-lqy`，不替代默认 Ralph。

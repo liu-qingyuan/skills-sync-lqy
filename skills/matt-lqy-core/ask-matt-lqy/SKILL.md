@@ -17,12 +17,14 @@ disable-model-invocation: true
 - 用户授权子 agent 并行实施：使用 `implement-spec-subagent-lqy`，复用同一 Spec/Tickets，按项目约定与风险选择共享工作区或独立 worktree；由单一整合者在稳定快照上验证交付，不在规划后自动启动。
 - 单 Ticket：`implement-lqy`，公开 Seam 上 TDD、验证、bounded 双轴 review、受限 clean 和完成状态。
 - 写 PR 正文：`pr-lqy`；不要求从直接 commit/push 改成 PR。
-- 会话复盘：用户主动选择 `retro-lqy`；只建议，不自动改环境。
+- 会话复盘：用户主动选择 `retro-lqy`；独立运行只提建议，已授权 chief 调用时遵循 chief 的最后一步替代规则。
 
-不把 `implement-spec`、`chief-of-staff`、多层 subagent 调度或定时任务推荐成默认实施流程。
+Ralph 仍是默认实施入口；显式选择 chief 时，遵循其委派和过程调用，不把安装 chief 或软件工厂词汇当成已启动执行。
 
 ## 其它入口
 
+- 需要持续委派工作、保留跨会话历史：显式使用 `chief-of-staff-lqy`，按其过程协调新上下文 subagents、调用复盘并维护约定位置的 wiki。
+- 设计软件工厂：`software-factory-lqy`，用任务、运行和服务槽位组织设计，按需读取服务调研材料；它是设计语言，不是执行引擎。
 - 已观察故障：`diagnosing-bugs-lqy`，先建立反馈循环。
 - 外部 issue 请求：`triage-lqy`；已经由 Ticket publisher 准备的工作不重复 triage，PR 不作为请求入口。
 - 多会话仍无法看清方向：`wayfinder-lqy`；决策 Ticket 不进 Ralph，路线清晰后再 `to-spec-lqy`。

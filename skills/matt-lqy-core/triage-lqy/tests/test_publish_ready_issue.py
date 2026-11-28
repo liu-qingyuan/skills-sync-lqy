@@ -138,6 +138,14 @@ class PublishReadyIssueCliTests(unittest.TestCase):
             "#!/usr/bin/env python3\n"
             "import json, os, pathlib, sys\n"
             "args = sys.argv[1:]\n"
+            "if os.environ.get('GH_REPO') is not None:\n"
+            "    print('GH_REPO leaked', file=sys.stderr); raise SystemExit(2)\n"
+            "if args[:1] == ['issue']:\n"
+            "    target = args[args.index('--repo') + 1] if '--repo' in args else 'github.com/upstream/project'\n"
+            "    if args.count('--repo') != 1 or target != 'github.com/example/project':\n"
+            "        print(f'wrong issue target: {target}', file=sys.stderr); raise SystemExit(2)\n"
+            "if args[:1] == ['api'] and (args[1] != 'repos/example/project/issues/42' or args[-2:] != ['--hostname', 'github.com']):\n"
+            "    print(f'wrong API target: {args}', file=sys.stderr); raise SystemExit(2)\n"
             "expected_repo = pathlib.Path(os.environ['TEST_EXPECTED_REPO']).resolve()\n"
             "if pathlib.Path.cwd().resolve() != expected_repo:\n"
             "    print(f'wrong gh cwd: {pathlib.Path.cwd()}', file=sys.stderr)\n"
@@ -155,7 +163,7 @@ class PublishReadyIssueCliTests(unittest.TestCase):
             "    return {**state, 'body': body, 'labels': [{'name': value} for value in state['labels']], "
             "'comments': [{'body': value} for value in state['comments']]}\n"
             "if args[:2] == ['repo', 'view']:\n"
-            "    print('example/project')\n"
+            "    print('unexpected repo view for no-create triage', file=sys.stderr); raise SystemExit(2)\n"
             "elif args[:1] == ['api']:\n"
             "    print('true' if state['is_pr'] else 'false')\n"
             "elif args[:2] == ['issue', 'view']:\n"
@@ -232,6 +240,9 @@ class PublishReadyIssueCliTests(unittest.TestCase):
             ["api", "view", "resolve", "provision", "edit", "comment", "view", "edit", "edit", "view"],
             operations,
         )
+        gh_calls = [json.loads(event.removeprefix('gh ')) for event in events if event.startswith('gh ')]
+        self.assertTrue(all(call[call.index('--repo') + 1] == 'github.com/example/project' for call in gh_calls if call[0] == 'issue'))
+        self.assertEqual('repos/example/project/issues/42', gh_calls[0][1])
         state = self.state()
         self.assertTrue(
             str(state["body"]).rstrip().endswith(

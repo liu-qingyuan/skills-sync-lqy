@@ -155,6 +155,12 @@ class PublishTicketSetCliTests(unittest.TestCase):
             "#!/usr/bin/env python3\n"
             "import json, os, pathlib, sys\n"
             "args = sys.argv[1:]\n"
+            "if os.environ.get('GH_REPO') is not None:\n"
+            "    print('GH_REPO leaked', file=sys.stderr); raise SystemExit(2)\n"
+            "if args[:1] == ['issue']:\n"
+            "    target = args[args.index('--repo') + 1] if '--repo' in args else 'github.com/upstream/project'\n"
+            "    if args.count('--repo') != 1 or target != 'github.com/example/project':\n"
+            "        print(f'wrong issue target: {target}', file=sys.stderr); raise SystemExit(2)\n"
             "expected_repo = pathlib.Path(os.environ['TEST_EXPECTED_REPO']).resolve()\n"
             "if pathlib.Path.cwd().resolve() != expected_repo:\n"
             "    print(f'wrong gh cwd: {pathlib.Path.cwd()}', file=sys.stderr)\n"
@@ -168,7 +174,8 @@ class PublishTicketSetCliTests(unittest.TestCase):
             "def issue_data(number):\n"
             "    if number == 1:\n"
             "        body = pathlib.Path(os.environ['TEST_PARENT_BODY']).read_text()\n"
-            "        return {'number': 1, 'title': 'Spec: Parent', 'body': body, "
+            "        title = os.environ.get('TEST_PARENT_TITLE', 'Spec: Parent')\n"
+            "        return {'number': 1, 'title': title, 'body': body, "
             "'state': 'OPEN', 'labels': [{'name': 'ready-for-agent'}]}\n"
             "    if number == 99:\n"
             "        body = pathlib.Path(os.environ['TEST_EXTERNAL_BODY']).read_text()\n"
@@ -180,7 +187,13 @@ class PublishTicketSetCliTests(unittest.TestCase):
             "    if os.environ.get('TEST_MUTATE_READBACK') == str(number):\n"
             "        record['body'] += '\\n\\n## Changed\\n\\nRemote mutation.\\n'\n"
             "    return record\n"
-            "if args[:2] == ['issue', 'view']:\n"
+            "if args[:2] == ['repo', 'view']:\n"
+            "    if args != ['repo', 'view', 'github.com/example/project', '--json', 'nameWithOwner']:\n"
+            "        print(f'wrong repo view target: {args}', file=sys.stderr); raise SystemExit(2)\n"
+            "    if os.environ.get('TEST_FAIL_REPO_VIEW'):\n"
+            "        print('repo view unavailable', file=sys.stderr); raise SystemExit(1)\n"
+            "    print(os.environ.get('TEST_VIEW_REPO_RESPONSE', '{\"nameWithOwner\": \"example/project\"}'))\n"
+            "elif args[:2] == ['issue', 'view']:\n"
             "    print(json.dumps(issue_data(int(args[2]))))\n"
             "elif args[:2] == ['issue', 'list']:\n"
             "    records = [issue_data(int(path.stem)) for path in sorted(issue_dir.glob('[0-9]*.json'))]\n"
@@ -214,7 +227,17 @@ class PublishTicketSetCliTests(unittest.TestCase):
             "        print(f'unexpected edit argv: {args}', file=sys.stderr)\n"
             "        raise SystemExit(2)\n"
             "    labels_file.write_text(json.dumps(labels))\n"
+            "elif args[:2] == ['issue', 'comment']:\n"
+            "    if os.environ.get('TEST_FAIL_COMMENT') == args[2]:\n"
+            "        print('requested comment failure', file=sys.stderr)\n"
+            "        raise SystemExit(1)\n"
+            "    if args[3] != '--body' or args[4] != 'Ticket frontier 已完整验证并发布。':\n"
+            "        print(f'unexpected comment argv: {args}', file=sys.stderr)\n"
+            "        raise SystemExit(2)\n"
             "elif args[:2] == ['issue', 'close']:\n"
+            "    if not args[2].isdigit():\n"
+            "        print(f'unexpected close argv: {args}', file=sys.stderr)\n"
+            "        raise SystemExit(2)\n"
             "    number = int(args[2])\n"
             "    record_path = issue_dir / f'{number}.json'\n"
             "    record = json.loads(record_path.read_text())\n"
@@ -325,6 +348,7 @@ class PublishTicketSetCliTests(unittest.TestCase):
                 "view",
                 "list",
                 "provision",
+                "view",
                 "create",
                 "create",
                 "create",
@@ -335,6 +359,7 @@ class PublishTicketSetCliTests(unittest.TestCase):
                 "edit",
                 "view",
                 "view",
+                "comment",
                 "close",
             ],
             operations,
@@ -343,16 +368,34 @@ class PublishTicketSetCliTests(unittest.TestCase):
         first_body = str(self.issue(43)["body"])
         second_body = str(self.issue(44)["body"])
         self.assertIn("## Blocked by\n\n- None — can start immediately", gate_body)
-        self.assertIn("## Parent\n\n#1", first_body)
+        self.assertIn("## Parent\n\nSpec: Parent — #1", first_body)
         self.assertIn("## Blocked by\n\n- #42", first_body)
         self.assertIn("## Blocked by\n\n- #42\n- #43", second_body)
         self.assertTrue(first_body.rstrip().endswith(git_section()))
         self.assertTrue(second_body.rstrip().endswith(git_section()))
+        comment, close = [
+            json.loads(event[3:]) for event in events
+            if event.startswith("gh ") and json.loads(event[3:])[1] in {"comment", "close"}
+        ]
+        self.assertEqual(["issue", "comment", "42", "--body", "Ticket frontier 已完整验证并发布。", "--repo", "github.com/example/project"], comment)
+        self.assertEqual(["issue", "close", "42", "--repo", "github.com/example/project"], close)
+        issue_calls = [json.loads(event[3:]) for event in events if event.startswith('gh ') and json.loads(event[3:])[0] == 'issue']
+        self.assertTrue(all(call[call.index('--repo') + 1] == 'github.com/example/project' for call in issue_calls))
+        self.assertEqual(['repo', 'view', 'github.com/example/project', '--json', 'nameWithOwner'], json.loads(next(event[3:] for event in events if event.startswith('gh ["repo"'))))
         self.assertEqual("CLOSED", self.issue(42)["state"])
         self.assertEqual({"43": ["ready-for-agent"], "44": ["ready-for-agent"]}, self.labels())
         output = json.loads(result.stdout)
         self.assertEqual(42, output["publication_gate"])
         self.assertEqual([43, 44], [ticket["number"] for ticket in output["tickets"]])
+
+    def test_published_gate_and_tickets_show_fetched_parent_title_and_reference(self) -> None:
+        self.env["TEST_PARENT_TITLE"] = "Spec: Renamed Parent"
+
+        result = self.publish()
+
+        self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+        for number in (42, 43, 44):
+            self.assertIn("## Parent\n\nSpec: Renamed Parent — #1\n\n", str(self.issue(number)["body"]))
 
     def test_invalid_parent_contract_stops_before_provisioning_or_creation(self) -> None:
         self.parent_body.write_text(f"{git_section()}\n\n{git_section()}\n", encoding="utf-8")
@@ -437,6 +480,41 @@ class PublishTicketSetCliTests(unittest.TestCase):
             if event.startswith("gh ") and json.loads(event[3:])[1] in {"edit", "close"}
         ]
         self.assertNotIn("10", [args[2] for args in mutations])
+
+    def test_titled_ready_child_freezes_contract_even_after_parent_title_changes(self) -> None:
+        self.env["TEST_PARENT_TITLE"] = "Spec: New title"
+        self.write_existing_issue(
+            10,
+            body=existing_ticket_body().replace("## Parent\n\n#1", "## Parent\n\nSpec: Old title — #1"),
+            labels=["ready-for-agent"],
+        )
+        self.parent_body.write_text(
+            f"## Problem Statement\n\nEdited parent.\n\n{git_section(base_commit='2' * 40)}\n",
+            encoding="utf-8",
+        )
+
+        result = self.publish()
+
+        self.assertEqual(3, result.returncode, result.stdout + result.stderr)
+        self.assertIn("parent issue #1 Git contract drifted", result.stderr)
+        self.assertFalse((self.issue_dir / "42.json").exists())
+
+    def test_false_parent_references_do_not_freeze_an_unrelated_ready_child(self) -> None:
+        self.parent_body.write_text(
+            f"## Problem Statement\n\nEdited parent.\n\n{git_section(base_commit='2' * 40)}\n",
+            encoding="utf-8",
+        )
+        false_bodies = (
+            "## Parent\n\nSpec: Other — #10\n\n## What to build\n\nMention #1 here.",
+            "## What to build\n\nMention #1 here.",
+            "## Parent\n\nSpec: Old — #1 extra\n\n## What to build\n\nExisting.",
+            "## Parent\n\nSpec: Old — #1\n\n## Parent\n\n#1\n\n## What to build\n\nExisting.",
+        )
+        for body in false_bodies:
+            with self.subTest(body=body):
+                self.write_existing_issue(10, body=f"{body}\n\n{git_section()}\n", labels=["ready-for-agent"])
+                result = self.publish()
+                self.assertEqual(0, result.returncode, result.stdout + result.stderr)
 
     def test_first_publication_uses_current_parent_contract_without_ready_children(self) -> None:
         result = self.publish()
@@ -553,6 +631,19 @@ class PublishTicketSetCliTests(unittest.TestCase):
         provision_event = next(event for event in self.events() if event.startswith("provision "))
         self.assertIn("--allow-base-drift", json.loads(provision_event.removeprefix("provision ")))
 
+    def test_repo_view_failure_or_mismatch_stops_before_any_create(self) -> None:
+        for setting, response in (("TEST_FAIL_REPO_VIEW", "1"), ("TEST_VIEW_REPO_RESPONSE", '{"nameWithOwner":"upstream/project"}'), ("TEST_VIEW_REPO_RESPONSE", "{}")):
+            with self.subTest(setting=setting, response=response):
+                self.env[setting] = response
+                result = self.publish()
+                self.assertNotEqual(0, result.returncode)
+                gh_calls = [json.loads(event[3:]) for event in self.events() if event.startswith("gh ")]
+                self.assertEqual(["view", "list", "view"], [call[1] for call in gh_calls])
+                self.assertEqual("repo", gh_calls[-1][0])
+                self.assertFalse(any(self.issue_dir.glob('[0-9]*.json')))
+                self.event_log.unlink()
+                self.env.pop(setting)
+
     def test_partial_create_failure_leaves_every_created_ticket_unlabeled(self) -> None:
         self.env["TEST_FAIL_CREATE"] = "44"
 
@@ -574,6 +665,19 @@ class PublishTicketSetCliTests(unittest.TestCase):
         self.assertEqual(3, result.returncode, result.stdout + result.stderr)
         self.assertEqual({}, self.labels())
         self.assertNotIn("edit", [json.loads(event[3:])[1] for event in self.events() if event.startswith("gh ")])
+
+    def test_comment_failure_keeps_gate_open_and_does_not_report_success(self) -> None:
+        self.env["TEST_FAIL_COMMENT"] = "42"
+
+        result = self.publish()
+
+        self.assertEqual(1, result.returncode, result.stdout + result.stderr)
+        self.assertIn("requested comment failure", result.stderr)
+        self.assertEqual("OPEN", self.issue(42)["state"])
+        self.assertEqual({"43": ["ready-for-agent"], "44": ["ready-for-agent"]}, self.labels())
+        operations = [json.loads(event[3:]) for event in self.events() if event.startswith("gh ")]
+        self.assertEqual("comment", operations[-1][1])
+        self.assertNotIn("close", [args[1] for args in operations])
 
     def test_label_and_rollback_failure_remains_blocked_by_the_publication_gate(self) -> None:
         self.env["TEST_FAIL_LABEL"] = "43"

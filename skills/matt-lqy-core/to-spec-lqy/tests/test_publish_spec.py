@@ -128,7 +128,18 @@ class PublishSpecIssueCliTests(unittest.TestCase):
             "with log.open('a', encoding='utf-8') as handle:\n"
             "    handle.write(json.dumps({'argv': sys.argv[1:], 'cwd': str(pathlib.Path.cwd())}) + '\\n')\n"
             "args = sys.argv[1:]\n"
-            "if args[:2] == ['issue', 'create']:\n"
+            "if args[:1] == ['issue']:\n"
+            "    if args.count('--repo') != 1 or args[args.index('--repo') + 1] != 'github.com/example/project':\n"
+            "        print(f'wrong issue target: {args}', file=sys.stderr); raise SystemExit(2)\n"
+            "if os.environ.get('GH_REPO') is not None:\n"
+            "    print('GH_REPO leaked', file=sys.stderr); raise SystemExit(2)\n"
+            "if args[:2] == ['repo', 'view']:\n"
+            "    if args != ['repo', 'view', 'github.com/example/project', '--json', 'nameWithOwner']:\n"
+            "        print(f'wrong target: {args}', file=sys.stderr); raise SystemExit(2)\n"
+            "    if os.environ.get('TEST_FAIL_REPO_VIEW'):\n"
+            "        print('repo view unavailable', file=sys.stderr); raise SystemExit(1)\n"
+            "    print(os.environ.get('TEST_VIEW_REPO_RESPONSE', '{\"nameWithOwner\": \"example/project\"}'))\n"
+            "elif args[:2] == ['issue', 'create']:\n"
             "    print('https://github.com/example/project/issues/42')\n"
             "elif args[:3] == ['issue', 'view', '42']:\n"
             "    print(pathlib.Path(os.environ['TEST_VIEW_BODY']).read_text(encoding='utf-8'))\n"
@@ -186,10 +197,12 @@ class PublishSpecIssueCliTests(unittest.TestCase):
 
         self.assertEqual(0, result.returncode, result.stdout + result.stderr)
         calls = self.calls()
-        self.assertEqual(["create", "view", "edit"], [call[1] for call in calls])
-        self.assertNotIn("--label", calls[0])
-        self.assertEqual(["--add-label", "ready-for-agent"], calls[2][-2:])
-        self.assertEqual([str(self.repo.resolve())] * 3, self.call_cwds())
+        self.assertEqual(["repo", "create", "view", "edit"], [call[0] if call[0] == 'repo' else call[1] for call in calls])
+        self.assertEqual(['repo', 'view', 'github.com/example/project', '--json', 'nameWithOwner'], calls[0])
+        self.assertNotIn("--label", calls[1])
+        self.assertEqual("ready-for-agent", calls[3][calls[3].index("--add-label") + 1])
+        self.assertEqual(["github.com/example/project"] * 3, [call[call.index("--repo") + 1] for call in calls[1:]])
+        self.assertEqual([str(self.repo.resolve())] * 4, self.call_cwds())
         output = json.loads(result.stdout)
         self.assertEqual(42, output["number"])
         self.assertEqual("/tmp/project-worktree", output["workspace"]["path"])
@@ -236,7 +249,18 @@ class PublishSpecIssueCliTests(unittest.TestCase):
         result = self.publish()
 
         self.assertEqual(3, result.returncode, result.stdout + result.stderr)
-        self.assertEqual(["create", "view"], [call[1] for call in self.calls()])
+        self.assertEqual(["repo", "create", "view"], [call[0] if call[0] == 'repo' else call[1] for call in self.calls()])
+
+    def test_repo_view_failure_or_mismatch_stops_before_create(self) -> None:
+        for setting, response in (("TEST_FAIL_REPO_VIEW", "1"), ("TEST_VIEW_REPO_RESPONSE", '{"nameWithOwner":"upstream/project"}'), ("TEST_VIEW_REPO_RESPONSE", "{}")):
+            with self.subTest(setting=setting, response=response):
+                self.env[setting] = response
+                result = self.publish()
+                self.assertNotEqual(0, result.returncode)
+                self.assertEqual([["repo", "view", "github.com/example/project", "--json", "nameWithOwner"]], self.calls())
+                self.assertFalse(any(call[0] == "issue" for call in self.calls()))
+                self.log_file.unlink()
+                self.env.pop(setting)
 
 
 if __name__ == "__main__":

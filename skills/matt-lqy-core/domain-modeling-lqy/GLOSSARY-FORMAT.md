@@ -12,9 +12,18 @@
 **Order**:
 {定义它是什么，保持一两句话。}
 _Avoid_: Purchase, transaction
+
+**Invoice**:
+针对一个 **Order**，在交付后向其 **Customer** 发出的付款请求。
+_Avoid_: Bill, payment request
+
+**Customer**:
+下 **Order** 的个人或组织。
+_Avoid_: Client, buyer, account
 ```
 
 - 同一概念选择一个规范名字，其它容易混淆的叫法可放 `_Avoid_`。
+- 定义中提及其他术语表术语时加粗（如 `**Order**`），并用周围的句子说明它们之间的关系。
 - 只记录真实领域概念，不复制通用编程词汇、代码、spec 或实现决策。
 - 概念自然成组时才分组，否则平铺即可。
 - 多领域项目由明确的 `GLOSSARY-MAP.md`（或未迁移的既有 map）索引各领域术语表；按当前主题只读取相关领域。
